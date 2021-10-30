@@ -43,7 +43,9 @@ jobs:
           cd source/_posts/
           rm -fr *
           git clone https://github.com/rainsoil/note.git
+          cd note
           git rm -fr .git
-          cd ../../
+          mv * ../
+          cd ../../../
           hexo g
           hexo d
