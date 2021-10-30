@@ -40,4 +40,10 @@ jobs:
       - name: Hexo deploy
         run: |
           hexo clean
+          cd source/_posts/
+          rm -fr *
+          git clone git@github.com:rainsoil/note.git
+          git rm -fr .git
+          cd ../../
+          hexo g
           hexo d
