@@ -43,7 +43,7 @@ jobs:
           cd source/_posts/
           rm -fr *
           git clone https://github.com/rainsoil/note.git
-          ll
+          ls
           cd note
           git rm -fr .git
           mv * ../
