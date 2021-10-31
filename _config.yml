@@ -3,13 +3,13 @@
 ## Source: https://github.com/hexojs/hexo/
 
 # Site
-title: Hexo
-subtitle: ''
+title: railsoil
+subtitle: 'railsoil知识库'
 description: ''
 keywords:
 author: luyanan
 language: zh-CN
-timezone: ''
+timezone: 'Asia/Shanghai'
 
 # URL
 ## Set your site url here. For example, if you use GitHub Page, set url as 'https://username.github.io/project'
@@ -104,8 +104,9 @@ ignore:
 # Extensions
 ## Plugins: https://hexo.io/plugins/
 ## Themes: https://hexo.io/themes/
-theme:  hexo-theme-matery
-
+#theme:  hexo-theme-matery
+theme:  tree
+#theme: replica
 # Deployment
 ## Docs: https://hexo.io/docs/one-command-deployment
 # Deployment
@@ -138,3 +139,13 @@ feed:
   content_limit: 140
   content_limit_delim: ' '
   order_by: -date
+
+#marked setting for markdown
+marked:
+  gfm: true
+  pedantic: false
+  sanitize: false
+  tables: true
+  breaks: true
+  smartLists: true
+  smartypants: true
