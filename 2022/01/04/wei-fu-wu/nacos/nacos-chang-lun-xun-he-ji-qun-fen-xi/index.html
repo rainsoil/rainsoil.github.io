@@ -1,0 +1,1726 @@
+<!DOCTYPE HTML>
+<html lang="zh-CN">
+
+
+<head>
+    <meta charset="utf-8">
+    <meta name="keywords" content="Nacos长轮询和集群分析, railsoil">
+    <meta name="description" content="长轮询的时间间隔我们知道客户端会有一个长训轮的任务去检查服务器端的配置是否发生了变化, 如果发生了变更, 那么客户端会拿到变更的groupKey 再根据 groupKey 去获取配置项的最新值 跟新到本地的缓存以及文件中,那么这种每次都靠客">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="renderer" content="webkit|ie-stand|ie-comp">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="format-detection" content="telephone=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="referrer" content="no-referrer-when-downgrade">
+    <!-- Global site tag (gtag.js) - Google Analytics -->
+
+
+    <title>Nacos长轮询和集群分析 | railsoil</title>
+    <link rel="icon" type="image/png" href="/favicon.png">
+
+    <link rel="stylesheet" type="text/css" href="/libs/awesome/css/all.min.css">
+    <link rel="stylesheet" type="text/css" href="/libs/materialize/materialize.min.css">
+    <link rel="stylesheet" type="text/css" href="/libs/aos/aos.css">
+    <link rel="stylesheet" type="text/css" href="/libs/animate/animate.min.css">
+    <link rel="stylesheet" type="text/css" href="/libs/lightGallery/css/lightgallery.min.css">
+    <link rel="stylesheet" type="text/css" href="/css/matery.css">
+    <link rel="stylesheet" type="text/css" href="/css/my.css">
+
+    <script src="/libs/jquery/jquery.min.js"></script>
+
+<meta name="generator" content="Hexo 5.4.0"><link rel="alternate" href="/atom.xml" title="railsoil" type="application/atom+xml">
+<link rel="stylesheet" href="/css/prism-tomorrow.css" type="text/css"></head>
+
+
+
+
+<body>
+    <header class="navbar-fixed">
+    <nav id="headNav" class="bg-color nav-transparent">
+        <div id="navContainer" class="nav-wrapper container">
+            <div class="brand-logo">
+                <a href="/" class="waves-effect waves-light">
+                    
+                    <img src="/medias/logo.png" class="logo-img" alt="LOGO">
+                    
+                    <span class="logo-span">railsoil</span>
+                </a>
+            </div>
+            
+
+<a href="#" data-target="mobile-nav" class="sidenav-trigger button-collapse"><i class="fas fa-bars"></i></a>
+<ul class="right nav-menu">
+  
+  <li class="hide-on-med-and-down nav-item">
+    
+    <a href="/" class="waves-effect waves-light">
+      
+      <i class="fas fa-home" style="zoom: 0.6;"></i>
+      
+      <span>首页</span>
+    </a>
+    
+  </li>
+  
+  <li class="hide-on-med-and-down nav-item">
+    
+    <a href="/tags" class="waves-effect waves-light">
+      
+      <i class="fas fa-tags" style="zoom: 0.6;"></i>
+      
+      <span>标签</span>
+    </a>
+    
+  </li>
+  
+  <li class="hide-on-med-and-down nav-item">
+    
+    <a href="/categories" class="waves-effect waves-light">
+      
+      <i class="fas fa-bookmark" style="zoom: 0.6;"></i>
+      
+      <span>分类</span>
+    </a>
+    
+  </li>
+  
+  <li class="hide-on-med-and-down nav-item">
+    
+    <a href="/archives" class="waves-effect waves-light">
+      
+      <i class="fas fa-archive" style="zoom: 0.6;"></i>
+      
+      <span>归档</span>
+    </a>
+    
+  </li>
+  
+  <li class="hide-on-med-and-down nav-item">
+    
+    <a href="/about" class="waves-effect waves-light">
+      
+      <i class="fas fa-user-circle" style="zoom: 0.6;"></i>
+      
+      <span>关于</span>
+    </a>
+    
+  </li>
+  
+  <li>
+    <a href="#searchModal" class="modal-trigger waves-effect waves-light">
+      <i id="searchIcon" class="fas fa-search" title="搜索" style="zoom: 0.85;"></i>
+    </a>
+  </li>
+</ul>
+
+
+<div id="mobile-nav" class="side-nav sidenav">
+
+    <div class="mobile-head bg-color">
+        
+        <img src="/medias/logo.png" class="logo-img circle responsive-img">
+        
+        <div class="logo-name">railsoil</div>
+        <div class="logo-desc">
+            
+            Never really desperate, only the lost of the soul.
+            
+        </div>
+    </div>
+
+    <ul class="menu-list mobile-menu-list">
+        
+        <li class="m-nav-item">
+	  
+		<a href="/" class="waves-effect waves-light">
+			
+			    <i class="fa-fw fas fa-home"></i>
+			
+			首页
+		</a>
+          
+        </li>
+        
+        <li class="m-nav-item">
+	  
+		<a href="/tags" class="waves-effect waves-light">
+			
+			    <i class="fa-fw fas fa-tags"></i>
+			
+			标签
+		</a>
+          
+        </li>
+        
+        <li class="m-nav-item">
+	  
+		<a href="/categories" class="waves-effect waves-light">
+			
+			    <i class="fa-fw fas fa-bookmark"></i>
+			
+			分类
+		</a>
+          
+        </li>
+        
+        <li class="m-nav-item">
+	  
+		<a href="/archives" class="waves-effect waves-light">
+			
+			    <i class="fa-fw fas fa-archive"></i>
+			
+			归档
+		</a>
+          
+        </li>
+        
+        <li class="m-nav-item">
+	  
+		<a href="/about" class="waves-effect waves-light">
+			
+			    <i class="fa-fw fas fa-user-circle"></i>
+			
+			关于
+		</a>
+          
+        </li>
+        
+        
+    </ul>
+</div>
+
+
+        </div>
+
+        
+    </nav>
+
+</header>
+
+    
+
+
+
+<div class="bg-cover pd-header post-cover" style="background-image: url('/medias/featureimages/21.jpg')">
+    <div class="container" style="right: 0px;left: 0px;">
+        <div class="row">
+            <div class="col s12 m12 l12">
+                <div class="brand">
+                    <h1 class="description center-align post-title">Nacos长轮询和集群分析</h1>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+
+<main class="post-container content">
+
+    
+    <link rel="stylesheet" href="/libs/tocbot/tocbot.css">
+<style>
+    #articleContent h1::before,
+    #articleContent h2::before,
+    #articleContent h3::before,
+    #articleContent h4::before,
+    #articleContent h5::before,
+    #articleContent h6::before {
+        display: block;
+        content: " ";
+        height: 100px;
+        margin-top: -100px;
+        visibility: hidden;
+    }
+
+    #articleContent :focus {
+        outline: none;
+    }
+
+    .toc-fixed {
+        position: fixed;
+        top: 64px;
+    }
+
+    .toc-widget {
+        width: 345px;
+        padding-left: 20px;
+    }
+
+    .toc-widget .toc-title {
+        padding: 35px 0 15px 17px;
+        font-size: 1.5rem;
+        font-weight: bold;
+        line-height: 1.5rem;
+    }
+
+    .toc-widget ol {
+        padding: 0;
+        list-style: none;
+    }
+
+    #toc-content {
+        padding-bottom: 30px;
+        overflow: auto;
+    }
+
+    #toc-content ol {
+        padding-left: 10px;
+    }
+
+    #toc-content ol li {
+        padding-left: 10px;
+    }
+
+    #toc-content .toc-link:hover {
+        color: #42b983;
+        font-weight: 700;
+        text-decoration: underline;
+    }
+
+    #toc-content .toc-link::before {
+        background-color: transparent;
+        max-height: 25px;
+
+        position: absolute;
+        right: 23.5vw;
+        display: block;
+    }
+
+    #toc-content .is-active-link {
+        color: #42b983;
+    }
+
+    #floating-toc-btn {
+        position: fixed;
+        right: 15px;
+        bottom: 76px;
+        padding-top: 15px;
+        margin-bottom: 0;
+        z-index: 998;
+    }
+
+    #floating-toc-btn .btn-floating {
+        width: 48px;
+        height: 48px;
+    }
+
+    #floating-toc-btn .btn-floating i {
+        line-height: 48px;
+        font-size: 1.4rem;
+    }
+</style>
+<div class="row">
+    <div id="main-content" class="col s12 m12 l9">
+        <!-- 文章内容详情 -->
+<div id="artDetail">
+    <div class="card">
+        <div class="card-content article-info">
+            <div class="row tag-cate">
+                <div class="col s7">
+                    
+                          <div class="article-tag">
+                            <span class="chip bg-color">无标签</span>
+                          </div>
+                    
+                </div>
+                <div class="col s5 right-align">
+                    
+                    <div class="post-cate">
+                        <i class="fas fa-bookmark fa-fw icon-category"></i>
+                        
+                            <a href="/categories/nacos/" class="post-category">
+                                nacos
+                            </a>
+                        
+                            <a href="/categories/nacos/%E5%BE%AE%E6%9C%8D%E5%8A%A1/" class="post-category">
+                                微服务
+                            </a>
+                        
+                            <a href="/categories/nacos/%E5%BE%AE%E6%9C%8D%E5%8A%A1/%E5%BE%AE%E6%9C%8D%E5%8A%A1/" class="post-category">
+                                微服务
+                            </a>
+                        
+                            <a href="/categories/nacos/%E5%BE%AE%E6%9C%8D%E5%8A%A1/%E5%BE%AE%E6%9C%8D%E5%8A%A1/nacos/" class="post-category">
+                                nacos
+                            </a>
+                        
+                    </div>
+                    
+                </div>
+            </div>
+
+            <div class="post-info">
+                
+                <div class="post-date info-break-policy">
+                    <i class="far fa-calendar-minus fa-fw"></i>发布日期:&nbsp;&nbsp;
+                    2022-01-04
+                </div>
+                
+
+                
+
+                
+                <div class="info-break-policy">
+                    <i class="far fa-file-word fa-fw"></i>文章字数:&nbsp;&nbsp;
+                    5.7k
+                </div>
+                
+
+                
+                <div class="info-break-policy">
+                    <i class="far fa-clock fa-fw"></i>阅读时长:&nbsp;&nbsp;
+                    26 分
+                </div>
+                
+
+                
+                    <div id="busuanzi_container_page_pv" class="info-break-policy">
+                        <i class="far fa-eye fa-fw"></i>阅读次数:&nbsp;&nbsp;
+                        <span id="busuanzi_value_page_pv"></span>
+                    </div>
+				
+            </div>
+        </div>
+        <hr class="clearfix">
+
+        
+
+        
+
+        <div class="card-content article-card-content">
+            <div id="articleContent">
+                <h1 id="长轮询的时间间隔"><a href="#长轮询的时间间隔" class="headerlink" title="长轮询的时间间隔"></a>长轮询的时间间隔</h1><p>我们知道客户端会有一个长训轮的任务去检查服务器端的配置是否发生了变化, 如果发生了变更, 那么客户端会拿到变更的<code>groupKey</code> 再根据 <code>groupKey</code> 去获取配置项的最新值 跟新到本地的缓存以及文件中,那么这种每次都靠客户端去请求, 那请求的时间间隔设置多少合适呢? </p>
+<p>如果间隔时间设置的太长的话有可能无法及时获取服务端的变更, 如果间隔时间设置的太短的话, 那么频繁的请求对于服务端来说无疑也是一种负担,所以最好的方式是客户端每隔一段长度适中的时间去服务端请求, 而在这期间如果配置发生了变更, 服务端能够主动将变更后的结果推送给客户端, 这样既能够保证客户端能够实时感知到配置的变化, 也降低了服务端的压力, 我们来看看nacos 设置的间隔时间是多久? </p>
+<h2 id="长轮询的概念"><a href="#长轮询的概念" class="headerlink" title="长轮询的概念"></a>长轮询的概念</h2><p>那么在讲解原理之前, 先给大家解释一下什么叫长轮询. </p>
+<p>客户端发起一个请求到服务端, 服务端收到客户端的请求后, 并不会立即响应给客户端, 而是先把请求hold住, 然后服务端会在hold 住的这段时间内检查数据是否有更新, 如果有, 则响应给客户端. 如果一直没有数据变更, 则达到一定时间(长轮询时间间隔)才返回. </p>
+<p>长轮询典型的场景有: 扫码登陆、扫码支付. </p>
+<p><img src="http://files.luyanan.com//img/20191210211140.png"></p>
+<h2 id="客户端长轮询"><a href="#客户端长轮询" class="headerlink" title="客户端长轮询"></a>客户端长轮询</h2><p>我们在 <code>ClientWorker</code>  这个类中, 找到<code>checkUpdateConfigStr</code> 这个方法, 这里面就是去服务端查询发生变化的  groupKey</p>
+<pre class=" language-java"><code class="language-java"><span class="token comment" spellcheck="true">/**
+     * 从Server获取值变化了的DataID列表。返回的对象里只有dataId和group是有效的。 保证不返回NULL。
+     */</span>
+    List<span class="token operator">&lt;</span>String<span class="token operator">></span> <span class="token function">checkUpdateConfigStr</span><span class="token punctuation">(</span>String probeUpdateString<span class="token punctuation">,</span> <span class="token keyword">boolean</span> isInitializingCacheList<span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+
+        List<span class="token operator">&lt;</span>String<span class="token operator">></span> params <span class="token operator">=</span> Arrays<span class="token punctuation">.</span><span class="token function">asList</span><span class="token punctuation">(</span>Constants<span class="token punctuation">.</span>PROBE_MODIFY_REQUEST<span class="token punctuation">,</span> probeUpdateString<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token keyword">long</span> timeout <span class="token operator">=</span> TimeUnit<span class="token punctuation">.</span>SECONDS<span class="token punctuation">.</span><span class="token function">toMillis</span><span class="token punctuation">(</span>30L<span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+        List<span class="token operator">&lt;</span>String<span class="token operator">></span> headers <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">ArrayList</span><span class="token operator">&lt;</span>String<span class="token operator">></span><span class="token punctuation">(</span><span class="token number">2</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        headers<span class="token punctuation">.</span><span class="token function">add</span><span class="token punctuation">(</span><span class="token string">"Long-Pulling-Timeout"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        headers<span class="token punctuation">.</span><span class="token function">add</span><span class="token punctuation">(</span><span class="token string">""</span> <span class="token operator">+</span> timeout<span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+        <span class="token comment" spellcheck="true">// told server do not hang me up if new initializing cacheData added in</span>
+        <span class="token keyword">if</span> <span class="token punctuation">(</span>isInitializingCacheList<span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+            headers<span class="token punctuation">.</span><span class="token function">add</span><span class="token punctuation">(</span><span class="token string">"Long-Pulling-Timeout-No-Hangup"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+            headers<span class="token punctuation">.</span><span class="token function">add</span><span class="token punctuation">(</span><span class="token string">"true"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+
+        <span class="token keyword">if</span> <span class="token punctuation">(</span>StringUtils<span class="token punctuation">.</span><span class="token function">isBlank</span><span class="token punctuation">(</span>probeUpdateString<span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+            <span class="token keyword">return</span> Collections<span class="token punctuation">.</span><span class="token function">emptyList</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+
+        <span class="token keyword">try</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+            HttpResult result <span class="token operator">=</span> agent<span class="token punctuation">.</span><span class="token function">httpPost</span><span class="token punctuation">(</span>Constants<span class="token punctuation">.</span>CONFIG_CONTROLLER_PATH <span class="token operator">+</span> <span class="token string">"/listener"</span><span class="token punctuation">,</span> headers<span class="token punctuation">,</span> params<span class="token punctuation">,</span>
+                    agent<span class="token punctuation">.</span><span class="token function">getEncode</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">,</span> timeout<span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+            <span class="token keyword">if</span> <span class="token punctuation">(</span>HttpURLConnection<span class="token punctuation">.</span>HTTP_OK <span class="token operator">==</span> result<span class="token punctuation">.</span>code<span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+                <span class="token function">setHealthServer</span><span class="token punctuation">(</span><span class="token boolean">true</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+                <span class="token keyword">return</span> <span class="token function">parseUpdateDataIdResponse</span><span class="token punctuation">(</span>result<span class="token punctuation">.</span>content<span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span> <span class="token keyword">else</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+                <span class="token function">setHealthServer</span><span class="token punctuation">(</span><span class="token boolean">false</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+                <span class="token keyword">if</span> <span class="token punctuation">(</span>result<span class="token punctuation">.</span>code <span class="token operator">==</span> HttpURLConnection<span class="token punctuation">.</span>HTTP_INTERNAL_ERROR<span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+                    log<span class="token punctuation">.</span><span class="token function">error</span><span class="token punctuation">(</span><span class="token string">"NACOS-0007"</span><span class="token punctuation">,</span> LoggerHelper<span class="token punctuation">.</span><span class="token function">getErrorCodeStr</span><span class="token punctuation">(</span><span class="token string">"Nacos"</span><span class="token punctuation">,</span> <span class="token string">"Nacos-0007"</span><span class="token punctuation">,</span> <span class="token string">"环境问题"</span><span class="token punctuation">,</span>
+                            <span class="token string">"[check-update] get changed dataId error"</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+                <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+                log<span class="token punctuation">.</span><span class="token function">error</span><span class="token punctuation">(</span>agent<span class="token punctuation">.</span><span class="token function">getName</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">,</span> <span class="token string">"NACOS-XXXX"</span><span class="token punctuation">,</span> <span class="token string">"[check-update] get changed dataId error, code=&amp;#123;&amp;#125;"</span><span class="token punctuation">,</span>
+                        result<span class="token punctuation">.</span>code<span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+        <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span> <span class="token keyword">catch</span> <span class="token punctuation">(</span><span class="token class-name">IOException</span> e<span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+            <span class="token function">setHealthServer</span><span class="token punctuation">(</span><span class="token boolean">false</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+            log<span class="token punctuation">.</span><span class="token function">error</span><span class="token punctuation">(</span>agent<span class="token punctuation">.</span><span class="token function">getName</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">,</span> <span class="token string">"NACOS-XXXX"</span><span class="token punctuation">,</span> <span class="token string">"[check-update] get changed dataId exception, msg=&amp;#123;&amp;#125;"</span><span class="token punctuation">,</span>
+                    e<span class="token punctuation">.</span><span class="token function">toString</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+        <span class="token keyword">return</span> Collections<span class="token punctuation">.</span><span class="token function">emptyList</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+</code></pre>
+<p>这个方法最终会发起http请求, 注意这里面有个 <code>timeout</code> 属性. </p>
+<pre class=" language-java"><code class="language-java">HttpResult result <span class="token operator">=</span> agent<span class="token punctuation">.</span><span class="token function">httpPost</span><span class="token punctuation">(</span>Constants<span class="token punctuation">.</span>CONFIG_CONTROLLER_PATH <span class="token operator">+</span> <span class="token string">"/listener"</span><span class="token punctuation">,</span> headers<span class="token punctuation">,</span> params<span class="token punctuation">,</span>
+                    agent<span class="token punctuation">.</span><span class="token function">getEncode</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">,</span> timeout<span class="token punctuation">)</span><span class="token punctuation">;</span>
+</code></pre>
+<p> timeout 是在init这个方法中赋值的, 默认情况下是30秒, 可以通过 <code>configLongPollTimeout</code> 进行修改, </p>
+<pre class=" language-java"><code class="language-java"> <span class="token keyword">private</span> <span class="token keyword">void</span> <span class="token function">init</span><span class="token punctuation">(</span>Properties properties<span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+
+        timeout <span class="token operator">=</span> Math<span class="token punctuation">.</span><span class="token function">max</span><span class="token punctuation">(</span>NumberUtils<span class="token punctuation">.</span><span class="token function">toInt</span><span class="token punctuation">(</span>properties<span class="token punctuation">.</span><span class="token function">getProperty</span><span class="token punctuation">(</span>PropertyKeyConst<span class="token punctuation">.</span>CONFIG_LONG_POLL_TIMEOUT<span class="token punctuation">)</span><span class="token punctuation">,</span>
+            Constants<span class="token punctuation">.</span>CONFIG_LONG_POLL_TIMEOUT<span class="token punctuation">)</span><span class="token punctuation">,</span> Constants<span class="token punctuation">.</span>MIN_CONFIG_LONG_POLL_TIMEOUT<span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+        taskPenaltyTime <span class="token operator">=</span> NumberUtils<span class="token punctuation">.</span><span class="token function">toInt</span><span class="token punctuation">(</span>properties<span class="token punctuation">.</span><span class="token function">getProperty</span><span class="token punctuation">(</span>PropertyKeyConst<span class="token punctuation">.</span>CONFIG_RETRY_TIME<span class="token punctuation">)</span><span class="token punctuation">,</span> Constants<span class="token punctuation">.</span>CONFIG_RETRY_TIME<span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+        enableRemoteSyncConfig <span class="token operator">=</span> Boolean<span class="token punctuation">.</span><span class="token function">parseBoolean</span><span class="token punctuation">(</span>properties<span class="token punctuation">.</span><span class="token function">getProperty</span><span class="token punctuation">(</span>PropertyKeyConst<span class="token punctuation">.</span>ENABLE_REMOTE_SYNC_CONFIG<span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+</code></pre>
+<p>所有从这里得出的一个基本结论是:</p>
+<blockquote>
+<p>客户端发起一个轮询请求,超时时间是 30s, 那么客户端为什么要等待30s 才超时呢？不是越快越好吗?</p>
+</blockquote>
+<h2 id="客户端长轮询的时间间隔"><a href="#客户端长轮询的时间间隔" class="headerlink" title="客户端长轮询的时间间隔"></a>客户端长轮询的时间间隔</h2><p>我们可以在nacos 的日志目录下 <code>$NACOS_HOME/nacos/logs/config-client-request.log</code> 文件中: </p>
+<pre><code>2019-08-04 13:22:19,736|0|nohangup|127.0.0.1|polling|1|55|0
+2019-08-04 13:22:49,443|29504|timeout|127.0.0.1|polling|1|55
+2019-08-04 13:23:18,983|29535|timeout|127.0.0.1|polling|1|55
+2019-08-04 13:23:48,493|29501|timeout|127.0.0.1|polling|1|55
+2019-08-04 13:24:18,003|29500|timeout|127.0.0.1|polling|1|55
+2019-08-04 13:24:47,509|29501|timeout|127.0.0.1|polling|1|55
+</code></pre>
+<p>可以看到一个现象, 在配置没有发生变化的情况下, 客户端会等待29.5s以上, 才请求到服务端的结果. 然后客户端拿到服务器端的结果后, 在做后续的操作. </p>
+<p>如果在配置发生变更的情况下, 由于客户端基于长轮询的连接保持, 所以返回的时间会非常短. 我摁可以做个小实验, 在<code>nacos console</code> 中频繁修改数据在观察一下:</p>
+<pre><code>2019-08-04 13:30:17,016|0|inadvance|127.0.0.1|polling|1|55|example+DEFAULT_GROUP
+2019-08-04
+13:30:17,022|3|null|127.0.0.1|get|example|DEFAULT_GROUP||e10e4d5973c497e490a8d7a
+9e4e9be64|unknown
+2019-08-04
+13:30:20,807|10|true|0:0:0:0:0:0:0:1|publish|example|DEFAULT_GROUP||81360b7e732a
+5dbb37d62d81cebb85d2|null
+2019-08-04 13:30:20,843|0|inadvance|127.0.0.1|polling|1|55|example+DEFAULT_GROUP
+2019-08-04
+13:30:20,848|1|null|127.0.0.1|get|example|DEFAULT_GROUP||81360b7e732a5dbb37d62d8
+1cebb85d2|unknown
+</code></pre>
+<p><img src="http://files.luyanan.com//img/20191212102604.png"></p>
+<h2 id="服务端的处理"><a href="#服务端的处理" class="headerlink" title="服务端的处理"></a>服务端的处理</h2><p>分析完客户端之后, 随着好奇心的驱使, 服务端是如何处理客户端的请求呢? 那么同样, 我们需要思考几个问题:</p>
+<ul>
+<li>客户端的长轮询响应时间是受到哪些因素的影响</li>
+<li>客户端的超时时间为什么要设置30s</li>
+</ul>
+<p>客户端发送请求的地址是 <code>/v1/cs/configs/listener</code>, 找到服务端对应的方法. </p>
+<h3 id="ConfigController"><a href="#ConfigController" class="headerlink" title="ConfigController"></a>ConfigController</h3><p>nacos 是使用 spring mvc 提供的rest api, 这里会调用<code>inner.doPollingConfig</code> 进行处理. </p>
+<pre class=" language-java"><code class="language-java"> <span class="token comment" spellcheck="true">/**
+     * 比较MD5
+     */</span>
+    <span class="token annotation punctuation">@RequestMapping</span><span class="token punctuation">(</span>value <span class="token operator">=</span> <span class="token string">"/listener"</span><span class="token punctuation">,</span> method <span class="token operator">=</span> RequestMethod<span class="token punctuation">.</span>POST<span class="token punctuation">)</span>
+    <span class="token keyword">public</span> <span class="token keyword">void</span> <span class="token function">listener</span><span class="token punctuation">(</span>HttpServletRequest request<span class="token punctuation">,</span> HttpServletResponse response<span class="token punctuation">)</span>
+        <span class="token keyword">throws</span> ServletException<span class="token punctuation">,</span> IOException <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+        request<span class="token punctuation">.</span><span class="token function">setAttribute</span><span class="token punctuation">(</span><span class="token string">"org.apache.catalina.ASYNC_SUPPORTED"</span><span class="token punctuation">,</span> <span class="token boolean">true</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        String probeModify <span class="token operator">=</span> request<span class="token punctuation">.</span><span class="token function">getParameter</span><span class="token punctuation">(</span><span class="token string">"Listening-Configs"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token keyword">if</span> <span class="token punctuation">(</span>StringUtils<span class="token punctuation">.</span><span class="token function">isBlank</span><span class="token punctuation">(</span>probeModify<span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+            <span class="token keyword">throw</span> <span class="token keyword">new</span> <span class="token class-name">IllegalArgumentException</span><span class="token punctuation">(</span><span class="token string">"invalid probeModify"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+
+        probeModify <span class="token operator">=</span> URLDecoder<span class="token punctuation">.</span><span class="token function">decode</span><span class="token punctuation">(</span>probeModify<span class="token punctuation">,</span> Constants<span class="token punctuation">.</span>ENCODE<span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+        Map<span class="token operator">&lt;</span>String<span class="token punctuation">,</span> String<span class="token operator">></span> clientMd5Map<span class="token punctuation">;</span>
+        <span class="token keyword">try</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+            clientMd5Map <span class="token operator">=</span> MD5Util<span class="token punctuation">.</span><span class="token function">getClientMd5Map</span><span class="token punctuation">(</span>probeModify<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span> <span class="token keyword">catch</span> <span class="token punctuation">(</span><span class="token class-name">Throwable</span> e<span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+            <span class="token keyword">throw</span> <span class="token keyword">new</span> <span class="token class-name">IllegalArgumentException</span><span class="token punctuation">(</span><span class="token string">"invalid probeModify"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+
+        <span class="token comment" spellcheck="true">// do long-polling</span>
+        inner<span class="token punctuation">.</span><span class="token function">doPollingConfig</span><span class="token punctuation">(</span>request<span class="token punctuation">,</span> response<span class="token punctuation">,</span> clientMd5Map<span class="token punctuation">,</span> probeModify<span class="token punctuation">.</span><span class="token function">length</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+</code></pre>
+<h3 id="doPollingConfig"><a href="#doPollingConfig" class="headerlink" title="doPollingConfig"></a>doPollingConfig</h3><p>这个方法中,兼容了长轮询和短轮询的逻辑, 我们只需要关注长轮询的部分, 再次进入到 <code>longPollingService.addLongPollingClient</code> </p>
+<pre class=" language-java"><code class="language-java">  <span class="token comment" spellcheck="true">/**
+     * 轮询接口
+     */</span>
+    <span class="token keyword">public</span> String <span class="token function">doPollingConfig</span><span class="token punctuation">(</span>HttpServletRequest request<span class="token punctuation">,</span> HttpServletResponse response<span class="token punctuation">,</span>
+                                  Map<span class="token operator">&lt;</span>String<span class="token punctuation">,</span> String<span class="token operator">></span> clientMd5Map<span class="token punctuation">,</span> <span class="token keyword">int</span> probeRequestSize<span class="token punctuation">)</span>
+        <span class="token keyword">throws</span> IOException<span class="token punctuation">,</span> ServletException <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+
+        <span class="token comment" spellcheck="true">// 长轮询</span>
+        <span class="token keyword">if</span> <span class="token punctuation">(</span>LongPollingService<span class="token punctuation">.</span><span class="token function">isSupportLongPolling</span><span class="token punctuation">(</span>request<span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+            longPollingService<span class="token punctuation">.</span><span class="token function">addLongPollingClient</span><span class="token punctuation">(</span>request<span class="token punctuation">,</span> response<span class="token punctuation">,</span> clientMd5Map<span class="token punctuation">,</span> probeRequestSize<span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <span class="token keyword">return</span> HttpServletResponse<span class="token punctuation">.</span>SC_OK <span class="token operator">+</span> <span class="token string">""</span><span class="token punctuation">;</span>
+        <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+
+        <span class="token comment" spellcheck="true">// else 兼容短轮询逻辑</span>
+        List<span class="token operator">&lt;</span>String<span class="token operator">></span> changedGroups <span class="token operator">=</span> MD5Util<span class="token punctuation">.</span><span class="token function">compareMd5</span><span class="token punctuation">(</span>request<span class="token punctuation">,</span> response<span class="token punctuation">,</span> clientMd5Map<span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+        <span class="token comment" spellcheck="true">// 兼容短轮询result</span>
+        String oldResult <span class="token operator">=</span> MD5Util<span class="token punctuation">.</span><span class="token function">compareMd5OldResult</span><span class="token punctuation">(</span>changedGroups<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        String newResult <span class="token operator">=</span> MD5Util<span class="token punctuation">.</span><span class="token function">compareMd5ResultString</span><span class="token punctuation">(</span>changedGroups<span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+        String version <span class="token operator">=</span> request<span class="token punctuation">.</span><span class="token function">getHeader</span><span class="token punctuation">(</span>Constants<span class="token punctuation">.</span>CLIENT_VERSION_HEADER<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token keyword">if</span> <span class="token punctuation">(</span>version <span class="token operator">==</span> null<span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+            version <span class="token operator">=</span> <span class="token string">"2.0.0"</span><span class="token punctuation">;</span>
+        <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+        <span class="token keyword">int</span> versionNum <span class="token operator">=</span> Protocol<span class="token punctuation">.</span><span class="token function">getVersionNumber</span><span class="token punctuation">(</span>version<span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+        <span class="token comment" spellcheck="true">/**
+         * 2.0.4版本以前, 返回值放入header中
+         */</span>
+        <span class="token keyword">if</span> <span class="token punctuation">(</span>versionNum <span class="token operator">&lt;</span> START_LONGPOLLING_VERSION_NUM<span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+            response<span class="token punctuation">.</span><span class="token function">addHeader</span><span class="token punctuation">(</span>Constants<span class="token punctuation">.</span>PROBE_MODIFY_RESPONSE<span class="token punctuation">,</span> oldResult<span class="token punctuation">)</span><span class="token punctuation">;</span>
+            response<span class="token punctuation">.</span><span class="token function">addHeader</span><span class="token punctuation">(</span>Constants<span class="token punctuation">.</span>PROBE_MODIFY_RESPONSE_NEW<span class="token punctuation">,</span> newResult<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span> <span class="token keyword">else</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+            request<span class="token punctuation">.</span><span class="token function">setAttribute</span><span class="token punctuation">(</span><span class="token string">"content"</span><span class="token punctuation">,</span> newResult<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+
+        <span class="token comment" spellcheck="true">// 禁用缓存</span>
+        response<span class="token punctuation">.</span><span class="token function">setHeader</span><span class="token punctuation">(</span><span class="token string">"Pragma"</span><span class="token punctuation">,</span> <span class="token string">"no-cache"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        response<span class="token punctuation">.</span><span class="token function">setDateHeader</span><span class="token punctuation">(</span><span class="token string">"Expires"</span><span class="token punctuation">,</span> <span class="token number">0</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        response<span class="token punctuation">.</span><span class="token function">setHeader</span><span class="token punctuation">(</span><span class="token string">"Cache-Control"</span><span class="token punctuation">,</span> <span class="token string">"no-cache,no-store"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        response<span class="token punctuation">.</span><span class="token function">setStatus</span><span class="token punctuation">(</span>HttpServletResponse<span class="token punctuation">.</span>SC_OK<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token keyword">return</span> HttpServletResponse<span class="token punctuation">.</span>SC_OK <span class="token operator">+</span> <span class="token string">""</span><span class="token punctuation">;</span>
+    <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+</code></pre>
+<h3 id="longPollingService-addLongPollingClient"><a href="#longPollingService-addLongPollingClient" class="headerlink" title="longPollingService.addLongPollingClient"></a>longPollingService.addLongPollingClient</h3><p>从方法的名字上可以推出, 这个方法应该是把客户端的长轮询请求添加到某个任务中. </p>
+<ul>
+<li>获得客户端传递过来的超时时间, 并且进行本地计算, 提前500s 返回响应, 这就能解释为什么客户端响应超时时间是29.5+了, 当然如果 <code>isFixedPolling=true</code> 的情况下, 不会提前返回响应. </li>
+<li>根据客户端请求过来的md5和服务端对应的group 下对应内容的md5 进行比较, 如果不一致, 则通过<code>generateResponse</code>  将结果返回. </li>
+<li>如果配置文件没有发生变化, 则通过 <code>scheduler.execute</code>   启动了一个定时任务, 将客户端的长轮询请求封装成一个叫<code> ClientLongPolling</code> 的任务, 交给 <code> scheduler</code> 去执行. </li>
+</ul>
+<pre class=" language-java"><code class="language-java">  <span class="token keyword">public</span> <span class="token keyword">void</span> <span class="token function">addLongPollingClient</span><span class="token punctuation">(</span>HttpServletRequest req<span class="token punctuation">,</span> HttpServletResponse rsp<span class="token punctuation">,</span> Map<span class="token operator">&lt;</span>String<span class="token punctuation">,</span> String<span class="token operator">></span> clientMd5Map<span class="token punctuation">,</span>
+                                     <span class="token keyword">int</span> probeRequestSize<span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+
+        String str <span class="token operator">=</span> req<span class="token punctuation">.</span><span class="token function">getHeader</span><span class="token punctuation">(</span>LongPollingService<span class="token punctuation">.</span>LONG_POLLING_HEADER<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        String noHangUpFlag <span class="token operator">=</span> req<span class="token punctuation">.</span><span class="token function">getHeader</span><span class="token punctuation">(</span>LongPollingService<span class="token punctuation">.</span>LONG_POLLING_NO_HANG_UP_HEADER<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        String appName <span class="token operator">=</span> req<span class="token punctuation">.</span><span class="token function">getHeader</span><span class="token punctuation">(</span>RequestUtil<span class="token punctuation">.</span>CLIENT_APPNAME_HEADER<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        String tag <span class="token operator">=</span> req<span class="token punctuation">.</span><span class="token function">getHeader</span><span class="token punctuation">(</span><span class="token string">"Vipserver-Tag"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token keyword">int</span> delayTime <span class="token operator">=</span> SwitchService<span class="token punctuation">.</span><span class="token function">getSwitchInteger</span><span class="token punctuation">(</span>SwitchService<span class="token punctuation">.</span>FIXED_DELAY_TIME<span class="token punctuation">,</span> <span class="token number">500</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token comment" spellcheck="true">/**
+         * 提前500ms返回响应，为避免客户端超时 @qiaoyi.dingqy 2013.10.22改动  add delay time for LoadBalance
+         */</span>
+        <span class="token keyword">long</span> timeout <span class="token operator">=</span> Math<span class="token punctuation">.</span><span class="token function">max</span><span class="token punctuation">(</span><span class="token number">10000</span><span class="token punctuation">,</span> Long<span class="token punctuation">.</span><span class="token function">parseLong</span><span class="token punctuation">(</span>str<span class="token punctuation">)</span> <span class="token operator">-</span> delayTime<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token keyword">if</span> <span class="token punctuation">(</span><span class="token function">isFixedPolling</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+            timeout <span class="token operator">=</span> Math<span class="token punctuation">.</span><span class="token function">max</span><span class="token punctuation">(</span><span class="token number">10000</span><span class="token punctuation">,</span> <span class="token function">getFixedPollingInterval</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <span class="token comment" spellcheck="true">// do nothing but set fix polling timeout</span>
+        <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span> <span class="token keyword">else</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+            <span class="token keyword">long</span> start <span class="token operator">=</span> System<span class="token punctuation">.</span><span class="token function">currentTimeMillis</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+            List<span class="token operator">&lt;</span>String<span class="token operator">></span> changedGroups <span class="token operator">=</span> MD5Util<span class="token punctuation">.</span><span class="token function">compareMd5</span><span class="token punctuation">(</span>req<span class="token punctuation">,</span> rsp<span class="token punctuation">,</span> clientMd5Map<span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <span class="token keyword">if</span> <span class="token punctuation">(</span>changedGroups<span class="token punctuation">.</span><span class="token function">size</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">></span> <span class="token number">0</span><span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+                <span class="token function">generateResponse</span><span class="token punctuation">(</span>req<span class="token punctuation">,</span> rsp<span class="token punctuation">,</span> changedGroups<span class="token punctuation">)</span><span class="token punctuation">;</span>
+                LogUtil<span class="token punctuation">.</span>clientLog<span class="token punctuation">.</span><span class="token function">info</span><span class="token punctuation">(</span><span class="token string">"&amp;#123;&amp;#125;|&amp;#123;&amp;#125;|&amp;#123;&amp;#125;|&amp;#123;&amp;#125;|&amp;#123;&amp;#125;|&amp;#123;&amp;#125;|&amp;#123;&amp;#125;"</span><span class="token punctuation">,</span>
+                    System<span class="token punctuation">.</span><span class="token function">currentTimeMillis</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">-</span> start<span class="token punctuation">,</span> <span class="token string">"instant"</span><span class="token punctuation">,</span> RequestUtil<span class="token punctuation">.</span><span class="token function">getRemoteIp</span><span class="token punctuation">(</span>req<span class="token punctuation">)</span><span class="token punctuation">,</span> <span class="token string">"polling"</span><span class="token punctuation">,</span>
+                    clientMd5Map<span class="token punctuation">.</span><span class="token function">size</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">,</span> probeRequestSize<span class="token punctuation">,</span> changedGroups<span class="token punctuation">.</span><span class="token function">size</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+                <span class="token keyword">return</span><span class="token punctuation">;</span>
+            <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span> <span class="token keyword">else</span> <span class="token keyword">if</span> <span class="token punctuation">(</span>noHangUpFlag <span class="token operator">!=</span> null <span class="token operator">&amp;&amp;</span> noHangUpFlag<span class="token punctuation">.</span><span class="token function">equalsIgnoreCase</span><span class="token punctuation">(</span>TRUE_STR<span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+                LogUtil<span class="token punctuation">.</span>clientLog<span class="token punctuation">.</span><span class="token function">info</span><span class="token punctuation">(</span><span class="token string">"&amp;#123;&amp;#125;|&amp;#123;&amp;#125;|&amp;#123;&amp;#125;|&amp;#123;&amp;#125;|&amp;#123;&amp;#125;|&amp;#123;&amp;#125;|&amp;#123;&amp;#125;"</span><span class="token punctuation">,</span> System<span class="token punctuation">.</span><span class="token function">currentTimeMillis</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">-</span> start<span class="token punctuation">,</span> <span class="token string">"nohangup"</span><span class="token punctuation">,</span>
+                    RequestUtil<span class="token punctuation">.</span><span class="token function">getRemoteIp</span><span class="token punctuation">(</span>req<span class="token punctuation">)</span><span class="token punctuation">,</span> <span class="token string">"polling"</span><span class="token punctuation">,</span> clientMd5Map<span class="token punctuation">.</span><span class="token function">size</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">,</span> probeRequestSize<span class="token punctuation">,</span>
+                    changedGroups<span class="token punctuation">.</span><span class="token function">size</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+                <span class="token keyword">return</span><span class="token punctuation">;</span>
+            <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+        <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+        String ip <span class="token operator">=</span> RequestUtil<span class="token punctuation">.</span><span class="token function">getRemoteIp</span><span class="token punctuation">(</span>req<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token comment" spellcheck="true">// 一定要由HTTP线程调用，否则离开后容器会立即发送响应</span>
+        <span class="token keyword">final</span> AsyncContext asyncContext <span class="token operator">=</span> req<span class="token punctuation">.</span><span class="token function">startAsync</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token comment" spellcheck="true">// AsyncContext.setTimeout()的超时时间不准，所以只能自己控制</span>
+        asyncContext<span class="token punctuation">.</span><span class="token function">setTimeout</span><span class="token punctuation">(</span>0L<span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+        scheduler<span class="token punctuation">.</span><span class="token function">execute</span><span class="token punctuation">(</span>
+            <span class="token keyword">new</span> <span class="token class-name">ClientLongPolling</span><span class="token punctuation">(</span>asyncContext<span class="token punctuation">,</span> clientMd5Map<span class="token punctuation">,</span> ip<span class="token punctuation">,</span> probeRequestSize<span class="token punctuation">,</span> timeout<span class="token punctuation">,</span> appName<span class="token punctuation">,</span> tag<span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+</code></pre>
+<h3 id="ClientLongPolling"><a href="#ClientLongPolling" class="headerlink" title="ClientLongPolling"></a>ClientLongPolling</h3><p>我们来分析一下, ClientLongPolling 到底做了什么操作? 或者说我们可以先猜测一下应该会做什么事情? </p>
+<ul>
+<li>这个任务是要阻塞 29.5s 才能执行, 以为立马执行没有任何意思, 毕竟前面已经执行过一次了</li>
+<li>如果在29.5s+ 之内, 数据发生变化, 需要提前通知, 需要有一种监控机制. </li>
+</ul>
+<p>基于这些猜想, 我们来看看他的实现过程. </p>
+<p>从代码粗粒度来看 ，它的实现似乎跟我们的猜想一致, 在run方法中, 通过<code>scheduler.schedule</code> 实现了一个定时任务, 它的delay 时间正好是前面计算的29.5s. 在这个任务中, 会通过<code>MD5Util.compareMd5</code> 来进行计算. </p>
+<p>那另外一个, 当数据发生变化以后, 肯定不能得到 29.5s 之后才通知呀, 那怎么办呢? 我们发现有一个 <code>allsubs</code> 的东西, 它似乎和发布订阅有关系,那是不是有可能当前的<code>clientLongPolling</code> 订阅了数据变化的时间呢? </p>
+<pre class=" language-java"><code class="language-java">  <span class="token annotation punctuation">@Override</span>
+        <span class="token keyword">public</span> <span class="token keyword">void</span> <span class="token function">run</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+            asyncTimeoutFuture <span class="token operator">=</span> scheduler<span class="token punctuation">.</span><span class="token function">schedule</span><span class="token punctuation">(</span><span class="token keyword">new</span> <span class="token class-name">Runnable</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+                <span class="token annotation punctuation">@Override</span>
+                <span class="token keyword">public</span> <span class="token keyword">void</span> <span class="token function">run</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+                    <span class="token keyword">try</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+                        <span class="token function">getRetainIps</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">put</span><span class="token punctuation">(</span>ClientLongPolling<span class="token punctuation">.</span><span class="token keyword">this</span><span class="token punctuation">.</span>ip<span class="token punctuation">,</span> System<span class="token punctuation">.</span><span class="token function">currentTimeMillis</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+                        <span class="token comment" spellcheck="true">/**
+                         * 删除订阅关系
+                         */</span>
+                        allSubs<span class="token punctuation">.</span><span class="token function">remove</span><span class="token punctuation">(</span>ClientLongPolling<span class="token punctuation">.</span><span class="token keyword">this</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+                        <span class="token keyword">if</span> <span class="token punctuation">(</span><span class="token function">isFixedPolling</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+                            LogUtil<span class="token punctuation">.</span>clientLog<span class="token punctuation">.</span><span class="token function">info</span><span class="token punctuation">(</span><span class="token string">"&amp;#123;&amp;#125;|&amp;#123;&amp;#125;|&amp;#123;&amp;#125;|&amp;#123;&amp;#125;|&amp;#123;&amp;#125;|&amp;#123;&amp;#125;"</span><span class="token punctuation">,</span>
+                                <span class="token punctuation">(</span>System<span class="token punctuation">.</span><span class="token function">currentTimeMillis</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">-</span> createTime<span class="token punctuation">)</span><span class="token punctuation">,</span>
+                                <span class="token string">"fix"</span><span class="token punctuation">,</span> RequestUtil<span class="token punctuation">.</span><span class="token function">getRemoteIp</span><span class="token punctuation">(</span><span class="token punctuation">(</span>HttpServletRequest<span class="token punctuation">)</span>asyncContext<span class="token punctuation">.</span><span class="token function">getRequest</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">,</span>
+                                <span class="token string">"polling"</span><span class="token punctuation">,</span>
+                                clientMd5Map<span class="token punctuation">.</span><span class="token function">size</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">,</span> probeRequestSize<span class="token punctuation">)</span><span class="token punctuation">;</span>
+                            List<span class="token operator">&lt;</span>String<span class="token operator">></span> changedGroups <span class="token operator">=</span> MD5Util<span class="token punctuation">.</span><span class="token function">compareMd5</span><span class="token punctuation">(</span>
+                                <span class="token punctuation">(</span>HttpServletRequest<span class="token punctuation">)</span>asyncContext<span class="token punctuation">.</span><span class="token function">getRequest</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">,</span>
+                                <span class="token punctuation">(</span>HttpServletResponse<span class="token punctuation">)</span>asyncContext<span class="token punctuation">.</span><span class="token function">getResponse</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">,</span> clientMd5Map<span class="token punctuation">)</span><span class="token punctuation">;</span>
+                            <span class="token keyword">if</span> <span class="token punctuation">(</span>changedGroups<span class="token punctuation">.</span><span class="token function">size</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">></span> <span class="token number">0</span><span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+                                <span class="token function">sendResponse</span><span class="token punctuation">(</span>changedGroups<span class="token punctuation">)</span><span class="token punctuation">;</span>
+                            <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span> <span class="token keyword">else</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+                                <span class="token function">sendResponse</span><span class="token punctuation">(</span>null<span class="token punctuation">)</span><span class="token punctuation">;</span>
+                            <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+                        <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span> <span class="token keyword">else</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+                            LogUtil<span class="token punctuation">.</span>clientLog<span class="token punctuation">.</span><span class="token function">info</span><span class="token punctuation">(</span><span class="token string">"&amp;#123;&amp;#125;|&amp;#123;&amp;#125;|&amp;#123;&amp;#125;|&amp;#123;&amp;#125;|&amp;#123;&amp;#125;|&amp;#123;&amp;#125;"</span><span class="token punctuation">,</span>
+                                <span class="token punctuation">(</span>System<span class="token punctuation">.</span><span class="token function">currentTimeMillis</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">-</span> createTime<span class="token punctuation">)</span><span class="token punctuation">,</span>
+                                <span class="token string">"timeout"</span><span class="token punctuation">,</span> RequestUtil<span class="token punctuation">.</span><span class="token function">getRemoteIp</span><span class="token punctuation">(</span><span class="token punctuation">(</span>HttpServletRequest<span class="token punctuation">)</span>asyncContext<span class="token punctuation">.</span><span class="token function">getRequest</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">,</span>
+                                <span class="token string">"polling"</span><span class="token punctuation">,</span>
+                                clientMd5Map<span class="token punctuation">.</span><span class="token function">size</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">,</span> probeRequestSize<span class="token punctuation">)</span><span class="token punctuation">;</span>
+                            <span class="token function">sendResponse</span><span class="token punctuation">(</span>null<span class="token punctuation">)</span><span class="token punctuation">;</span>
+                        <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+                    <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span> <span class="token keyword">catch</span> <span class="token punctuation">(</span><span class="token class-name">Throwable</span> t<span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+                        LogUtil<span class="token punctuation">.</span>defaultLog<span class="token punctuation">.</span><span class="token function">error</span><span class="token punctuation">(</span><span class="token string">"long polling error:"</span> <span class="token operator">+</span> t<span class="token punctuation">.</span><span class="token function">getMessage</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">,</span> t<span class="token punctuation">.</span><span class="token function">getCause</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+                    <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+
+                <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+
+            <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span><span class="token punctuation">,</span> timeoutTime<span class="token punctuation">,</span> TimeUnit<span class="token punctuation">.</span>MILLISECONDS<span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+            allSubs<span class="token punctuation">.</span><span class="token function">add</span><span class="token punctuation">(</span><span class="token keyword">this</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+</code></pre>
+<h3 id="allSubs"><a href="#allSubs" class="headerlink" title="allSubs"></a>allSubs</h3><p>allSubs 是一个队列, 队列里面存放了 <code>ClientLongPolling</code> 这个对象, 这个队列似乎和配置变更有某种关联关系. </p>
+<pre class=" language-java"><code class="language-java">    <span class="token comment" spellcheck="true">/**
+     * 长轮询订阅关系
+     */</span>
+    <span class="token keyword">final</span> Queue<span class="token operator">&lt;</span>ClientLongPolling<span class="token operator">></span> allSubs<span class="token punctuation">;</span>    
+</code></pre>
+<p>那这个时候, 我的第一想法是, 先去看一下当前类的类图, 发现 <code>LongPollingService</code> 继承了<code>AbstractEventListener</code>,事件监听. </p>
+<p><img src="http://files.luyanan.com//img/20191212111937.png"></p>
+<h3 id="AbstractEventListener"><a href="#AbstractEventListener" class="headerlink" title="AbstractEventListener"></a>AbstractEventListener</h3><p>这里面有个抽象的onEvent方法, 明显是用来处理事件的方法, 而抽象方法必须由子类实现, 所以意味着<code>LongPollingService</code> 里面肯定实现了onEvent 方法. </p>
+<pre class=" language-java"><code class="language-java">  <span class="token keyword">static</span> <span class="token keyword">public</span> <span class="token keyword">abstract</span> <span class="token keyword">class</span> <span class="token class-name">AbstractEventListener</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+
+        <span class="token keyword">public</span> <span class="token function">AbstractEventListener</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+            <span class="token comment" spellcheck="true">/**
+             * automatic register
+             */</span>
+            EventDispatcher<span class="token punctuation">.</span><span class="token function">addEventListener</span><span class="token punctuation">(</span><span class="token keyword">this</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+
+        <span class="token comment" spellcheck="true">/**
+         * 感兴趣的事件列表
+         *
+         * @return event list
+         */</span>
+        <span class="token keyword">abstract</span> <span class="token keyword">public</span> List<span class="token operator">&lt;</span>Class<span class="token operator">&lt;</span><span class="token operator">?</span> <span class="token keyword">extends</span> <span class="token class-name">Event</span><span class="token operator">>></span> <span class="token function">interest</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+        <span class="token comment" spellcheck="true">/**
+         * 处理事件
+         *
+         * @param event event
+         */</span>
+        <span class="token keyword">abstract</span> <span class="token keyword">public</span> <span class="token keyword">void</span> <span class="token function">onEvent</span><span class="token punctuation">(</span>Event event<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+</code></pre>
+<h3 id="LongPollingService-onEvent"><a href="#LongPollingService-onEvent" class="headerlink" title="LongPollingService.onEvent"></a>LongPollingService.onEvent</h3><p>这个事件的实现方法中: </p>
+<ul>
+<li>判断事件类型是否为<code>LocalDataChangeEvent</code></li>
+<li>通过<code>scheduler.execute</code> 执行 <code>DataChangeTask</code> 这个任务. </li>
+</ul>
+<pre class=" language-java"><code class="language-java">   <span class="token annotation punctuation">@Override</span>
+    <span class="token keyword">public</span> <span class="token keyword">void</span> <span class="token function">onEvent</span><span class="token punctuation">(</span>Event event<span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+        <span class="token keyword">if</span> <span class="token punctuation">(</span><span class="token function">isFixedPolling</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+            <span class="token comment" spellcheck="true">// ignore</span>
+        <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span> <span class="token keyword">else</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+            <span class="token keyword">if</span> <span class="token punctuation">(</span>event <span class="token keyword">instanceof</span> <span class="token class-name">LocalDataChangeEvent</span><span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+                LocalDataChangeEvent evt <span class="token operator">=</span> <span class="token punctuation">(</span>LocalDataChangeEvent<span class="token punctuation">)</span>event<span class="token punctuation">;</span>
+                scheduler<span class="token punctuation">.</span><span class="token function">execute</span><span class="token punctuation">(</span><span class="token keyword">new</span> <span class="token class-name">DataChangeTask</span><span class="token punctuation">(</span>evt<span class="token punctuation">.</span>groupKey<span class="token punctuation">,</span> evt<span class="token punctuation">.</span>isBeta<span class="token punctuation">,</span> evt<span class="token punctuation">.</span>betaIps<span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+        <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+    <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+</code></pre>
+<h3 id="DataChangeTask-run"><a href="#DataChangeTask-run" class="headerlink" title="DataChangeTask.run"></a>DataChangeTask.run</h3><p>从名字来看, 这个是数据变化的任务, 最让人兴奋的是, 这里面有一个循环迭代器, 从 <code>allsubs</code> 里面获取<code>ClientLongPolling</code></p>
+<p>最后通过<code>clientSub.sendResponse</code>把数据返回到客户端, 所以这也就能理解为啥数据变化能够实时触发更新了. </p>
+<pre class=" language-java"><code class="language-java">    <span class="token annotation punctuation">@Override</span>
+        <span class="token keyword">public</span> <span class="token keyword">void</span> <span class="token function">run</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+            <span class="token keyword">try</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+                ConfigService<span class="token punctuation">.</span><span class="token function">getContentBetaMd5</span><span class="token punctuation">(</span>groupKey<span class="token punctuation">)</span><span class="token punctuation">;</span>
+                <span class="token keyword">for</span> <span class="token punctuation">(</span>Iterator<span class="token operator">&lt;</span>ClientLongPolling<span class="token operator">></span> iter <span class="token operator">=</span> allSubs<span class="token punctuation">.</span><span class="token function">iterator</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span> iter<span class="token punctuation">.</span><span class="token function">hasNext</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span> <span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+                    ClientLongPolling clientSub <span class="token operator">=</span> iter<span class="token punctuation">.</span><span class="token function">next</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+                    <span class="token keyword">if</span> <span class="token punctuation">(</span>clientSub<span class="token punctuation">.</span>clientMd5Map<span class="token punctuation">.</span><span class="token function">containsKey</span><span class="token punctuation">(</span>groupKey<span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+                        <span class="token comment" spellcheck="true">// 如果beta发布且不在beta列表直接跳过</span>
+                        <span class="token keyword">if</span> <span class="token punctuation">(</span>isBeta <span class="token operator">&amp;&amp;</span> <span class="token operator">!</span>betaIps<span class="token punctuation">.</span><span class="token function">contains</span><span class="token punctuation">(</span>clientSub<span class="token punctuation">.</span>ip<span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+                            <span class="token keyword">continue</span><span class="token punctuation">;</span>
+                        <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+
+                        <span class="token comment" spellcheck="true">// 如果tag发布且不在tag列表直接跳过</span>
+                        <span class="token keyword">if</span> <span class="token punctuation">(</span>StringUtils<span class="token punctuation">.</span><span class="token function">isNotBlank</span><span class="token punctuation">(</span>tag<span class="token punctuation">)</span> <span class="token operator">&amp;&amp;</span> <span class="token operator">!</span>tag<span class="token punctuation">.</span><span class="token function">equals</span><span class="token punctuation">(</span>clientSub<span class="token punctuation">.</span>tag<span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+                            <span class="token keyword">continue</span><span class="token punctuation">;</span>
+                        <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+
+                        <span class="token function">getRetainIps</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">put</span><span class="token punctuation">(</span>clientSub<span class="token punctuation">.</span>ip<span class="token punctuation">,</span> System<span class="token punctuation">.</span><span class="token function">currentTimeMillis</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+                        iter<span class="token punctuation">.</span><span class="token function">remove</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span> <span class="token comment" spellcheck="true">// 删除订阅关系</span>
+                        LogUtil<span class="token punctuation">.</span>clientLog<span class="token punctuation">.</span><span class="token function">info</span><span class="token punctuation">(</span><span class="token string">"&amp;#123;&amp;#125;|&amp;#123;&amp;#125;|&amp;#123;&amp;#125;|&amp;#123;&amp;#125;|&amp;#123;&amp;#125;|&amp;#123;&amp;#125;|&amp;#123;&amp;#125;"</span><span class="token punctuation">,</span>
+                            <span class="token punctuation">(</span>System<span class="token punctuation">.</span><span class="token function">currentTimeMillis</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">-</span> changeTime<span class="token punctuation">)</span><span class="token punctuation">,</span>
+                            <span class="token string">"in-advance"</span><span class="token punctuation">,</span>
+                            RequestUtil<span class="token punctuation">.</span><span class="token function">getRemoteIp</span><span class="token punctuation">(</span><span class="token punctuation">(</span>HttpServletRequest<span class="token punctuation">)</span>clientSub<span class="token punctuation">.</span>asyncContext<span class="token punctuation">.</span><span class="token function">getRequest</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">,</span>
+                            <span class="token string">"polling"</span><span class="token punctuation">,</span>
+                            clientSub<span class="token punctuation">.</span>clientMd5Map<span class="token punctuation">.</span><span class="token function">size</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">,</span> clientSub<span class="token punctuation">.</span>probeRequestSize<span class="token punctuation">,</span> groupKey<span class="token punctuation">)</span><span class="token punctuation">;</span>
+                        clientSub<span class="token punctuation">.</span><span class="token function">sendResponse</span><span class="token punctuation">(</span>Arrays<span class="token punctuation">.</span><span class="token function">asList</span><span class="token punctuation">(</span>groupKey<span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+                    <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+                <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+            <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span> <span class="token keyword">catch</span> <span class="token punctuation">(</span><span class="token class-name">Throwable</span> t<span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+                LogUtil<span class="token punctuation">.</span>defaultLog<span class="token punctuation">.</span><span class="token function">error</span><span class="token punctuation">(</span><span class="token string">"data change error:"</span> <span class="token operator">+</span> t<span class="token punctuation">.</span><span class="token function">getMessage</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">,</span> t<span class="token punctuation">.</span><span class="token function">getCause</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+        <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+</code></pre>
+<p>那么接下来的一个疑问是, 数据变化之后是如何触发事件的呢? 所以我们定位到数据变化的请求类中, 在 <code>configController</code> 这个类中, 找到POST 请求的方法. </p>
+<p>找到配置变更的位置, 发现数据持久化之后 , 会通过<code>EventDispatcher</code> 进行事件发布, <code>EventDispatcher.fireEvent</code>. 但这个事件似乎不是我们所关心的时间, 原因是这里发布的事件是 <code>ConfigDataChangeEvent</code>,而<code>LongPollingService</code> 最感兴趣的事件是 <code>LocalDataChangeEvent</code>. </p>
+<pre class=" language-java"><code class="language-java">  <span class="token comment" spellcheck="true">/**
+     * 增加或更新非聚合数据。
+     *
+     * @throws NacosException
+     */</span>
+    <span class="token annotation punctuation">@RequestMapping</span><span class="token punctuation">(</span>method <span class="token operator">=</span> RequestMethod<span class="token punctuation">.</span>POST<span class="token punctuation">)</span>
+    <span class="token annotation punctuation">@ResponseBody</span>
+    <span class="token keyword">public</span> Boolean <span class="token function">publishConfig</span><span class="token punctuation">(</span>HttpServletRequest request<span class="token punctuation">,</span> HttpServletResponse response<span class="token punctuation">,</span>
+                                 <span class="token annotation punctuation">@RequestParam</span><span class="token punctuation">(</span><span class="token string">"dataId"</span><span class="token punctuation">)</span> String dataId<span class="token punctuation">,</span> <span class="token annotation punctuation">@RequestParam</span><span class="token punctuation">(</span><span class="token string">"group"</span><span class="token punctuation">)</span> String group<span class="token punctuation">,</span>
+                                 <span class="token annotation punctuation">@RequestParam</span><span class="token punctuation">(</span>value <span class="token operator">=</span> <span class="token string">"tenant"</span><span class="token punctuation">,</span> required <span class="token operator">=</span> <span class="token boolean">false</span><span class="token punctuation">,</span> defaultValue <span class="token operator">=</span> StringUtils<span class="token punctuation">.</span>EMPTY<span class="token punctuation">)</span>
+                                     String tenant<span class="token punctuation">,</span>
+                                 <span class="token annotation punctuation">@RequestParam</span><span class="token punctuation">(</span><span class="token string">"content"</span><span class="token punctuation">)</span> String content<span class="token punctuation">,</span>
+                                 <span class="token annotation punctuation">@RequestParam</span><span class="token punctuation">(</span>value <span class="token operator">=</span> <span class="token string">"tag"</span><span class="token punctuation">,</span> required <span class="token operator">=</span> <span class="token boolean">false</span><span class="token punctuation">)</span> String tag<span class="token punctuation">,</span>
+                                 <span class="token annotation punctuation">@RequestParam</span><span class="token punctuation">(</span>value <span class="token operator">=</span> <span class="token string">"appName"</span><span class="token punctuation">,</span> required <span class="token operator">=</span> <span class="token boolean">false</span><span class="token punctuation">)</span> String appName<span class="token punctuation">,</span>
+                                 <span class="token annotation punctuation">@RequestParam</span><span class="token punctuation">(</span>value <span class="token operator">=</span> <span class="token string">"src_user"</span><span class="token punctuation">,</span> required <span class="token operator">=</span> <span class="token boolean">false</span><span class="token punctuation">)</span> String srcUser<span class="token punctuation">,</span>
+                                 <span class="token annotation punctuation">@RequestParam</span><span class="token punctuation">(</span>value <span class="token operator">=</span> <span class="token string">"config_tags"</span><span class="token punctuation">,</span> required <span class="token operator">=</span> <span class="token boolean">false</span><span class="token punctuation">)</span> String configTags<span class="token punctuation">,</span>
+                                 <span class="token annotation punctuation">@RequestParam</span><span class="token punctuation">(</span>value <span class="token operator">=</span> <span class="token string">"desc"</span><span class="token punctuation">,</span> required <span class="token operator">=</span> <span class="token boolean">false</span><span class="token punctuation">)</span> String desc<span class="token punctuation">,</span>
+                                 <span class="token annotation punctuation">@RequestParam</span><span class="token punctuation">(</span>value <span class="token operator">=</span> <span class="token string">"use"</span><span class="token punctuation">,</span> required <span class="token operator">=</span> <span class="token boolean">false</span><span class="token punctuation">)</span> String use<span class="token punctuation">,</span>
+                                 <span class="token annotation punctuation">@RequestParam</span><span class="token punctuation">(</span>value <span class="token operator">=</span> <span class="token string">"effect"</span><span class="token punctuation">,</span> required <span class="token operator">=</span> <span class="token boolean">false</span><span class="token punctuation">)</span> String effect<span class="token punctuation">,</span>
+                                 <span class="token annotation punctuation">@RequestParam</span><span class="token punctuation">(</span>value <span class="token operator">=</span> <span class="token string">"type"</span><span class="token punctuation">,</span> required <span class="token operator">=</span> <span class="token boolean">false</span><span class="token punctuation">)</span> String type<span class="token punctuation">,</span>
+                                 <span class="token annotation punctuation">@RequestParam</span><span class="token punctuation">(</span>value <span class="token operator">=</span> <span class="token string">"schema"</span><span class="token punctuation">,</span> required <span class="token operator">=</span> <span class="token boolean">false</span><span class="token punctuation">)</span> String schema<span class="token punctuation">)</span>
+        <span class="token keyword">throws</span> NacosException <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+        <span class="token keyword">final</span> String srcIp <span class="token operator">=</span> RequestUtil<span class="token punctuation">.</span><span class="token function">getRemoteIp</span><span class="token punctuation">(</span>request<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        String requestIpApp <span class="token operator">=</span> RequestUtil<span class="token punctuation">.</span><span class="token function">getAppName</span><span class="token punctuation">(</span>request<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        ParamUtils<span class="token punctuation">.</span><span class="token function">checkParam</span><span class="token punctuation">(</span>dataId<span class="token punctuation">,</span> group<span class="token punctuation">,</span> <span class="token string">"datumId"</span><span class="token punctuation">,</span> content<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        ParamUtils<span class="token punctuation">.</span><span class="token function">checkParam</span><span class="token punctuation">(</span>tag<span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+        Map<span class="token operator">&lt;</span>String<span class="token punctuation">,</span> Object<span class="token operator">></span> configAdvanceInfo <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">HashMap</span><span class="token operator">&lt;</span>String<span class="token punctuation">,</span> Object<span class="token operator">></span><span class="token punctuation">(</span><span class="token number">10</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token keyword">if</span> <span class="token punctuation">(</span>configTags <span class="token operator">!=</span> null<span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+            configAdvanceInfo<span class="token punctuation">.</span><span class="token function">put</span><span class="token punctuation">(</span><span class="token string">"config_tags"</span><span class="token punctuation">,</span> configTags<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+        <span class="token keyword">if</span> <span class="token punctuation">(</span>desc <span class="token operator">!=</span> null<span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+            configAdvanceInfo<span class="token punctuation">.</span><span class="token function">put</span><span class="token punctuation">(</span><span class="token string">"desc"</span><span class="token punctuation">,</span> desc<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+        <span class="token keyword">if</span> <span class="token punctuation">(</span>use <span class="token operator">!=</span> null<span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+            configAdvanceInfo<span class="token punctuation">.</span><span class="token function">put</span><span class="token punctuation">(</span><span class="token string">"use"</span><span class="token punctuation">,</span> use<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+        <span class="token keyword">if</span> <span class="token punctuation">(</span>effect <span class="token operator">!=</span> null<span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+            configAdvanceInfo<span class="token punctuation">.</span><span class="token function">put</span><span class="token punctuation">(</span><span class="token string">"effect"</span><span class="token punctuation">,</span> effect<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+        <span class="token keyword">if</span> <span class="token punctuation">(</span>type <span class="token operator">!=</span> null<span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+            configAdvanceInfo<span class="token punctuation">.</span><span class="token function">put</span><span class="token punctuation">(</span><span class="token string">"type"</span><span class="token punctuation">,</span> type<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+        <span class="token keyword">if</span> <span class="token punctuation">(</span>schema <span class="token operator">!=</span> null<span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+            configAdvanceInfo<span class="token punctuation">.</span><span class="token function">put</span><span class="token punctuation">(</span><span class="token string">"schema"</span><span class="token punctuation">,</span> schema<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+        ParamUtils<span class="token punctuation">.</span><span class="token function">checkParam</span><span class="token punctuation">(</span>configAdvanceInfo<span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+        <span class="token keyword">if</span> <span class="token punctuation">(</span>AggrWhitelist<span class="token punctuation">.</span><span class="token function">isAggrDataId</span><span class="token punctuation">(</span>dataId<span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+            log<span class="token punctuation">.</span><span class="token function">warn</span><span class="token punctuation">(</span><span class="token string">"[aggr-conflict] &amp;#123;&amp;#125; attemp to publish single data, &amp;#123;&amp;#125;, &amp;#123;&amp;#125;"</span><span class="token punctuation">,</span>
+                RequestUtil<span class="token punctuation">.</span><span class="token function">getRemoteIp</span><span class="token punctuation">(</span>request<span class="token punctuation">)</span><span class="token punctuation">,</span> dataId<span class="token punctuation">,</span> group<span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <span class="token keyword">throw</span> <span class="token keyword">new</span> <span class="token class-name">NacosException</span><span class="token punctuation">(</span>NacosException<span class="token punctuation">.</span>NO_RIGHT<span class="token punctuation">,</span> <span class="token string">"dataId:"</span> <span class="token operator">+</span> dataId <span class="token operator">+</span> <span class="token string">" is aggr"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+
+        <span class="token keyword">final</span> Timestamp time <span class="token operator">=</span> TimeUtils<span class="token punctuation">.</span><span class="token function">getCurrentTime</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        String betaIps <span class="token operator">=</span> request<span class="token punctuation">.</span><span class="token function">getHeader</span><span class="token punctuation">(</span><span class="token string">"betaIps"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        ConfigInfo configInfo <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">ConfigInfo</span><span class="token punctuation">(</span>dataId<span class="token punctuation">,</span> group<span class="token punctuation">,</span> tenant<span class="token punctuation">,</span> appName<span class="token punctuation">,</span> content<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token keyword">if</span> <span class="token punctuation">(</span>StringUtils<span class="token punctuation">.</span><span class="token function">isBlank</span><span class="token punctuation">(</span>betaIps<span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+            <span class="token keyword">if</span> <span class="token punctuation">(</span>StringUtils<span class="token punctuation">.</span><span class="token function">isBlank</span><span class="token punctuation">(</span>tag<span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+                persistService<span class="token punctuation">.</span><span class="token function">insertOrUpdate</span><span class="token punctuation">(</span>srcIp<span class="token punctuation">,</span> srcUser<span class="token punctuation">,</span> configInfo<span class="token punctuation">,</span> time<span class="token punctuation">,</span> configAdvanceInfo<span class="token punctuation">,</span> <span class="token boolean">false</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+                EventDispatcher<span class="token punctuation">.</span><span class="token function">fireEvent</span><span class="token punctuation">(</span><span class="token keyword">new</span> <span class="token class-name">ConfigDataChangeEvent</span><span class="token punctuation">(</span><span class="token boolean">false</span><span class="token punctuation">,</span> dataId<span class="token punctuation">,</span> group<span class="token punctuation">,</span> tenant<span class="token punctuation">,</span> time<span class="token punctuation">.</span><span class="token function">getTime</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span> <span class="token keyword">else</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+                persistService<span class="token punctuation">.</span><span class="token function">insertOrUpdateTag</span><span class="token punctuation">(</span>configInfo<span class="token punctuation">,</span> tag<span class="token punctuation">,</span> srcIp<span class="token punctuation">,</span> srcUser<span class="token punctuation">,</span> time<span class="token punctuation">,</span> <span class="token boolean">false</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+                EventDispatcher<span class="token punctuation">.</span><span class="token function">fireEvent</span><span class="token punctuation">(</span><span class="token keyword">new</span> <span class="token class-name">ConfigDataChangeEvent</span><span class="token punctuation">(</span><span class="token boolean">false</span><span class="token punctuation">,</span> dataId<span class="token punctuation">,</span> group<span class="token punctuation">,</span> tenant<span class="token punctuation">,</span> tag<span class="token punctuation">,</span> time<span class="token punctuation">.</span><span class="token function">getTime</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+        <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span> <span class="token keyword">else</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span> <span class="token comment" spellcheck="true">// beta publish</span>
+            persistService<span class="token punctuation">.</span><span class="token function">insertOrUpdateBeta</span><span class="token punctuation">(</span>configInfo<span class="token punctuation">,</span> betaIps<span class="token punctuation">,</span> srcIp<span class="token punctuation">,</span> srcUser<span class="token punctuation">,</span> time<span class="token punctuation">,</span> <span class="token boolean">false</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+            EventDispatcher<span class="token punctuation">.</span><span class="token function">fireEvent</span><span class="token punctuation">(</span><span class="token keyword">new</span> <span class="token class-name">ConfigDataChangeEvent</span><span class="token punctuation">(</span><span class="token boolean">true</span><span class="token punctuation">,</span> dataId<span class="token punctuation">,</span> group<span class="token punctuation">,</span> tenant<span class="token punctuation">,</span> time<span class="token punctuation">.</span><span class="token function">getTime</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+        ConfigTraceService<span class="token punctuation">.</span><span class="token function">logPersistenceEvent</span><span class="token punctuation">(</span>dataId<span class="token punctuation">,</span> group<span class="token punctuation">,</span> tenant<span class="token punctuation">,</span> requestIpApp<span class="token punctuation">,</span> time<span class="token punctuation">.</span><span class="token function">getTime</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">,</span>
+            LOCAL_IP<span class="token punctuation">,</span> ConfigTraceService<span class="token punctuation">.</span>PERSISTENCE_EVENT_PUB<span class="token punctuation">,</span> content<span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+        <span class="token keyword">return</span> <span class="token boolean">true</span><span class="token punctuation">;</span>
+    <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+</code></pre>
+<p>后来我发现, 在 Nacos中有一个 <code>DumpService</code>, 它会定时把变更后的数据 dump 到磁盘上, <code>DumpService</code> 在spring 启动后, 会调用init 方法 启动几个 dump任务, 然后在任务结束后, 会触发一个 <code>LocalDataChangeEvent</code> 的事件. </p>
+<pre class=" language-java"><code class="language-java"> <span class="token annotation punctuation">@PostConstruct</span>
+    <span class="token keyword">public</span> <span class="token keyword">void</span> <span class="token function">init</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+        LogUtil<span class="token punctuation">.</span>defaultLog<span class="token punctuation">.</span><span class="token function">warn</span><span class="token punctuation">(</span><span class="token string">"DumpService start"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        DumpProcessor processor <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">DumpProcessor</span><span class="token punctuation">(</span><span class="token keyword">this</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        DumpAllProcessor dumpAllProcessor <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">DumpAllProcessor</span><span class="token punctuation">(</span><span class="token keyword">this</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        DumpAllBetaProcessor dumpAllBetaProcessor <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">DumpAllBetaProcessor</span><span class="token punctuation">(</span><span class="token keyword">this</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        DumpAllTagProcessor dumpAllTagProcessor <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">DumpAllTagProcessor</span><span class="token punctuation">(</span><span class="token keyword">this</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+        dumpTaskMgr <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">TaskManager</span><span class="token punctuation">(</span>
+            <span class="token string">"com.alibaba.nacos.server.DumpTaskManager"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        dumpTaskMgr<span class="token punctuation">.</span><span class="token function">setDefaultTaskProcessor</span><span class="token punctuation">(</span>processor<span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+        dumpAllTaskMgr <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">TaskManager</span><span class="token punctuation">(</span>
+            <span class="token string">"com.alibaba.nacos.server.DumpAllTaskManager"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        dumpAllTaskMgr<span class="token punctuation">.</span><span class="token function">setDefaultTaskProcessor</span><span class="token punctuation">(</span>dumpAllProcessor<span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+        Runnable dumpAll <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">Runnable</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+            <span class="token annotation punctuation">@Override</span>
+            <span class="token keyword">public</span> <span class="token keyword">void</span> <span class="token function">run</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+                dumpAllTaskMgr<span class="token punctuation">.</span><span class="token function">addTask</span><span class="token punctuation">(</span>DumpAllTask<span class="token punctuation">.</span>TASK_ID<span class="token punctuation">,</span> <span class="token keyword">new</span> <span class="token class-name">DumpAllTask</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+        <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span><span class="token punctuation">;</span>
+
+        Runnable dumpAllBeta <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">Runnable</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+            <span class="token annotation punctuation">@Override</span>
+            <span class="token keyword">public</span> <span class="token keyword">void</span> <span class="token function">run</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+                dumpAllTaskMgr<span class="token punctuation">.</span><span class="token function">addTask</span><span class="token punctuation">(</span>DumpAllBetaTask<span class="token punctuation">.</span>TASK_ID<span class="token punctuation">,</span> <span class="token keyword">new</span> <span class="token class-name">DumpAllBetaTask</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+        <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span><span class="token punctuation">;</span>
+
+        Runnable clearConfigHistory <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">Runnable</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+            <span class="token annotation punctuation">@Override</span>
+            <span class="token keyword">public</span> <span class="token keyword">void</span> <span class="token function">run</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+                log<span class="token punctuation">.</span><span class="token function">warn</span><span class="token punctuation">(</span><span class="token string">"clearConfigHistory start"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+                <span class="token keyword">if</span> <span class="token punctuation">(</span>ServerListService<span class="token punctuation">.</span><span class="token function">isFirstIp</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+                    <span class="token keyword">try</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+                        Timestamp startTime <span class="token operator">=</span> <span class="token function">getBeforeStamp</span><span class="token punctuation">(</span>TimeUtils<span class="token punctuation">.</span><span class="token function">getCurrentTime</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">,</span> <span class="token number">24</span> <span class="token operator">*</span> <span class="token function">getRetentionDays</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+                        <span class="token keyword">int</span> totalCount <span class="token operator">=</span> persistService<span class="token punctuation">.</span><span class="token function">findConfigHistoryCountByTime</span><span class="token punctuation">(</span>startTime<span class="token punctuation">)</span><span class="token punctuation">;</span>
+                        <span class="token keyword">if</span> <span class="token punctuation">(</span>totalCount <span class="token operator">></span> <span class="token number">0</span><span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+                            <span class="token keyword">int</span> pageSize <span class="token operator">=</span> <span class="token number">1000</span><span class="token punctuation">;</span>
+                            <span class="token keyword">int</span> removeTime <span class="token operator">=</span> <span class="token punctuation">(</span>totalCount <span class="token operator">+</span> pageSize <span class="token operator">-</span> <span class="token number">1</span><span class="token punctuation">)</span> <span class="token operator">/</span> pageSize<span class="token punctuation">;</span>
+                            log<span class="token punctuation">.</span><span class="token function">warn</span><span class="token punctuation">(</span><span class="token string">"clearConfigHistory, getBeforeStamp:&amp;#123;&amp;#125;, totalCount:&amp;#123;&amp;#125;, pageSize:&amp;#123;&amp;#125;, removeTime:&amp;#123;&amp;#125;"</span><span class="token punctuation">,</span>
+                                <span class="token keyword">new</span> <span class="token class-name">Object</span><span class="token punctuation">[</span><span class="token punctuation">]</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>startTime<span class="token punctuation">,</span> totalCount<span class="token punctuation">,</span> pageSize<span class="token punctuation">,</span> removeTime<span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+                            <span class="token keyword">while</span> <span class="token punctuation">(</span>removeTime <span class="token operator">></span> <span class="token number">0</span><span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+                                <span class="token comment" spellcheck="true">// 分页删除，以免批量太大报错</span>
+                                persistService<span class="token punctuation">.</span><span class="token function">removeConfigHistory</span><span class="token punctuation">(</span>startTime<span class="token punctuation">,</span> pageSize<span class="token punctuation">)</span><span class="token punctuation">;</span>
+                                removeTime<span class="token operator">--</span><span class="token punctuation">;</span>
+                            <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+                        <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+                    <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span> <span class="token keyword">catch</span> <span class="token punctuation">(</span><span class="token class-name">Throwable</span> e<span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+                        log<span class="token punctuation">.</span><span class="token function">error</span><span class="token punctuation">(</span><span class="token string">"clearConfigHistory error"</span><span class="token punctuation">,</span> e<span class="token punctuation">)</span><span class="token punctuation">;</span>
+                    <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+                <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+            <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+        <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span><span class="token punctuation">;</span>
+
+        <span class="token keyword">try</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+            <span class="token function">dumpConfigInfo</span><span class="token punctuation">(</span>dumpAllProcessor<span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+            <span class="token comment" spellcheck="true">// 更新beta缓存</span>
+            LogUtil<span class="token punctuation">.</span>defaultLog<span class="token punctuation">.</span><span class="token function">info</span><span class="token punctuation">(</span><span class="token string">"start clear all config-info-beta."</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+            DiskUtil<span class="token punctuation">.</span><span class="token function">clearAllBeta</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <span class="token keyword">if</span> <span class="token punctuation">(</span>persistService<span class="token punctuation">.</span><span class="token function">isExistTable</span><span class="token punctuation">(</span>BETA_TABLE_NAME<span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+                dumpAllBetaProcessor<span class="token punctuation">.</span><span class="token function">process</span><span class="token punctuation">(</span>DumpAllBetaTask<span class="token punctuation">.</span>TASK_ID<span class="token punctuation">,</span> <span class="token keyword">new</span> <span class="token class-name">DumpAllBetaTask</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+            <span class="token comment" spellcheck="true">// 更新Tag缓存</span>
+            LogUtil<span class="token punctuation">.</span>defaultLog<span class="token punctuation">.</span><span class="token function">info</span><span class="token punctuation">(</span><span class="token string">"start clear all config-info-tag."</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+            DiskUtil<span class="token punctuation">.</span><span class="token function">clearAllTag</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <span class="token keyword">if</span> <span class="token punctuation">(</span>persistService<span class="token punctuation">.</span><span class="token function">isExistTable</span><span class="token punctuation">(</span>TAG_TABLE_NAME<span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+                dumpAllTagProcessor<span class="token punctuation">.</span><span class="token function">process</span><span class="token punctuation">(</span>DumpAllTagTask<span class="token punctuation">.</span>TASK_ID<span class="token punctuation">,</span> <span class="token keyword">new</span> <span class="token class-name">DumpAllTagTask</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+
+            <span class="token comment" spellcheck="true">// add to dump aggr</span>
+            List<span class="token operator">&lt;</span>ConfigInfoChanged<span class="token operator">></span> configList <span class="token operator">=</span> persistService<span class="token punctuation">.</span><span class="token function">findAllAggrGroup</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <span class="token keyword">if</span> <span class="token punctuation">(</span>configList <span class="token operator">!=</span> null <span class="token operator">&amp;&amp;</span> <span class="token operator">!</span>configList<span class="token punctuation">.</span><span class="token function">isEmpty</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+                total <span class="token operator">=</span> configList<span class="token punctuation">.</span><span class="token function">size</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+                List<span class="token operator">&lt;</span>List<span class="token operator">&lt;</span>ConfigInfoChanged<span class="token operator">>></span> splitList <span class="token operator">=</span> <span class="token function">splitList</span><span class="token punctuation">(</span>configList<span class="token punctuation">,</span> INIT_THREAD_COUNT<span class="token punctuation">)</span><span class="token punctuation">;</span>
+                <span class="token keyword">for</span> <span class="token punctuation">(</span>List<span class="token operator">&lt;</span>ConfigInfoChanged<span class="token operator">></span> list <span class="token operator">:</span> splitList<span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+                    MergeAllDataWorker work <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">MergeAllDataWorker</span><span class="token punctuation">(</span>list<span class="token punctuation">)</span><span class="token punctuation">;</span>
+                    work<span class="token punctuation">.</span><span class="token function">start</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+                <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+                log<span class="token punctuation">.</span><span class="token function">info</span><span class="token punctuation">(</span><span class="token string">"server start, schedule merge end."</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+        <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span> <span class="token keyword">catch</span> <span class="token punctuation">(</span><span class="token class-name">Exception</span> e<span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+            LogUtil<span class="token punctuation">.</span>fatalLog<span class="token punctuation">.</span><span class="token function">error</span><span class="token punctuation">(</span>
+                <span class="token string">"Nacos Server did not start because dumpservice bean construction failure :\n"</span> <span class="token operator">+</span> e<span class="token punctuation">.</span><span class="token function">getMessage</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">,</span>
+                e<span class="token punctuation">.</span><span class="token function">getCause</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <span class="token keyword">throw</span> <span class="token keyword">new</span> <span class="token class-name">RuntimeException</span><span class="token punctuation">(</span>
+                <span class="token string">"Nacos Server did not start because dumpservice bean construction failure :\n"</span> <span class="token operator">+</span> e<span class="token punctuation">.</span><span class="token function">getMessage</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+        <span class="token keyword">if</span> <span class="token punctuation">(</span><span class="token operator">!</span>STANDALONE_MODE<span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+            Runnable heartbeat <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">Runnable</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+                <span class="token annotation punctuation">@Override</span>
+                <span class="token keyword">public</span> <span class="token keyword">void</span> <span class="token function">run</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+                    String heartBeatTime <span class="token operator">=</span> TimeUtils<span class="token punctuation">.</span><span class="token function">getCurrentTime</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">toString</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+                    <span class="token comment" spellcheck="true">// write disk</span>
+                    <span class="token keyword">try</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+                        DiskUtil<span class="token punctuation">.</span><span class="token function">saveHeartBeatToDisk</span><span class="token punctuation">(</span>heartBeatTime<span class="token punctuation">)</span><span class="token punctuation">;</span>
+                    <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span> <span class="token keyword">catch</span> <span class="token punctuation">(</span><span class="token class-name">IOException</span> e<span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+                        LogUtil<span class="token punctuation">.</span>fatalLog<span class="token punctuation">.</span><span class="token function">error</span><span class="token punctuation">(</span><span class="token string">"save heartbeat fail"</span> <span class="token operator">+</span> e<span class="token punctuation">.</span><span class="token function">getMessage</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+                    <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+                <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+            <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span><span class="token punctuation">;</span>
+
+            TimerTaskService<span class="token punctuation">.</span><span class="token function">scheduleWithFixedDelay</span><span class="token punctuation">(</span>heartbeat<span class="token punctuation">,</span> <span class="token number">0</span><span class="token punctuation">,</span> <span class="token number">10</span><span class="token punctuation">,</span> TimeUnit<span class="token punctuation">.</span>SECONDS<span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+            <span class="token keyword">long</span> initialDelay <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">Random</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">nextInt</span><span class="token punctuation">(</span>INITIAL_DELAY_IN_MINUTE<span class="token punctuation">)</span> <span class="token operator">+</span> <span class="token number">10</span><span class="token punctuation">;</span>
+            LogUtil<span class="token punctuation">.</span>defaultLog<span class="token punctuation">.</span><span class="token function">warn</span><span class="token punctuation">(</span><span class="token string">"initialDelay:&amp;#123;&amp;#125;"</span><span class="token punctuation">,</span> initialDelay<span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+            TimerTaskService<span class="token punctuation">.</span><span class="token function">scheduleWithFixedDelay</span><span class="token punctuation">(</span>dumpAll<span class="token punctuation">,</span> initialDelay<span class="token punctuation">,</span> DUMP_ALL_INTERVAL_IN_MINUTE<span class="token punctuation">,</span>
+                TimeUnit<span class="token punctuation">.</span>MINUTES<span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+            TimerTaskService<span class="token punctuation">.</span><span class="token function">scheduleWithFixedDelay</span><span class="token punctuation">(</span>dumpAllBeta<span class="token punctuation">,</span> initialDelay<span class="token punctuation">,</span> DUMP_ALL_INTERVAL_IN_MINUTE<span class="token punctuation">,</span>
+                TimeUnit<span class="token punctuation">.</span>MINUTES<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+
+        TimerTaskService<span class="token punctuation">.</span><span class="token function">scheduleWithFixedDelay</span><span class="token punctuation">(</span>clearConfigHistory<span class="token punctuation">,</span> <span class="token number">10</span><span class="token punctuation">,</span> <span class="token number">10</span><span class="token punctuation">,</span> TimeUnit<span class="token punctuation">.</span>MINUTES<span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+    <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+</code></pre>
+<h2 id="简单总结"><a href="#简单总结" class="headerlink" title="简单总结"></a>简单总结</h2><p>简单总结一i下刚才分析的过程: </p>
+<ul>
+<li><p>客户端发起长轮询请求. </p>
+</li>
+<li><p>服务端收到i请求后, 先比较服务端缓存中的数据是否相同,如果不同, 则直接返回. </p>
+</li>
+<li><p>如果相同, 则通过 <code>schedule</code> 延迟29.5s 之后再执行比较. </p>
+</li>
+<li><p>为了保证当服务端在 29.5s之内数据发生变化能够及时的通知给客户端, 服务端采用事件订阅的方式来监听服务端本地数据变化的事件, 一旦收到事件, 则触发<code>ClientLongPolling</code> , 把结果写回到客户端, 就完成了一次数据的推送. </p>
+</li>
+<li><p>如果 <code>ClientLongPolling</code> 任务完成了数据的推送之后, ClientLongPolling 中的调度任务又开始执行了怎么办？</p>
+<p>  很见到那, 只要在进行推送操作之前, 先将原来等待执行的调度任务取消就行了,这样就方式了推送操作写完响应数据之后， 调用任务又去写响应数据, 这时肯定报错. 所以, 在<code>ClientLongPolling</code> 方法中, 最开始的一个步骤就是删除订阅事件. </p>
+</li>
+</ul>
+<p>所以总的来说, Nacos 采用推+拉的方式, 来解决最开始关于长轮询事件间隔的问题, 当然, 30s 这个时间是可以设置的, 之所以设置成30s, 应该是一个经验值, </p>
+<h1 id="集群选举问题"><a href="#集群选举问题" class="headerlink" title="集群选举问题"></a>集群选举问题</h1><p>Nacos 支持集群模式,很显然, . </p>
+<p>而一旦涉及到集群, 就涉及到主从, 那么nacos 是一种什么样的机制来实现集群的呢? </p>
+<p>nacos 的集群模式类似于zookeeper, 它分为leader 角色和 follower角色, 那么从这个角色的名字可以看出, 这个集群存在选举的机制, 因为如果自己不具备选举功能, 角色的命名可能就是master/slave了. </p>
+<h2 id="选举算法"><a href="#选举算法" class="headerlink" title="选举算法"></a>选举算法</h2><p>nacos集群采用<code>raft</code> 算法来实现, 它是相对于zookeeper 的选举算法来说比较简单的一种. </p>
+<p>选举算法的核心在 <code>RaftCore</code>中, 包括数据的处理和数据的同步. </p>
+<p>在Raft 算法中, 节点有三种角色: </p>
+<ul>
+<li>Leader : 负责接受客户端的请求. </li>
+<li>Candidate: 用于选举Leader 的一种角色</li>
+<li>Follower: 负责响应来自leader  或者Candidate 的请求. </li>
+</ul>
+<p>选举分为两个节点:</p>
+<ul>
+<li>服务启动的时候</li>
+<li>leader 挂了的时候</li>
+</ul>
+<p>所有节点启动的时候, 都是 folower 状态, 如果在一段时间内如果没有收到leader 的心跳(可能是没有leader 或者leader 挂了), 那么folower 会变成Candidate . 然后发起选举, 在选举之前, 会增加term, 这个term 和zookeeper 中的epoch 的道理是一样的. </p>
+<ul>
+<li>folower 会投自己一票, 并且给其他节点发送票据<code>vote</code>, 等待其他节点回复. </li>
+<li>在这个过程中, 可能出现几种情况: <ul>
+<li>收到过半的票数通过, 则成为leader</li>
+<li>被告知其他节点已经成为了leader, 则自己切换为 folower</li>
+<li>一段时间内没有收到过半的投票, 则重新发起选举. </li>
+</ul>
+</li>
+<li>约束条件在任一term中, 单个节点最多只能投一票. </li>
+</ul>
+<p>选举的几种情况: </p>
+<ul>
+<li>第一种情况:  赢得选举后, leader 会给所有节点发送消息, 避免其他节点触发新的选举. </li>
+<li>第二种情况: 比如有三个节点A、B、C。 A、B 同时发起选举, 而A的选举消息先达到C,C给A 投了一票, 当B 的消息达到C时, 已经不能满足上面提到的第一个约束, 而C不会给B投票, 而A和B显然都不会给对方投票. A 胜出之后, 会给B、C 发送心跳消息, 节点B发现节点A的term 不低于自己的term, 知道已经有了leader, 于是转换为folower. </li>
+<li>第三种情况: 没有任何节点获得投票, 可能是平票的情况. 加入总共有四个节点, (A/B/C/D). NodeC、NodeD 同时成为了 candidate.但NodeA  投了NodeD 一票,NodeB 投了NodeC 一票. 这就出现了凭票 spilt vote 的情况. 这个时候大家都在等呀等呀. 知道超时后重新发起选举, 如果出现平票的情况, 那么就延长了系统不可用的时间, 于是raft 就引入了<code>randomized election timeouts</code>  来尽量避免平票的情况. </li>
+</ul>
+<h2 id="数据的处理"><a href="#数据的处理" class="headerlink" title="数据的处理"></a>数据的处理</h2><p>对于事务操作, 请求会转发给leader. </p>
+<p>非事务操作, 可以任意一个节点来处理. </p>
+<p>下面这段代码摘自 RaftCore,.在发布内容的时候, 做了两个事情. </p>
+<ul>
+<li>如果当前的节点不是leader, 则转发给leader 节点处理. </li>
+<li>如果是, 则向所有节点发送 onPublish</li>
+</ul>
+<pre class=" language-java"><code class="language-java"> <span class="token keyword">public</span> <span class="token keyword">void</span> <span class="token function">signalPublish</span><span class="token punctuation">(</span>String key<span class="token punctuation">,</span> Record value<span class="token punctuation">)</span> <span class="token keyword">throws</span> Exception <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+
+        <span class="token keyword">if</span> <span class="token punctuation">(</span><span class="token operator">!</span><span class="token function">isLeader</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+            JSONObject params <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">JSONObject</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+            params<span class="token punctuation">.</span><span class="token function">put</span><span class="token punctuation">(</span><span class="token string">"key"</span><span class="token punctuation">,</span> key<span class="token punctuation">)</span><span class="token punctuation">;</span>
+            params<span class="token punctuation">.</span><span class="token function">put</span><span class="token punctuation">(</span><span class="token string">"value"</span><span class="token punctuation">,</span> value<span class="token punctuation">)</span><span class="token punctuation">;</span>
+            Map<span class="token operator">&lt;</span>String<span class="token punctuation">,</span> String<span class="token operator">></span> parameters <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">HashMap</span><span class="token operator">&lt;</span><span class="token operator">></span><span class="token punctuation">(</span><span class="token number">1</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+            parameters<span class="token punctuation">.</span><span class="token function">put</span><span class="token punctuation">(</span><span class="token string">"key"</span><span class="token punctuation">,</span> key<span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+            raftProxy<span class="token punctuation">.</span><span class="token function">proxyPostLarge</span><span class="token punctuation">(</span><span class="token function">getLeader</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">.</span>ip<span class="token punctuation">,</span> API_PUB<span class="token punctuation">,</span> params<span class="token punctuation">.</span><span class="token function">toJSONString</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">,</span> parameters<span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <span class="token keyword">return</span><span class="token punctuation">;</span>
+        <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+
+        <span class="token keyword">try</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+            OPERATE_LOCK<span class="token punctuation">.</span><span class="token function">lock</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <span class="token keyword">long</span> start <span class="token operator">=</span> System<span class="token punctuation">.</span><span class="token function">currentTimeMillis</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <span class="token keyword">final</span> Datum datum <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">Datum</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+            datum<span class="token punctuation">.</span>key <span class="token operator">=</span> key<span class="token punctuation">;</span>
+            datum<span class="token punctuation">.</span>value <span class="token operator">=</span> value<span class="token punctuation">;</span>
+            <span class="token keyword">if</span> <span class="token punctuation">(</span><span class="token function">getDatum</span><span class="token punctuation">(</span>key<span class="token punctuation">)</span> <span class="token operator">==</span> null<span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+                datum<span class="token punctuation">.</span>timestamp<span class="token punctuation">.</span><span class="token function">set</span><span class="token punctuation">(</span>1L<span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span> <span class="token keyword">else</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+                datum<span class="token punctuation">.</span>timestamp<span class="token punctuation">.</span><span class="token function">set</span><span class="token punctuation">(</span><span class="token function">getDatum</span><span class="token punctuation">(</span>key<span class="token punctuation">)</span><span class="token punctuation">.</span>timestamp<span class="token punctuation">.</span><span class="token function">incrementAndGet</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+
+            JSONObject json <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">JSONObject</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+            json<span class="token punctuation">.</span><span class="token function">put</span><span class="token punctuation">(</span><span class="token string">"datum"</span><span class="token punctuation">,</span> datum<span class="token punctuation">)</span><span class="token punctuation">;</span>
+            json<span class="token punctuation">.</span><span class="token function">put</span><span class="token punctuation">(</span><span class="token string">"source"</span><span class="token punctuation">,</span> peers<span class="token punctuation">.</span><span class="token function">local</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+            <span class="token function">onPublish</span><span class="token punctuation">(</span>datum<span class="token punctuation">,</span> peers<span class="token punctuation">.</span><span class="token function">local</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+            <span class="token keyword">final</span> String content <span class="token operator">=</span> JSON<span class="token punctuation">.</span><span class="token function">toJSONString</span><span class="token punctuation">(</span>json<span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+            <span class="token keyword">final</span> CountDownLatch latch <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">CountDownLatch</span><span class="token punctuation">(</span>peers<span class="token punctuation">.</span><span class="token function">majorityCount</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <span class="token keyword">for</span> <span class="token punctuation">(</span><span class="token keyword">final</span> String server <span class="token operator">:</span> peers<span class="token punctuation">.</span><span class="token function">allServersIncludeMyself</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+                <span class="token keyword">if</span> <span class="token punctuation">(</span><span class="token function">isLeader</span><span class="token punctuation">(</span>server<span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+                    latch<span class="token punctuation">.</span><span class="token function">countDown</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+                    <span class="token keyword">continue</span><span class="token punctuation">;</span>
+                <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+                <span class="token keyword">final</span> String url <span class="token operator">=</span> <span class="token function">buildURL</span><span class="token punctuation">(</span>server<span class="token punctuation">,</span> API_ON_PUB<span class="token punctuation">)</span><span class="token punctuation">;</span>
+                HttpClient<span class="token punctuation">.</span><span class="token function">asyncHttpPostLarge</span><span class="token punctuation">(</span>url<span class="token punctuation">,</span> Arrays<span class="token punctuation">.</span><span class="token function">asList</span><span class="token punctuation">(</span><span class="token string">"key="</span> <span class="token operator">+</span> key<span class="token punctuation">)</span><span class="token punctuation">,</span> content<span class="token punctuation">,</span> <span class="token keyword">new</span> <span class="token class-name">AsyncCompletionHandler</span><span class="token operator">&lt;</span>Integer<span class="token operator">></span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+                    <span class="token annotation punctuation">@Override</span>
+                    <span class="token keyword">public</span> Integer <span class="token function">onCompleted</span><span class="token punctuation">(</span>Response response<span class="token punctuation">)</span> <span class="token keyword">throws</span> Exception <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+                        <span class="token keyword">if</span> <span class="token punctuation">(</span>response<span class="token punctuation">.</span><span class="token function">getStatusCode</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">!=</span> HttpURLConnection<span class="token punctuation">.</span>HTTP_OK<span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+                            Loggers<span class="token punctuation">.</span>RAFT<span class="token punctuation">.</span><span class="token function">warn</span><span class="token punctuation">(</span><span class="token string">"[RAFT] failed to publish data to peer, datumId=&amp;#123;&amp;#125;, peer=&amp;#123;&amp;#125;, http code=&amp;#123;&amp;#125;"</span><span class="token punctuation">,</span>
+                                datum<span class="token punctuation">.</span>key<span class="token punctuation">,</span> server<span class="token punctuation">,</span> response<span class="token punctuation">.</span><span class="token function">getStatusCode</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+                            <span class="token keyword">return</span> <span class="token number">1</span><span class="token punctuation">;</span>
+                        <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+                        latch<span class="token punctuation">.</span><span class="token function">countDown</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+                        <span class="token keyword">return</span> <span class="token number">0</span><span class="token punctuation">;</span>
+                    <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+
+                    <span class="token annotation punctuation">@Override</span>
+                    <span class="token keyword">public</span> STATE <span class="token function">onContentWriteCompleted</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+                        <span class="token keyword">return</span> STATE<span class="token punctuation">.</span>CONTINUE<span class="token punctuation">;</span>
+                    <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+                <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+            <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+
+            <span class="token keyword">if</span> <span class="token punctuation">(</span><span class="token operator">!</span>latch<span class="token punctuation">.</span><span class="token function">await</span><span class="token punctuation">(</span>UtilsAndCommons<span class="token punctuation">.</span>RAFT_PUBLISH_TIMEOUT<span class="token punctuation">,</span> TimeUnit<span class="token punctuation">.</span>MILLISECONDS<span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+                <span class="token comment" spellcheck="true">// only majority servers return success can we consider this update success</span>
+                Loggers<span class="token punctuation">.</span>RAFT<span class="token punctuation">.</span><span class="token function">error</span><span class="token punctuation">(</span><span class="token string">"data publish failed, caused failed to notify majority, key=&amp;#123;&amp;#125;"</span><span class="token punctuation">,</span> key<span class="token punctuation">)</span><span class="token punctuation">;</span>
+                <span class="token keyword">throw</span> <span class="token keyword">new</span> <span class="token class-name">IllegalStateException</span><span class="token punctuation">(</span><span class="token string">"data publish failed, caused failed to notify majority, key="</span> <span class="token operator">+</span> key<span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+
+            <span class="token keyword">long</span> end <span class="token operator">=</span> System<span class="token punctuation">.</span><span class="token function">currentTimeMillis</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+            Loggers<span class="token punctuation">.</span>RAFT<span class="token punctuation">.</span><span class="token function">info</span><span class="token punctuation">(</span><span class="token string">"signalPublish cost &amp;#123;&amp;#125; ms, key: &amp;#123;&amp;#125;"</span><span class="token punctuation">,</span> <span class="token punctuation">(</span>end <span class="token operator">-</span> start<span class="token punctuation">)</span><span class="token punctuation">,</span> key<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span> <span class="token keyword">finally</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+            OPERATE_LOCK<span class="token punctuation">.</span><span class="token function">unlock</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+    <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+</code></pre>
+
+                
+            </div>
+            <hr/>
+
+            
+
+    <div class="reprint" id="reprint-statement">
+        
+            <div class="reprint__author">
+                <span class="reprint-meta" style="font-weight: bold;">
+                    <i class="fas fa-user">
+                        文章作者:
+                    </i>
+                </span>
+                <span class="reprint-info">
+                    <a href="/about" rel="external nofollow noreferrer">luyanan</a>
+                </span>
+            </div>
+            <div class="reprint__type">
+                <span class="reprint-meta" style="font-weight: bold;">
+                    <i class="fas fa-link">
+                        文章链接:
+                    </i>
+                </span>
+                <span class="reprint-info">
+                    <a href="https://rainsoil.github.io/2022/01/04/wei-fu-wu/nacos/nacos-chang-lun-xun-he-ji-qun-fen-xi/">https://rainsoil.github.io/2022/01/04/wei-fu-wu/nacos/nacos-chang-lun-xun-he-ji-qun-fen-xi/</a>
+                </span>
+            </div>
+            <div class="reprint__notice">
+                <span class="reprint-meta" style="font-weight: bold;">
+                    <i class="fas fa-copyright">
+                        版权声明:
+                    </i>
+                </span>
+                <span class="reprint-info">
+                    本博客所有文章除特別声明外，均采用
+                    <a href="https://creativecommons.org/licenses/by/4.0/deed.zh" rel="external nofollow noreferrer" target="_blank">CC BY 4.0</a>
+                    许可协议。转载请注明来源
+                    <a href="/about" target="_blank">luyanan</a>
+                    !
+                </span>
+            </div>
+        
+    </div>
+
+    <script async defer>
+      document.addEventListener("copy", function (e) {
+        let toastHTML = '<span>复制成功，请遵循本文的转载规则</span><button class="btn-flat toast-action" onclick="navToReprintStatement()" style="font-size: smaller">查看</a>';
+        M.toast({html: toastHTML})
+      });
+
+      function navToReprintStatement() {
+        $("html, body").animate({scrollTop: $("#reprint-statement").offset().top - 80}, 800);
+      }
+    </script>
+
+
+
+            <div class="tag_share" style="display: block;">
+                <div class="post-meta__tag-list" style="display: inline-block;">
+                    
+                        <div class="article-tag">
+                            <span class="chip bg-color">无标签</span>
+                        </div>
+                    
+                </div>
+                <div class="post_share" style="zoom: 80%; width: fit-content; display: inline-block; float: right; margin: -0.15rem 0;">
+                    <link rel="stylesheet" type="text/css" href="/libs/share/css/share.min.css">
+<div id="article-share">
+
+    
+    <div class="social-share" data-sites="twitter,facebook,google,qq,qzone,wechat,weibo,douban,linkedin" data-wechat-qrcode-helper="<p>微信扫一扫即可分享！</p>"></div>
+    <script src="/libs/share/js/social-share.min.js"></script>
+    
+
+    
+
+</div>
+
+                </div>
+            </div>
+            
+        </div>
+    </div>
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+<article id="prenext-posts" class="prev-next articles">
+    <div class="row article-row">
+        
+        <div class="article col s12 m6" data-aos="fade-up">
+            <div class="article-badge left-badge text-color">
+                <i class="fas fa-chevron-left"></i>&nbsp;上一篇</div>
+            <div class="card">
+                <a href="/2022/01/04/wei-fu-wu/rabbitmq/rabbitmq-gong-zuo-mo-xing-yu-java-bian-cheng-1/">
+                    <div class="card-image">
+                        
+                        
+                        <img src="/medias/featureimages/10.jpg" class="responsive-img" alt="RabbitMQ工作模型与java编程(1)">
+                        
+                        <span class="card-title">RabbitMQ工作模型与java编程(1)</span>
+                    </div>
+                </a>
+                <div class="card-content article-content">
+                    <div class="summary block-with-text">
+                        
+                            
+                        
+                    </div>
+                    <div class="publish-info">
+                        <span class="publish-date">
+                            <i class="far fa-clock fa-fw icon-date"></i>2022-01-04
+                        </span>
+                        <span class="publish-author">
+                            
+                            <i class="fas fa-bookmark fa-fw icon-category"></i>
+                            
+                            <a href="/categories/rabbitMQ/" class="post-category">
+                                    rabbitMQ
+                                </a>
+                            
+                            <a href="/categories/rabbitMQ/%E5%BE%AE%E6%9C%8D%E5%8A%A1/" class="post-category">
+                                    微服务
+                                </a>
+                            
+                            <a href="/categories/rabbitMQ/%E5%BE%AE%E6%9C%8D%E5%8A%A1/%E5%BE%AE%E6%9C%8D%E5%8A%A1/" class="post-category">
+                                    微服务
+                                </a>
+                            
+                            <a href="/categories/rabbitMQ/%E5%BE%AE%E6%9C%8D%E5%8A%A1/%E5%BE%AE%E6%9C%8D%E5%8A%A1/rabbitMQ/" class="post-category">
+                                    rabbitMQ
+                                </a>
+                            
+                            
+                        </span>
+                    </div>
+                </div>
+                
+            </div>
+        </div>
+        
+        
+        <div class="article col s12 m6" data-aos="fade-up">
+            <div class="article-badge right-badge text-color">
+                下一篇&nbsp;<i class="fas fa-chevron-right"></i>
+            </div>
+            <div class="card">
+                <a href="/2022/01/04/wei-fu-wu/kafka/fen-bu-shi-xiao-xi-tong-xin-zhi-kafka-de-shi-xian-yuan-li/">
+                    <div class="card-image">
+                        
+                        
+                        <img src="/medias/featureimages/21.jpg" class="responsive-img" alt="分布式消息通信值Kafka的实现原理">
+                        
+                        <span class="card-title">分布式消息通信值Kafka的实现原理</span>
+                    </div>
+                </a>
+                <div class="card-content article-content">
+                    <div class="summary block-with-text">
+                        
+                            
+                        
+                    </div>
+                    <div class="publish-info">
+                            <span class="publish-date">
+                                <i class="far fa-clock fa-fw icon-date"></i>2022-01-04
+                            </span>
+                        <span class="publish-author">
+                            
+                            <i class="fas fa-bookmark fa-fw icon-category"></i>
+                            
+                            <a href="/categories/kafka/" class="post-category">
+                                    kafka
+                                </a>
+                            
+                            <a href="/categories/kafka/%E5%BE%AE%E6%9C%8D%E5%8A%A1/" class="post-category">
+                                    微服务
+                                </a>
+                            
+                            <a href="/categories/kafka/%E5%BE%AE%E6%9C%8D%E5%8A%A1/%E5%BE%AE%E6%9C%8D%E5%8A%A1/" class="post-category">
+                                    微服务
+                                </a>
+                            
+                            <a href="/categories/kafka/%E5%BE%AE%E6%9C%8D%E5%8A%A1/%E5%BE%AE%E6%9C%8D%E5%8A%A1/kafka/" class="post-category">
+                                    kafka
+                                </a>
+                            
+                            
+                        </span>
+                    </div>
+                </div>
+                
+            </div>
+        </div>
+        
+    </div>
+</article>
+
+</div>
+
+
+
+<!-- 代码块功能依赖 -->
+<script type="text/javascript" src="/libs/codeBlock/codeBlockFuction.js"></script>
+
+<!-- 代码语言 -->
+
+<script type="text/javascript" src="/libs/codeBlock/codeLang.js"></script>
+
+
+<!-- 代码块复制 -->
+
+<script type="text/javascript" src="/libs/codeBlock/codeCopy.js"></script>
+
+
+<!-- 代码块收缩 -->
+
+<script type="text/javascript" src="/libs/codeBlock/codeShrink.js"></script>
+
+
+    </div>
+    <div id="toc-aside" class="expanded col l3 hide-on-med-and-down">
+        <div class="toc-widget card" style="background-color: white;">
+            <div class="toc-title"><i class="far fa-list-alt"></i>&nbsp;&nbsp;目录</div>
+            <div id="toc-content"></div>
+        </div>
+    </div>
+</div>
+
+<!-- TOC 悬浮按钮. -->
+
+<div id="floating-toc-btn" class="hide-on-med-and-down">
+    <a class="btn-floating btn-large bg-color">
+        <i class="fas fa-list-ul"></i>
+    </a>
+</div>
+
+
+<script src="/libs/tocbot/tocbot.min.js"></script>
+<script>
+    $(function () {
+        tocbot.init({
+            tocSelector: '#toc-content',
+            contentSelector: '#articleContent',
+            headingsOffset: -($(window).height() * 0.4 - 45),
+            collapseDepth: Number('0'),
+            headingSelector: 'h2, h3, h4'
+        });
+
+        // modify the toc link href to support Chinese.
+        let i = 0;
+        let tocHeading = 'toc-heading-';
+        $('#toc-content a').each(function () {
+            $(this).attr('href', '#' + tocHeading + (++i));
+        });
+
+        // modify the heading title id to support Chinese.
+        i = 0;
+        $('#articleContent').children('h2, h3, h4').each(function () {
+            $(this).attr('id', tocHeading + (++i));
+        });
+
+        // Set scroll toc fixed.
+        let tocHeight = parseInt($(window).height() * 0.4 - 64);
+        let $tocWidget = $('.toc-widget');
+        $(window).scroll(function () {
+            let scroll = $(window).scrollTop();
+            /* add post toc fixed. */
+            if (scroll > tocHeight) {
+                $tocWidget.addClass('toc-fixed');
+            } else {
+                $tocWidget.removeClass('toc-fixed');
+            }
+        });
+
+        
+        /* 修复文章卡片 div 的宽度. */
+        let fixPostCardWidth = function (srcId, targetId) {
+            let srcDiv = $('#' + srcId);
+            if (srcDiv.length === 0) {
+                return;
+            }
+
+            let w = srcDiv.width();
+            if (w >= 450) {
+                w = w + 21;
+            } else if (w >= 350 && w < 450) {
+                w = w + 18;
+            } else if (w >= 300 && w < 350) {
+                w = w + 16;
+            } else {
+                w = w + 14;
+            }
+            $('#' + targetId).width(w);
+        };
+
+        // 切换TOC目录展开收缩的相关操作.
+        const expandedClass = 'expanded';
+        let $tocAside = $('#toc-aside');
+        let $mainContent = $('#main-content');
+        $('#floating-toc-btn .btn-floating').click(function () {
+            if ($tocAside.hasClass(expandedClass)) {
+                $tocAside.removeClass(expandedClass).hide();
+                $mainContent.removeClass('l9');
+            } else {
+                $tocAside.addClass(expandedClass).show();
+                $mainContent.addClass('l9');
+            }
+            fixPostCardWidth('artDetail', 'prenext-posts');
+        });
+        
+    });
+</script>
+
+    
+
+</main>
+
+
+
+
+    <footer class="page-footer bg-color">
+    
+        <link rel="stylesheet" href="/libs/aplayer/APlayer.min.css">
+<style>
+    .aplayer .aplayer-lrc p {
+        
+        display: none;
+        
+        font-size: 12px;
+        font-weight: 700;
+        line-height: 16px !important;
+    }
+
+    .aplayer .aplayer-lrc p.aplayer-lrc-current {
+        
+        display: none;
+        
+        font-size: 15px;
+        color: #42b983;
+    }
+
+    
+    .aplayer.aplayer-fixed.aplayer-narrow .aplayer-body {
+        left: -66px !important;
+    }
+
+    .aplayer.aplayer-fixed.aplayer-narrow .aplayer-body:hover {
+        left: 0px !important;
+    }
+
+    
+</style>
+<div class="">
+    
+    <div class="row">
+        <meting-js class="col l8 offset-l2 m10 offset-m1 s12"
+                   server="netease"
+                   type="playlist"
+                   id="503838841"
+                   fixed='true'
+                   autoplay='false'
+                   theme='#42b983'
+                   loop='all'
+                   order='random'
+                   preload='auto'
+                   volume='0.7'
+                   list-folded='true'
+        >
+        </meting-js>
+    </div>
+</div>
+
+<script src="/libs/aplayer/APlayer.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/meting@2/dist/Meting.min.js"></script>
+
+    
+
+    <div class="container row center-align"
+         style="margin-bottom: 0px !important;">
+        <div class="col s12 m8 l8 copy-right">
+            Copyright&nbsp;&copy;
+            
+                <span id="year">2019-2022</span>
+            
+            <a href="/about" target="_blank">luyanan</a>
+            |&nbsp;Powered by&nbsp;<a href="https://hexo.io/" target="_blank">Hexo</a>
+            |&nbsp;Theme&nbsp;<a href="https://github.com/blinkfox/hexo-theme-matery" target="_blank">Matery</a>
+            <br>
+            
+                &nbsp;<i class="fas fa-chart-area"></i>&nbsp;站点总字数:&nbsp;<span
+                        class="white-color">803.3k</span>
+            
+            
+            
+                
+            
+            
+                <span id="busuanzi_container_site_pv">
+                &nbsp;|&nbsp;<i class="far fa-eye"></i>&nbsp;总访问量:&nbsp;
+                    <span id="busuanzi_value_site_pv" class="white-color"></span>
+            </span>
+            
+            
+                <span id="busuanzi_container_site_uv">
+                &nbsp;|&nbsp;<i class="fas fa-users"></i>&nbsp;总访问人数:&nbsp;
+                    <span id="busuanzi_value_site_uv" class="white-color"></span>
+            </span>
+            
+            <br>
+
+            <!-- 运行天数提醒. -->
+            
+            <br>
+            
+        </div>
+        <div class="col s12 m4 l4 social-link social-statis">
+    <a href="https://github.com/rainsoil" class="tooltipped" target="_blank" data-tooltip="访问我的GitHub" data-position="top" data-delay="50">
+        <i class="fab fa-github"></i>
+    </a>
+
+
+
+    <a href="mailto:luyanan0718@163.com" class="tooltipped" target="_blank" data-tooltip="邮件联系我" data-position="top" data-delay="50">
+        <i class="fas fa-envelope-open"></i>
+    </a>
+
+
+
+
+
+
+
+    <a href="tencent://AddContact/?fromId=50&fromSubId=1&subcmd=all&uin=914596513" class="tooltipped" target="_blank" data-tooltip="QQ联系我: 914596513" data-position="top" data-delay="50">
+        <i class="fab fa-qq"></i>
+    </a>
+
+
+
+
+
+
+
+    <a href="/atom.xml" class="tooltipped" target="_blank" data-tooltip="RSS 订阅" data-position="top" data-delay="50">
+        <i class="fas fa-rss"></i>
+    </a>
+
+</div>
+    </div>
+</footer>
+
+<div class="progress-bar"></div>
+
+
+    <!-- 搜索遮罩框 -->
+<div id="searchModal" class="modal">
+    <div class="modal-content">
+        <div class="search-header">
+            <span class="title"><i class="fas fa-search"></i>&nbsp;&nbsp;搜索</span>
+            <input type="search" id="searchInput" name="s" placeholder="请输入搜索的关键字"
+                   class="search-input">
+        </div>
+        <div id="searchResult"></div>
+    </div>
+</div>
+
+<script type="text/javascript">
+$(function () {
+    var searchFunc = function (path, search_id, content_id) {
+        'use strict';
+        $.ajax({
+            url: path,
+            dataType: "xml",
+            success: function (xmlResponse) {
+                // get the contents from search data
+                var datas = $("entry", xmlResponse).map(function () {
+                    return {
+                        title: $("title", this).text(),
+                        content: $("content", this).text(),
+                        url: $("url", this).text()
+                    };
+                }).get();
+                var $input = document.getElementById(search_id);
+                var $resultContent = document.getElementById(content_id);
+                $input.addEventListener('input', function () {
+                    var str = '<ul class=\"search-result-list\">';
+                    var keywords = this.value.trim().toLowerCase().split(/[\s\-]+/);
+                    $resultContent.innerHTML = "";
+                    if (this.value.trim().length <= 0) {
+                        return;
+                    }
+                    // perform local searching
+                    datas.forEach(function (data) {
+                        var isMatch = true;
+                        var data_title = data.title.trim().toLowerCase();
+                        var data_content = data.content.trim().replace(/<[^>]+>/g, "").toLowerCase();
+                        var data_url = data.url;
+                        data_url = data_url.indexOf('/') === 0 ? data.url : '/' + data_url;
+                        var index_title = -1;
+                        var index_content = -1;
+                        var first_occur = -1;
+                        // only match artiles with not empty titles and contents
+                        if (data_title !== '' && data_content !== '') {
+                            keywords.forEach(function (keyword, i) {
+                                index_title = data_title.indexOf(keyword);
+                                index_content = data_content.indexOf(keyword);
+                                if (index_title < 0 && index_content < 0) {
+                                    isMatch = false;
+                                } else {
+                                    if (index_content < 0) {
+                                        index_content = 0;
+                                    }
+                                    if (i === 0) {
+                                        first_occur = index_content;
+                                    }
+                                }
+                            });
+                        }
+                        // show search results
+                        if (isMatch) {
+                            str += "<li><a href='" + data_url + "' class='search-result-title'>" + data_title + "</a>";
+                            var content = data.content.trim().replace(/<[^>]+>/g, "");
+                            if (first_occur >= 0) {
+                                // cut out 100 characters
+                                var start = first_occur - 20;
+                                var end = first_occur + 80;
+                                if (start < 0) {
+                                    start = 0;
+                                }
+                                if (start === 0) {
+                                    end = 100;
+                                }
+                                if (end > content.length) {
+                                    end = content.length;
+                                }
+                                var match_content = content.substr(start, end);
+                                // highlight all keywords
+                                keywords.forEach(function (keyword) {
+                                    var regS = new RegExp(keyword, "gi");
+                                    match_content = match_content.replace(regS, "<em class=\"search-keyword\">" + keyword + "</em>");
+                                });
+
+                                str += "<p class=\"search-result\">" + match_content + "...</p>"
+                            }
+                            str += "</li>";
+                        }
+                    });
+                    str += "</ul>";
+                    $resultContent.innerHTML = str;
+                });
+            }
+        });
+    };
+
+    searchFunc('/search.xml', 'searchInput', 'searchResult');
+});
+</script>
+
+    <!-- 回到顶部按钮 -->
+<div id="backTop" class="top-scroll">
+    <a class="btn-floating btn-large waves-effect waves-light" href="#!">
+        <i class="fas fa-arrow-up"></i>
+    </a>
+</div>
+
+
+    <script src="/libs/materialize/materialize.min.js"></script>
+    <script src="/libs/masonry/masonry.pkgd.min.js"></script>
+    <script src="/libs/aos/aos.js"></script>
+    <script src="/libs/scrollprogress/scrollProgress.min.js"></script>
+    <script src="/libs/lightGallery/js/lightgallery-all.min.js"></script>
+    <script src="/js/matery.js"></script>
+
+    
+
+    
+
+    <!-- 雪花特效 -->
+    
+
+    <!-- 鼠标星星特效 -->
+    
+
+    <!-- Baidu Analytics -->
+
+    <!-- Baidu Push -->
+
+<script>
+    (function () {
+        var bp = document.createElement('script');
+        var curProtocol = window.location.protocol.split(':')[0];
+        if (curProtocol === 'https') {
+            bp.src = 'https://zz.bdstatic.com/linksubmit/push.js';
+        } else {
+            bp.src = 'http://push.zhanzhang.baidu.com/push.js';
+        }
+        var s = document.getElementsByTagName("script")[0];
+        s.parentNode.insertBefore(bp, s);
+    })();
+</script>
+
+    
+    <script src="/libs/others/clicklove.js" async="async"></script>
+    
+    
+    <script async src="/libs/others/busuanzi.pure.mini.js"></script>
+    
+
+    
+
+    
+
+    <!--腾讯兔小巢-->
+    
+    
+    <script type="text/javascript" color="0,0,255"
+        pointColor="0,0,255" opacity='0.7'
+        zIndex="-1" count="99"
+        src="/libs/background/canvas-nest.js"></script>
+    
+
+    
+
+    
+
+    
+    <script src="/libs/instantpage/instantpage.js" type="module"></script>
+    
+
+</body>
+
+</html>

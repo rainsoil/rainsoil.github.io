@@ -1,0 +1,1485 @@
+<!DOCTYPE HTML>
+<html lang="zh-CN">
+
+
+<head>
+    <meta charset="utf-8">
+    <meta name="keywords" content="kubernetes系统核心组件(10), railsoil">
+    <meta name="description" content="kubernetes系统核心组件1. Master和Node
+官网:https://kubernetes.io/zh/docs/concepts/architecture/master-node-communication/
+
+k8s 集群">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="renderer" content="webkit|ie-stand|ie-comp">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="format-detection" content="telephone=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="referrer" content="no-referrer-when-downgrade">
+    <!-- Global site tag (gtag.js) - Google Analytics -->
+
+
+    <title>kubernetes系统核心组件(10) | railsoil</title>
+    <link rel="icon" type="image/png" href="/favicon.png">
+
+    <link rel="stylesheet" type="text/css" href="/libs/awesome/css/all.min.css">
+    <link rel="stylesheet" type="text/css" href="/libs/materialize/materialize.min.css">
+    <link rel="stylesheet" type="text/css" href="/libs/aos/aos.css">
+    <link rel="stylesheet" type="text/css" href="/libs/animate/animate.min.css">
+    <link rel="stylesheet" type="text/css" href="/libs/lightGallery/css/lightgallery.min.css">
+    <link rel="stylesheet" type="text/css" href="/css/matery.css">
+    <link rel="stylesheet" type="text/css" href="/css/my.css">
+
+    <script src="/libs/jquery/jquery.min.js"></script>
+
+<meta name="generator" content="Hexo 5.4.0"><link rel="alternate" href="/atom.xml" title="railsoil" type="application/atom+xml">
+<link rel="stylesheet" href="/css/prism-tomorrow.css" type="text/css"></head>
+
+
+
+
+<body>
+    <header class="navbar-fixed">
+    <nav id="headNav" class="bg-color nav-transparent">
+        <div id="navContainer" class="nav-wrapper container">
+            <div class="brand-logo">
+                <a href="/" class="waves-effect waves-light">
+                    
+                    <img src="/medias/logo.png" class="logo-img" alt="LOGO">
+                    
+                    <span class="logo-span">railsoil</span>
+                </a>
+            </div>
+            
+
+<a href="#" data-target="mobile-nav" class="sidenav-trigger button-collapse"><i class="fas fa-bars"></i></a>
+<ul class="right nav-menu">
+  
+  <li class="hide-on-med-and-down nav-item">
+    
+    <a href="/" class="waves-effect waves-light">
+      
+      <i class="fas fa-home" style="zoom: 0.6;"></i>
+      
+      <span>首页</span>
+    </a>
+    
+  </li>
+  
+  <li class="hide-on-med-and-down nav-item">
+    
+    <a href="/tags" class="waves-effect waves-light">
+      
+      <i class="fas fa-tags" style="zoom: 0.6;"></i>
+      
+      <span>标签</span>
+    </a>
+    
+  </li>
+  
+  <li class="hide-on-med-and-down nav-item">
+    
+    <a href="/categories" class="waves-effect waves-light">
+      
+      <i class="fas fa-bookmark" style="zoom: 0.6;"></i>
+      
+      <span>分类</span>
+    </a>
+    
+  </li>
+  
+  <li class="hide-on-med-and-down nav-item">
+    
+    <a href="/archives" class="waves-effect waves-light">
+      
+      <i class="fas fa-archive" style="zoom: 0.6;"></i>
+      
+      <span>归档</span>
+    </a>
+    
+  </li>
+  
+  <li class="hide-on-med-and-down nav-item">
+    
+    <a href="/about" class="waves-effect waves-light">
+      
+      <i class="fas fa-user-circle" style="zoom: 0.6;"></i>
+      
+      <span>关于</span>
+    </a>
+    
+  </li>
+  
+  <li>
+    <a href="#searchModal" class="modal-trigger waves-effect waves-light">
+      <i id="searchIcon" class="fas fa-search" title="搜索" style="zoom: 0.85;"></i>
+    </a>
+  </li>
+</ul>
+
+
+<div id="mobile-nav" class="side-nav sidenav">
+
+    <div class="mobile-head bg-color">
+        
+        <img src="/medias/logo.png" class="logo-img circle responsive-img">
+        
+        <div class="logo-name">railsoil</div>
+        <div class="logo-desc">
+            
+            Never really desperate, only the lost of the soul.
+            
+        </div>
+    </div>
+
+    <ul class="menu-list mobile-menu-list">
+        
+        <li class="m-nav-item">
+	  
+		<a href="/" class="waves-effect waves-light">
+			
+			    <i class="fa-fw fas fa-home"></i>
+			
+			首页
+		</a>
+          
+        </li>
+        
+        <li class="m-nav-item">
+	  
+		<a href="/tags" class="waves-effect waves-light">
+			
+			    <i class="fa-fw fas fa-tags"></i>
+			
+			标签
+		</a>
+          
+        </li>
+        
+        <li class="m-nav-item">
+	  
+		<a href="/categories" class="waves-effect waves-light">
+			
+			    <i class="fa-fw fas fa-bookmark"></i>
+			
+			分类
+		</a>
+          
+        </li>
+        
+        <li class="m-nav-item">
+	  
+		<a href="/archives" class="waves-effect waves-light">
+			
+			    <i class="fa-fw fas fa-archive"></i>
+			
+			归档
+		</a>
+          
+        </li>
+        
+        <li class="m-nav-item">
+	  
+		<a href="/about" class="waves-effect waves-light">
+			
+			    <i class="fa-fw fas fa-user-circle"></i>
+			
+			关于
+		</a>
+          
+        </li>
+        
+        
+    </ul>
+</div>
+
+
+        </div>
+
+        
+    </nav>
+
+</header>
+
+    
+
+
+
+<div class="bg-cover pd-header post-cover" style="background-image: url('/medias/featureimages/23.jpg')">
+    <div class="container" style="right: 0px;left: 0px;">
+        <div class="row">
+            <div class="col s12 m12 l12">
+                <div class="brand">
+                    <h1 class="description center-align post-title">kubernetes系统核心组件(10)</h1>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+
+<main class="post-container content">
+
+    
+    <link rel="stylesheet" href="/libs/tocbot/tocbot.css">
+<style>
+    #articleContent h1::before,
+    #articleContent h2::before,
+    #articleContent h3::before,
+    #articleContent h4::before,
+    #articleContent h5::before,
+    #articleContent h6::before {
+        display: block;
+        content: " ";
+        height: 100px;
+        margin-top: -100px;
+        visibility: hidden;
+    }
+
+    #articleContent :focus {
+        outline: none;
+    }
+
+    .toc-fixed {
+        position: fixed;
+        top: 64px;
+    }
+
+    .toc-widget {
+        width: 345px;
+        padding-left: 20px;
+    }
+
+    .toc-widget .toc-title {
+        padding: 35px 0 15px 17px;
+        font-size: 1.5rem;
+        font-weight: bold;
+        line-height: 1.5rem;
+    }
+
+    .toc-widget ol {
+        padding: 0;
+        list-style: none;
+    }
+
+    #toc-content {
+        padding-bottom: 30px;
+        overflow: auto;
+    }
+
+    #toc-content ol {
+        padding-left: 10px;
+    }
+
+    #toc-content ol li {
+        padding-left: 10px;
+    }
+
+    #toc-content .toc-link:hover {
+        color: #42b983;
+        font-weight: 700;
+        text-decoration: underline;
+    }
+
+    #toc-content .toc-link::before {
+        background-color: transparent;
+        max-height: 25px;
+
+        position: absolute;
+        right: 23.5vw;
+        display: block;
+    }
+
+    #toc-content .is-active-link {
+        color: #42b983;
+    }
+
+    #floating-toc-btn {
+        position: fixed;
+        right: 15px;
+        bottom: 76px;
+        padding-top: 15px;
+        margin-bottom: 0;
+        z-index: 998;
+    }
+
+    #floating-toc-btn .btn-floating {
+        width: 48px;
+        height: 48px;
+    }
+
+    #floating-toc-btn .btn-floating i {
+        line-height: 48px;
+        font-size: 1.4rem;
+    }
+</style>
+<div class="row">
+    <div id="main-content" class="col s12 m12 l9">
+        <!-- 文章内容详情 -->
+<div id="artDetail">
+    <div class="card">
+        <div class="card-content article-info">
+            <div class="row tag-cate">
+                <div class="col s7">
+                    
+                          <div class="article-tag">
+                            <span class="chip bg-color">无标签</span>
+                          </div>
+                    
+                </div>
+                <div class="col s5 right-align">
+                    
+                    <div class="post-cate">
+                        <i class="fas fa-bookmark fa-fw icon-category"></i>
+                        
+                            <a href="/categories/k8s/" class="post-category">
+                                k8s
+                            </a>
+                        
+                            <a href="/categories/k8s/k8s/" class="post-category">
+                                k8s
+                            </a>
+                        
+                    </div>
+                    
+                </div>
+            </div>
+
+            <div class="post-info">
+                
+                <div class="post-date info-break-policy">
+                    <i class="far fa-calendar-minus fa-fw"></i>发布日期:&nbsp;&nbsp;
+                    2022-01-04
+                </div>
+                
+
+                
+
+                
+                <div class="info-break-policy">
+                    <i class="far fa-file-word fa-fw"></i>文章字数:&nbsp;&nbsp;
+                    3.3k
+                </div>
+                
+
+                
+                <div class="info-break-policy">
+                    <i class="far fa-clock fa-fw"></i>阅读时长:&nbsp;&nbsp;
+                    14 分
+                </div>
+                
+
+                
+                    <div id="busuanzi_container_page_pv" class="info-break-policy">
+                        <i class="far fa-eye fa-fw"></i>阅读次数:&nbsp;&nbsp;
+                        <span id="busuanzi_value_page_pv"></span>
+                    </div>
+				
+            </div>
+        </div>
+        <hr class="clearfix">
+
+        
+
+        
+
+        <div class="card-content article-card-content">
+            <div id="articleContent">
+                <h1 id="kubernetes系统核心组件"><a href="#kubernetes系统核心组件" class="headerlink" title="kubernetes系统核心组件"></a>kubernetes系统核心组件</h1><h2 id="1-Master和Node"><a href="#1-Master和Node" class="headerlink" title="1. Master和Node"></a>1. <code>Master</code>和<code>Node</code></h2><blockquote>
+<p>官网:<a target="_blank" rel="noopener" href="https://kubernetes.io/zh/docs/concepts/architecture/master-node-communication/">https://kubernetes.io/zh/docs/concepts/architecture/master-node-communication/</a></p>
+</blockquote>
+<p>k8s 集群中的控制节点,负责整个集群的管理和控制,可以做成高可用,防止一台<code>master</code> 宕机或者不可用,其中有一些关键的组件, 比如<code>API Server</code>、<code>Controller Manage</code> 、<code>Scheduler</code>等. </p>
+<blockquote>
+<p>Node</p>
+</blockquote>
+<p><code>Node</code> 会被<code>master</code> 分配一些工作负载,当某个<code>Node</code>  不可用的时候, 会将工作负载转移到其他的<code>Node</code> 节点上,<code>Node</code> 上,<code>Node</code> 上有一些关键的进程,如<code>kubelet</code>、<code>kube-proxy</code>、<code>docker</code> 等等. </p>
+<blockquote>
+<p>查看集群中的<code>Node</code></p>
+</blockquote>
+<pre class=" language-bash"><code class="language-bash">kubectl get nodes
+kubectl describe node node-name
+</code></pre>
+<h2 id="2-kubeadm"><a href="#2-kubeadm" class="headerlink" title="2. kubeadm"></a>2. <code>kubeadm</code></h2><h3 id="2-1-kubeadm-init"><a href="#2-1-kubeadm-init" class="headerlink" title="2.1 kubeadm init"></a>2.1 <code>kubeadm init</code></h3><p><img src="http://files.luyanan.com//img/20200504170958.png" alt="image-20200504170943637"></p>
+<ol>
+<li><p>进行一系列的健康检查[<code>init</code> 之前的检查], 以确定这台机器可以部署<code>kubernetes</code></p>
+<p>  <code>kubeadm init pre-flight check:</code></p>
+</li>
+<li><p><code>kubeadm</code> 版本与要安装的<code>kubernetes</code>  版本检查</p>
+</li>
+<li><p><code>kuernetes</code> 安装的系统检查(<code>contos</code>版本,<code>cgroup</code>、<code>docker</code>等)</p>
+</li>
+<li><p>用户、主机、端口、<code>swap</code>等</p>
+</li>
+<li><p>生成<code>kubernetes</code> 对外提供服务所需要的各种证书对应目录, 也就是生成私钥和数字证书</p>
+<p> <code>/etc/kubernetes/pki/*</code></p>
+<ol>
+<li>自建<code>ca</code>,生成<code>ca.key</code>和<code>ca.crt</code></li>
+<li><code>apiserver</code>的私钥和公钥生成</li>
+<li><code>apiserver</code>访问<code>kubeclt</code> 使用的客户端私钥和证书</li>
+<li><code>sa.key</code> 和<code>sa.pub</code></li>
+<li><code>etcd</code> 相关私钥和数字证书</li>
+</ol>
+</li>
+<li><p>为其他组件生成访问<code>kube-APIServer</code> 所需要的配置文件<code>xxx.conf</code></p>
+<pre class=" language-bash"><code class="language-bash"><span class="token function">ls</span> /etc/kubernetes/
+admin.conf controller-manager.conf kubelet.conf scheduler.conf
+</code></pre>
+<ol>
+<li><p>有了<code>$HOME/.kube/config</code> 就可以使用<code>kubectl</code> 和k8s集群打交道了,这个文件是来自于<code>admin.config</code></p>
+<pre class=" language-bash"><code class="language-bash"><span class="token function">mkdir</span> -p <span class="token variable">$HOME</span>/.kube
+<span class="token function">sudo</span> <span class="token function">cp</span> -i /etc/kubernetes/admin.conf <span class="token variable">$HOME</span>/.kube/config
+<span class="token function">sudo</span> <span class="token function">chown</span> <span class="token variable"><span class="token variable">$(</span><span class="token function">id</span> -u<span class="token variable">)</span></span><span class="token keyword">:</span><span class="token variable"><span class="token variable">$(</span><span class="token function">id</span> -g<span class="token variable">)</span></span> <span class="token variable">$HOME</span>/.kube/config
+</code></pre>
+</li>
+<li><p><code>kubeconfig</code>  中包含了<code>cluster</code>、<code>user</code> 和<code>context</code> 信息, <code>kubectl config view</code></p>
+</li>
+<li><p>允许<code>kubectl </code> 快速切换<code>context</code>, 管理多集群</p>
+</li>
+</ol>
+</li>
+<li><p>为<code>master</code> 生成<code>Pod</code> 配置文件 ,这些组件会被<code>master</code> 节点上的<code>kubectl</code> 读取到,并且创建对应的资源</p>
+<pre class=" language-bash"><code class="language-bash"><span class="token function">ls</span> /etc/kubernetes/manifests/*.yaml
+kube-apiserver.yaml
+kube-controller-manager.yaml
+kube-scheduler.yaml
+</code></pre>
+<p> 这些<code>pod</code> 由<code>kubectl</code> 直接管理, 是静态<code>pod</code>, 直接使用主机网络</p>
+<p> <code>kubectl</code> 读取<code>manifests</code> 目录并管理各控制平台组件<code>pod</code> 的启动与停止</p>
+<p> 要想修改这些<code>pod</code>,直接修改<code>manifests</code> 下的<code>yaml</code> 文件即可.</p>
+</li>
+<li><p> 下载镜像,等待控制平面启动</p>
+</li>
+<li><p>一旦这些<code>yaml</code> 文件出现在被<code>kubectl</code> 监视的<code>/etc/kubernetes/manifests/</code> 目录下, <code>kubectl</code> 就会自动创建这些<code>yaml</code> 文件定义的<code>pod</code>, 即<code>master</code> 组件的容器,<code>master</code> 容器启动后,<code>kubeadm</code>会通过检查<code>localhost6443/healthz</code>  这个<code>master</code> 组件的健康状态检查<code>URL</code>, 等到<code>master</code>组件完全 运行起来. </p>
+<p> 【 <code>cat kube-apiserver.yaml</code>里面有健康检查的配置】</p>
+</li>
+<li><p> 为集群生成一个<code>bootstrap token</code>, 设置当前<code>node</code> 为<code>master</code>, <code>master</code> 节点将不承担工作负载. </p>
+</li>
+<li><p> 将<code>ca.crt</code> 等<code>master</code> 节点的重要信息,通过<code>COnfigMap</code> 的方式保存在<code>etcd</code> 中, 供后续部署<code>node</code> 节点使用</p>
+</li>
+<li><p>安装默认插件,<code>kubernetes</code> 默认<code>kube-proxy</code> 和<code>dns</code> 两个插件是必须要安装的,<code>dns</code> 插件安装了会处于<code>Pending</code>状态, 要等网络插件安装完成, 比如<code>calico</code></p>
+<pre class=" language-bash"><code class="language-bash">kubectl get daemonset -n kube-system
+</code></pre>
+<p> 可以看到kube-proxy和calico[或者其他网络插件]</p>
+</li>
+</ol>
+<h3 id="2-2-kubeadm-join"><a href="#2-2-kubeadm-join" class="headerlink" title="2.2  kubeadm join"></a>2.2  <code>kubeadm join</code></h3><pre class=" language-bash"><code class="language-bash">kubeadm <span class="token function">join</span> 192.168.0.51:6443 --token yu1ak0.2dcecvmpozsy8loh \ --discovery-token-ca-cert-hash
+sha256:5c4a69b3bb05b81b675db5559b0e4d7972f1d0a61195f217161522f464c307b0
+</code></pre>
+<ol>
+<li><p><code>join</code> 前检查</p>
+</li>
+<li><p><code>discovery-token-ca-cert-hash</code> 用于验证<code>master</code> 的身份</p>
+<pre class=" language-bash"><code class="language-bash"><span class="token comment" spellcheck="true">#可以计算出来, 在w 节点上执行</span>
+openssl x509 -in /etc/kubernetes/pki/ca.crt -noout -pubkey <span class="token operator">|</span> openssl rsa -pubin -
+outform DER 2<span class="token operator">></span>/dev/null <span class="token operator">|</span> sha256sum <span class="token operator">|</span> <span class="token function">cut</span> -d<span class="token string">' '</span> -f1
+<span class="token comment" spellcheck="true"># 最终的hash值</span>
+909adc03d6e4bd676cfc4e04b864530dd19927d8ed9d84e224101ef38ed0bb96
+</code></pre>
+</li>
+<li><p><code>token</code> 用于<code>master</code> 验证<code>node</code></p>
+<pre class=" language-bash"><code class="language-bash"><span class="token comment" spellcheck="true"># 在master 上节点上,可以查看对应的token</span>
+kubectl get secret -n kube-system <span class="token operator">|</span> <span class="token function">grep</span> bootstrap-token
+<span class="token comment" spellcheck="true"># 得到token的值</span>
+kubectl get secret/bootstrap-token-kggzhc -n kube-system -o yaml
+<span class="token comment" spellcheck="true"># 对token的值进行解码</span>
+<span class="token keyword">echo</span> NHRzZHp0Y2RidDRmd2U5dw<span class="token operator">==</span><span class="token operator">|</span>base64 -d ---<span class="token operator">></span>4tsdztcdbt4fwe9w
+<span class="token comment" spellcheck="true"># 最终token的值</span>
+kggzhc.4tsdztcdbt4fwe9w
+</code></pre>
+</li>
+</ol>
+<h2 id="3-核心组件"><a href="#3-核心组件" class="headerlink" title="3.  核心组件"></a>3.  核心组件</h2><p><img src="http://files.luyanan.com//img/20200504211225.png" alt="image-20200504211211667"></p>
+<h3 id="3-1-kubectl"><a href="#3-1-kubectl" class="headerlink" title="3.1 kubectl"></a>3.1 <code>kubectl</code></h3><p>操作集群的客户端,负责和集群进行打交道</p>
+<h3 id="3-2-kube-apiserver"><a href="#3-2-kube-apiserver" class="headerlink" title="3.2 kube-apiserver"></a>3.2 <code>kube-apiserver</code></h3><p>整个集群的中枢纽带,负责的事情很多 </p>
+<ul>
+<li><code>/etc/kubernetes/manifests/kube-apiserver.yaml  # kubectl 管理的静态pod</code></li>
+<li><code>--insecure-port=0 #默认使用http 非安全协议访问</code></li>
+<li>安全验证的一些文件</li>
+<li>准入策略的拦截器</li>
+<li> <code>--authorization-mode=Node,RBAC</code></li>
+<li><code>--etcd # 配置apiserver 与etcd 通信</code></li>
+</ul>
+<h3 id="3-3-kube-scheduler"><a href="#3-3-kube-scheduler" class="headerlink" title="3.3 kube-scheduler"></a>3.3 <code>kube-scheduler</code></h3><p>单纯的调度<code>pod</code>, 按照特定的调度算法和策略，将待调度<code>pod</code> 绑定到集群中某个适合的<code>Node</code>, 并写入到绑定信息,由对应节点的<code>kubectl</code> 服务创建<code>pod</code></p>
+<ol>
+<li><code>/etc/kubernetes/manifests/kube-scheduler.yaml # kubelet管理的静态pod</code></li>
+<li><code>--address</code>表示只在master节点上提供服务，不对外</li>
+<li><code>kubeconfig</code> 表示</li>
+</ol>
+<h3 id="3-4-kube-controller-manage"><a href="#3-4-kube-controller-manage" class="headerlink" title="3.4 kube-controller-manage"></a>3.4 <code>kube-controller-manage</code></h3><p>负责集群中<code>Node</code>、<code>Pod</code> 副本, 服务的<code>endpoint</code>、命令空间、<code>Service Account</code>、资源配置等管理.</p>
+<p>会划分成不同类型的<code>controller</code>, 每个<code>controller</code>都是一个死循环, 在循环中<code>controller</code> 通过<code>apiservice</code> 监视自己控制资源的状态, 一旦状态发生变化就会努力改变状态,直到变成期望的状态. </p>
+<ol>
+<li><code>/etc/kubernetes/manifests/kube-controller-manager.yaml # kubelet管理的静态pod</code></li>
+<li>参数设置<code>ca-file</code></li>
+<li>多个<code>manage</code>, 是否需要i进行<code>leader</code> 选举</li>
+</ol>
+<h3 id="3-5-kubectl"><a href="#3-5-kubectl" class="headerlink" title="3.5 kubectl"></a>3.5 <code>kubectl</code></h3><p><code>kubectl</code> 集群中的所有节点都运行,用于管理<code>pod</code> 和<code>contailer</code>, 每个<code>kubectl</code> 会向<code>apiserver</code> 注册本节点的信息,并向<code>master</code> 节点上报本节点资源使用的情况</p>
+<ol>
+<li><code>kubectl</code> 由操作系统<code>init[systemd]</code>  进行启动</li>
+<li><code>ls /lib/systemd/system/kubelet.service</code></li>
+<li><code>systemctl daemon-reload &amp; systemctl restart kubelet</code></li>
+</ol>
+<h3 id="3-6-kube-proxy"><a href="#3-6-kube-proxy" class="headerlink" title="3.6 kube-proxy"></a>3.6 <code>kube-proxy</code></h3><p>集群中的所有节点都运行,像<code>service</code> 的操作都是由<code>kube-proxy</code> 代理的,对于客户端是透明的. </p>
+<ol>
+<li><code>kube-proxy</code> 由<code>daemonset</code>  控制器在各个节点上启动唯一实例</li>
+<li>配置参数 <code>：/var/lib/kube-proxy/config.conf(pod内) # 不是静态pod</code></li>
+<li><code>kubectl get pods -n kube-system</code></li>
+<li><code>kubectl exec kube-proxy-jt9n4 -n kube-system -- cat /var/lib/kube-proxy/config.conf</code></li>
+<li><code>mode:&quot;&quot; ---&gt;# iptables</code></li>
+</ol>
+<h3 id="3-7-DNS"><a href="#3-7-DNS" class="headerlink" title="3.7 DNS"></a>3.7 <code>DNS</code></h3><p>域名解析的问题</p>
+<h3 id="3-8-dashboard"><a href="#3-8-dashboard" class="headerlink" title="3.8  dashboard"></a>3.8 <code> dashboard</code></h3><p>需要有监控面板能够检测整个集群的状态</p>
+<h3 id="3-9-etcd"><a href="#3-9-etcd" class="headerlink" title="3.9 etcd"></a>3.9 <code>etcd</code></h3><p>整个集群的配置中心,所有集群的状态数据,对象数据都存储在<code>etcd</code> 中. </p>
+<p><code>kubeadm</code> 引导启动的k8s 集群, 默认只启动一个<code>etcd</code> 节点</p>
+<ol>
+<li><code>/etc/kubernetes/manifests/etcd.yaml # kubelet管理的静态pod</code></li>
+<li><code>etcd</code> 所使用的相关密钥在<code>/etc/kubernetes/pki/etcd</code> 里面</li>
+<li><code>etcd</code> 挂载<code>master</code> 节点本地路径 <code>/var/lib/etcd</code> 用于运行时数据存储,<code>tree</code></li>
+</ol>
+<h2 id="4-kubernetes-源码查看方式"><a href="#4-kubernetes-源码查看方式" class="headerlink" title="4.  kubernetes 源码查看方式"></a>4.  <code>kubernetes</code> 源码查看方式</h2><blockquote>
+<p>源码地址: <a target="_blank" rel="noopener" href="https://github.com/kubernetes/kubernetes">https://github.com/kubernetes/kubernetes</a></p>
+<p><a target="_blank" rel="noopener" href="https://github.com/kubernetes/kubernetes/tree/release-1.14">https://github.com/kubernetes/kubernetes/tree/release-1.14</a></p>
+</blockquote>
+<h2 id="5-kubectl"><a href="#5-kubectl" class="headerlink" title="5. kubectl"></a>5. <code>kubectl</code></h2><blockquote>
+<p>语法: <code>kubectl [command] [TYPE] [NAME] [flag]</code></p>
+<p>官网: <a target="_blank" rel="noopener" href="https://kubernetes.io/docs/reference/kubectl/overview/">https://kubernetes.io/docs/reference/kubectl/overview/</a></p>
+</blockquote>
+<ul>
+<li><code>command</code>:  用于操作k8s 资源对象的命令,比如<code>apply</code>、<code>delete</code>、<code>describe</code>、<code>get</code>等</li>
+<li><code>TYPE</code>: 要操作资源对象的类型, 区分大小写,比如<code>pod[pods/po]</code>、<code>deployment</code></li>
+<li><code>NAME</code>: 要操作对象的具体名称,若不指定,则返回该资源类型的全部对象(是默认命名空间下的)</li>
+<li><code>flags</code>: 可选</li>
+</ul>
+<h3 id="5-1-demo"><a href="#5-1-demo" class="headerlink" title="5.1 demo"></a>5.1 <code>demo</code></h3><ul>
+<li><p>查看集群的状态</p>
+<pre class=" language-bash"><code class="language-bash"><span class="token comment" spellcheck="true"># 查看集群的信息</span>
+kubectl config view
+<span class="token comment" spellcheck="true"># 查看cluster的信息</span>
+kubectl config get-clusters
+</code></pre>
+</li>
+<li><p>创建资源</p>
+<pre class=" language-bash"><code class="language-bash">kubectl apply -f xxx.yaml
+kubectl apply -f <span class="token operator">&lt;</span>directory<span class="token operator">></span>
+</code></pre>
+</li>
+<li><p>查看资源对象</p>
+<pre class=" language-bash"><code class="language-bash"><span class="token comment" spellcheck="true"># 查看Pod</span>
+kubectl get pods
+<span class="token comment" spellcheck="true"># 查看Service</span>
+kubectl get svc
+</code></pre>
+</li>
+<li><p>问题查看调试</p>
+<pre class=" language-bash"><code class="language-bash">kubectl describe pod pod-name
+kubectl <span class="token function">exec</span> -it pod-name
+kubectl logs -f pod-name
+kubectl attach
+</code></pre>
+</li>
+</ul>
+<h2 id="6-API-Server"><a href="#6-API-Server" class="headerlink" title="6. API Server"></a>6. <code>API Server</code></h2><blockquote>
+<p>官网: <a target="_blank" rel="noopener" href="https://kubernetes.io/zh/docs/reference/command-line-tools-reference/kube-apiserver/">https://kubernetes.io/zh/docs/reference/command-line-tools-reference/kube-apiserver/</a></p>
+</blockquote>
+<p><code>API Server</code> 提供了k8s 各类资源对象的操作,是集群内各个功能模块之间数据交互和通信的中心枢纽,是整个系统的数据总线和数据中心,通常我们通过<code>kubectl</code> 和<code>apiservice</code> 进行交互. </p>
+<p><code>APIService</code> 通过<code>kube-apiserver</code>的进程提供服务,运行在<code>master</code> 节点上. </p>
+<p><code>kubectl</code>与<code>APIServer</code> 之间是<code>REST</code> 调用</p>
+<pre class=" language-text"><code class="language-text">The Kubernetes API server validates and configures data for the api objects which
+include pods, services, replicationcontrollers, and others. The API Server services
+REST operations and provides the frontend to the cluster’s shared state through which
+all other components interact.
+</code></pre>
+<ol>
+<li><p>查看<code>yaml</code> 文件中的<code>apiVersion</code></p>
+<pre class=" language-bash"><code class="language-bash"><span class="token function">grep</span> -r <span class="token string">"apiVersion"</span> <span class="token keyword">.</span>
+</code></pre>
+<pre class=" language-text"><code class="language-text">./pod_nginx.yaml:apiVersion: apps/v1
+./my-tomcat.yaml:apiVersion: apps/v1
+./my-tomcat.yaml:apiVersion: v1
+./mandatory.yaml:apiVersion: v1
+./mandatory.yaml:apiVersion: v1
+./mandatory.yaml:apiVersion: v1
+./mandatory.yaml:apiVersion: v1
+./mandatory.yaml:apiVersion: v1
+./mandatory.yaml:apiVersion: rbac.authorization.k8s.io/v1beta1
+./mandatory.yaml:apiVersion: rbac.authorization.k8s.io/v1beta1
+./mandatory.yaml:apiVersion: rbac.authorization.k8s.io/v1beta1
+...
+</code></pre>
+</li>
+<li><p><code>REST API</code> 设计</p>
+<p> <code>API官网</code>：  <a target="_blank" rel="noopener" href="https://kubernetes.io/docs/concepts/overview/kubernetes-api/">https://kubernetes.io/docs/concepts/overview/kubernetes-api/</a></p>
+<p><code>V1.14</code>: <a target="_blank" rel="noopener" href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.14/">https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.14/</a></p>
+<p> <img src="http://files.luyanan.com//img/20200504215549.png" alt="image-20200504215548798"></p>
+</li>
+<li><p>想要写<code>pod</code> 的<code>yaml</code> 文件</p>
+<pre class=" language-bash"><code class="language-bash">https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.14/<span class="token comment" spellcheck="true">#pod-v1-core</span>
+</code></pre>
+</li>
+<li><p><code>kube-apiserver</code></p>
+<pre class=" language-bash"><code class="language-bash"><span class="token function">lsof</span> -i tcp:8080
+<span class="token function">vi</span> /etc/kubernetes/manifests/kube-apiserver.yaml <span class="token punctuation">[</span>kubeadm安装方式<span class="token punctuation">]</span>
+<span class="token comment" spellcheck="true"># 查询insecure-port，并将修改端口为8080</span>
+insecure-port<span class="token operator">=</span>8080
+<span class="token comment" spellcheck="true"># kubect apply生效，需要等待一会</span>
+kubectl apply -f kube-apiserver.yaml
+</code></pre>
+</li>
+<li><p>查看端口以及访问测试</p>
+<p> 可以发现结果和<code>kubectl</code>使用一样</p>
+<pre class=" language-bash"><code class="language-bash"><span class="token function">lsof</span> -i tcp:8080
+curl localhost:8080
+curl localhost:8080/api
+curl localhost:8080/api/v1
+curl localhost:8080/api/v1/pods
+curl localhost:8080/api/v1/services
+</code></pre>
+</li>
+<li><p>设计一个<code>pod</code>的<code>url</code> 请求</p>
+<pre class=" language-bash"><code class="language-bash">https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.14/<span class="token comment" spellcheck="true">#-strong-write-operations-pod-v1-core-strong</span>
+</code></pre>
+</li>
+<li><p>这种操作还是相对比较麻烦的,哪怕使用<code>kubectl</code></p>
+<p> <a target="_blank" rel="noopener" href="https://github.com/kubernetes-client">https://github.com/kubernetes-client</a></p>
+<p>Java ：<a target="_blank" rel="noopener" href="https://github.com/kubernetes-client/java">https://github.com/kubernetes-client/java</a></p>
+<p>Go ：<a target="_blank" rel="noopener" href="https://github.com/kubernetes/client-go">https://github.com/kubernetes/client-go</a></p>
+</li>
+</ol>
+<h2 id="7-集群安全机制之API-Server"><a href="#7-集群安全机制之API-Server" class="headerlink" title="7.  集群安全机制之API Server"></a>7.  集群安全机制之<code>API Server</code></h2><blockquote>
+<p> 官网:<a target="_blank" rel="noopener" href="https://v1-12.docs.kubernetes.io/docs/reference/access-authn-authz/controlling-access/">https://v1-12.docs.kubernetes.io/docs/reference/access-authn-authz/controlling-access/</a></p>
+</blockquote>
+<p>对于k8s 集群的访问操作, 都是通过<code>api server</code> 的<code>rest api</code> 来实现的,难道所有的操作都允许吗? 当然是不行的, 这里就涉及到认证、授权和准入等操作. </p>
+<p><img src="http://files.luyanan.com//img/20200505083355.png" alt="image-20200505083325959"></p>
+<h3 id="7-1-API-Server认证-Authentication"><a href="#7-1-API-Server认证-Authentication" class="headerlink" title="7.1  API Server认证(Authentication)"></a>7.1  <code>API Server认证(Authentication)</code></h3><blockquote>
+<p>官网: <a target="_blank" rel="noopener" href="https://v1-12.docs.kubernetes.io/docs/reference/access-authn-authz/controlling-access/#authentication">https://v1-12.docs.kubernetes.io/docs/reference/access-authn-authz/controlling-access/#authentication</a></p>
+</blockquote>
+<p>说白了, 就是如何来识别客户端的身份,k8s 集群中提供了3种识别客户端的身份的方式</p>
+<ul>
+<li><p><code>https</code>  证书认证</p>
+<p> 基于<code>CA</code> 根证书签名的双向数字证书认证方式</p>
+</li>
+<li><p><code>HTTP Token</code> 认证</p>
+<p>  通过<code>Token</code> 来识别合法用户</p>
+</li>
+<li><p><code>HTTP Base</code> 认证</p>
+<p> 通过用户名+密码的方式来认证</p>
+</li>
+</ul>
+<h3 id="7-2-API-Server授权-Authorization"><a href="#7-2-API-Server授权-Authorization" class="headerlink" title="7.2 API Server授权(Authorization)"></a>7.2 <code>API Server</code>授权(Authorization)</h3><blockquote>
+<p>官网: <a target="_blank" rel="noopener" href="https://v1-12.docs.kubernetes.io/docs/reference/access-authn-authz/controlling-access/#authorization">https://v1-12.docs.kubernetes.io/docs/reference/access-authn-authz/controlling-access/#authorization</a></p>
+</blockquote>
+<ul>
+<li><code>ABAC</code> 授权模式</li>
+<li><code>Webhook</code> 授权模式</li>
+<li><code>RBPC</code> 授权模式</li>
+</ul>
+<p><code>Role</code>、<code>ClusterRole</code>、<code>RoleBinding</code>和<code>ClusterRoleBinding</code></p>
+<p>用户可以使用<code>kubectl</code> 或者<code>API</code> 调用等方式操作这些资源对象</p>
+<p><img src="http://files.luyanan.com//img/20200505085232.png" alt="image-20200505085230364"></p>
+<h3 id="7-3-Admission-Contro-准入控制"><a href="#7-3-Admission-Contro-准入控制" class="headerlink" title="7.3  Admission Contro(准入控制)"></a>7.3  <code>Admission Contro</code>(准入控制)</h3><blockquote>
+<p>官网:<a target="_blank" rel="noopener" href="https://v1-12.docs.kubernetes.io/docs/reference/access-authn-authz/controlling-access/#admission-control">https://v1-12.docs.kubernetes.io/docs/reference/access-authn-authz/controlling-access/#admission-control</a></p>
+</blockquote>
+<ul>
+<li><p><code>Always</code></p>
+<p>允许所有请求</p>
+</li>
+<li><p><code>AlwaysPullImages</code></p>
+<p> 在启动容器之前总是尝试重新下载镜像</p>
+</li>
+<li><p><code>AlwaysDeny</code></p>
+<p> 禁止所有请求</p>
+</li>
+</ul>
+<h2 id="8-Scheduler"><a href="#8-Scheduler" class="headerlink" title="8. Scheduler"></a>8. <code>Scheduler</code></h2><blockquote>
+<p>官网: <a target="_blank" rel="noopener" href="https://kubernetes.io/docs/concepts/scheduling/kube-scheduler/">https://kubernetes.io/docs/concepts/scheduling/kube-scheduler/</a></p>
+</blockquote>
+<blockquote>
+<p>In Kubernetes, <em>scheduling</em> refers to making sure that <a target="_blank" rel="noopener" href="https://kubernetes.io/docs/concepts/workloads/pods/pod-overview/">Pods</a> are matched to <a target="_blank" rel="noopener" href="https://kubernetes.io/docs/concepts/architecture/nodes/">Nodes</a> so that <a target="_blank" rel="noopener" href="https://kubernetes.io/docs/reference/generated/kubelet">Kubelet</a> can run them.</p>
+</blockquote>
+<p>通过调度算法,为待调度<code>Pod</code> 列表的每个<code>pod</code>, 从<code>Node</code> 列表中选择一个最合适的<code>Node</code></p>
+<p>然后,目标节点上的<code>kubelet</code> 通过<code>API Server</code> 监听到<code>Kubernetes Schduler</code> 产生的<code>Pod</code>  绑定事件,获取对应的<code>Pod</code> 清单,下载<code>image</code> 镜像,并启动容器</p>
+<h3 id="8-1-架构图"><a href="#8-1-架构图" class="headerlink" title="8.1  架构图"></a>8.1  架构图</h3><p><img src="http://files.luyanan.com//img/20200505090159.png" alt="image-20200505090156707"></p>
+<h3 id="8-2-流程描述"><a href="#8-2-流程描述" class="headerlink" title="8.2  流程描述"></a>8.2  流程描述</h3><blockquote>
+<p><a target="_blank" rel="noopener" href="https://kubernetes.io/docs/concepts/scheduling/kube-scheduler/#kube-scheduler-implementation">https://kubernetes.io/docs/concepts/scheduling/kube-scheduler/#kube-scheduler-implementation</a></p>
+</blockquote>
+<blockquote>
+<ol>
+<li><code>Filtering</code></li>
+<li><code>Scoring</code></li>
+</ol>
+</blockquote>
+<ol>
+<li>预选调度策略：遍历所有目标的<code>Node</code>,筛选出符合<code>Pod</code> 要求的候选节点</li>
+<li>优选调度策略: 在1的基础上, 采用优选策略算法计算出每个候选节点的积分, 积分最高者胜出</li>
+</ol>
+<h3 id="8-3-预选策略和优选策略"><a href="#8-3-预选策略和优选策略" class="headerlink" title="8.3  预选策略和优选策略"></a>8.3  预选策略和优选策略</h3><h4 id="8-3-1-预选策略"><a href="#8-3-1-预选策略" class="headerlink" title="8.3.1 预选策略"></a>8.3.1 预选策略</h4><blockquote>
+<p><a target="_blank" rel="noopener" href="https://kubernetes.io/docs/concepts/scheduling/kube-scheduler/#filtering">https://kubernetes.io/docs/concepts/scheduling/kube-scheduler/#filtering</a></p>
+</blockquote>
+<ul>
+<li><p><code>PodFitsHostPorts</code></p>
+<blockquote>
+<p>Checks if a Node has free ports (the network protocol kind) for the Pod ports the Pod is requesting.</p>
+</blockquote>
+</li>
+<li><p><code>PodFitsHost</code></p>
+<blockquote>
+<p>Checks if a Pod specifies a specific Node by it hostname.</p>
+</blockquote>
+<p><code>PodFitsResources</code></p>
+<blockquote>
+<p>Checks if the Node has free resources (eg, CPU and Memory) to meet the requirement of the Pod.</p>
+</blockquote>
+</li>
+</ul>
+<h4 id="8-3-2-优选策略"><a href="#8-3-2-优选策略" class="headerlink" title="8.3.2 优选策略"></a>8.3.2 优选策略</h4><blockquote>
+<p><a target="_blank" rel="noopener" href="https://kubernetes.io/docs/concepts/scheduling/kube-scheduler/#scoring">https://kubernetes.io/docs/concepts/scheduling/kube-scheduler/#scoring</a></p>
+</blockquote>
+<ul>
+<li><p><code>SelectorSpreadPriority</code></p>
+<blockquote>
+<p>Spreads Pods across hosts, considering Pods that belonging to the same Service, StatefulSet or ReplicaSet</p>
+</blockquote>
+</li>
+<li><p><code>InterPodAffinityPriority</code></p>
+<blockquote>
+<p>Computes a sum by iterating through the elements of weightedPodAffinityTerm and adding “weight” to the sum if the corresponding PodAffinityTerm is satisfied for that node; the node(s) with the highest sum are the most preferred.</p>
+</blockquote>
+</li>
+</ul>
+<h3 id="8-4-实战"><a href="#8-4-实战" class="headerlink" title="8.4  实战"></a>8.4  实战</h3><h4 id="8-4-1-Node"><a href="#8-4-1-Node" class="headerlink" title="8.4.1  Node"></a>8.4.1  <code>Node</code></h4><ol>
+<li><p>正常创建<code>Node</code>, 准备 <code>scheduler-node-origin.yaml</code> 资源文件</p>
+<pre class=" language-yaml"><code class="language-yaml"><span class="token key atrule">apiVersion</span><span class="token punctuation">:</span> apps/v1
+<span class="token key atrule">kind</span><span class="token punctuation">:</span> Deployment
+<span class="token key atrule">metadata</span><span class="token punctuation">:</span>
+  <span class="token key atrule">name</span><span class="token punctuation">:</span> scheduler<span class="token punctuation">-</span>node
+<span class="token key atrule">spec</span><span class="token punctuation">:</span>
+  <span class="token key atrule">selector</span><span class="token punctuation">:</span>
+    <span class="token key atrule">matchLabels</span><span class="token punctuation">:</span>
+      <span class="token key atrule">app</span><span class="token punctuation">:</span> scheduler<span class="token punctuation">-</span>node
+  <span class="token key atrule">replicas</span><span class="token punctuation">:</span> <span class="token number">1</span>
+  <span class="token key atrule">template</span><span class="token punctuation">:</span>
+    <span class="token key atrule">metadata</span><span class="token punctuation">:</span>
+      <span class="token key atrule">labels</span><span class="token punctuation">:</span>
+        <span class="token key atrule">app</span><span class="token punctuation">:</span> scheduler<span class="token punctuation">-</span>node
+    <span class="token key atrule">spec</span><span class="token punctuation">:</span>
+      <span class="token key atrule">containers</span><span class="token punctuation">:</span>
+      <span class="token punctuation">-</span> <span class="token key atrule">name</span><span class="token punctuation">:</span> scheduler<span class="token punctuation">-</span>node
+        <span class="token key atrule">image</span><span class="token punctuation">:</span> registry.cn<span class="token punctuation">-</span>hangzhou.aliyuncs.com/luyanan/test<span class="token punctuation">-</span>docker<span class="token punctuation">-</span>image<span class="token punctuation">:</span>v1.0
+        <span class="token key atrule">ports</span><span class="token punctuation">:</span>
+        <span class="token punctuation">-</span> <span class="token key atrule">containerPort</span><span class="token punctuation">:</span> <span class="token number">8080</span>
+</code></pre>
+<p> 启动并查看资源</p>
+<pre class=" language-bash"><code class="language-bash">kubectl apply -f scheduler-node-origin.yaml
+kubectl get pods
+kubectl describe pod pod-name
+</code></pre>
+</li>
+<li><p>准备<code>scheduler-node.yaml</code> 资源文件</p>
+<pre class=" language-yaml"><code class="language-yaml"><span class="token key atrule">apiVersion</span><span class="token punctuation">:</span> apps/v1
+<span class="token key atrule">kind</span><span class="token punctuation">:</span> Deployment
+<span class="token key atrule">metadata</span><span class="token punctuation">:</span>
+  <span class="token key atrule">name</span><span class="token punctuation">:</span> scheduler<span class="token punctuation">-</span>node
+<span class="token key atrule">spec</span><span class="token punctuation">:</span>
+  <span class="token key atrule">selector</span><span class="token punctuation">:</span>
+    <span class="token key atrule">matchLabels</span><span class="token punctuation">:</span>
+      <span class="token key atrule">app</span><span class="token punctuation">:</span> scheduler<span class="token punctuation">-</span>node
+  <span class="token key atrule">replicas</span><span class="token punctuation">:</span> <span class="token number">1</span>
+  <span class="token key atrule">template</span><span class="token punctuation">:</span>
+    <span class="token key atrule">metadata</span><span class="token punctuation">:</span>
+      <span class="token key atrule">labels</span><span class="token punctuation">:</span>
+        <span class="token key atrule">app</span><span class="token punctuation">:</span> scheduler<span class="token punctuation">-</span>node
+    <span class="token key atrule">spec</span><span class="token punctuation">:</span>
+      <span class="token key atrule">containers</span><span class="token punctuation">:</span>
+      <span class="token punctuation">-</span> <span class="token key atrule">name</span><span class="token punctuation">:</span> scheduler<span class="token punctuation">-</span>node
+        <span class="token key atrule">image</span><span class="token punctuation">:</span> registry.cn<span class="token punctuation">-</span>hangzhou.aliyuncs.com/luyanan/test<span class="token punctuation">-</span>docker<span class="token punctuation">-</span>image<span class="token punctuation">:</span>v1.0
+        <span class="token key atrule">ports</span><span class="token punctuation">:</span>
+        <span class="token punctuation">-</span> <span class="token key atrule">containerPort</span><span class="token punctuation">:</span> <span class="token number">8080</span>
+      <span class="token key atrule">affinity</span><span class="token punctuation">:</span>
+        <span class="token key atrule">nodeAffinity</span><span class="token punctuation">:</span>
+          <span class="token key atrule">requiredDuringSchedulingIgnoredDuringExecution</span><span class="token punctuation">:</span>
+            <span class="token key atrule">nodeSelectorTerms</span><span class="token punctuation">:</span>
+            <span class="token punctuation">-</span> <span class="token key atrule">matchExpressions</span><span class="token punctuation">:</span>
+              <span class="token punctuation">-</span> <span class="token key atrule">key</span><span class="token punctuation">:</span> beta.kubernetes.io/arch
+                <span class="token key atrule">operator</span><span class="token punctuation">:</span> In
+                <span class="token key atrule">values</span><span class="token punctuation">:</span>
+                <span class="token punctuation">-</span> amd641
+          <span class="token key atrule">preferredDuringSchedulingIgnoredDuringExecution</span><span class="token punctuation">:</span>
+          <span class="token punctuation">-</span> <span class="token key atrule">weight</span><span class="token punctuation">:</span> <span class="token number">1</span>
+            <span class="token key atrule">preference</span><span class="token punctuation">:</span>
+              <span class="token key atrule">matchExpressions</span><span class="token punctuation">:</span>
+              <span class="token punctuation">-</span> <span class="token key atrule">key</span><span class="token punctuation">:</span> disktype
+                <span class="token key atrule">operator</span><span class="token punctuation">:</span> NotIn
+                <span class="token key atrule">values</span><span class="token punctuation">:</span>
+                <span class="token punctuation">-</span> ssd
+</code></pre>
+<p>主要是体现<code>node</code> 的调度</p>
+<pre class=" language-bash"><code class="language-bash">kubectl get nodes w1 -o yaml
+找到labels
+</code></pre>
+<pre class=" language-bash"><code class="language-bash"><span class="token punctuation">[</span>root@master-kubeadm-k8s ~<span class="token punctuation">]</span><span class="token comment" spellcheck="true"># kubectl get pods</span>
+NAME READY STATUS RESTARTS AGE
+scheduler-node-84845c99d4-fvw9d 0/1 Pending 0 7s
+</code></pre>
+<pre class=" language-bash"><code class="language-bash">kubectl describe pod scheduler-node-84845c99d4-fvw9d
+Events:
+Type Reason Age From Message
+---- ------ ---- ---- -------
+Warning FailedScheduling 37s <span class="token punctuation">(</span>x2 over 37s<span class="token punctuation">)</span> default-scheduler 0/3 nodes are available:
+3 node<span class="token punctuation">(</span>s<span class="token punctuation">)</span> didn't match node selector.
+</code></pre>
+</li>
+</ol>
+<h4 id="8-4-2-Pod"><a href="#8-4-2-Pod" class="headerlink" title="8.4.2 Pod"></a>8.4.2 <code>Pod</code></h4><pre class=" language-yaml"><code class="language-yaml"><span class="token key atrule">affinity</span><span class="token punctuation">:</span>
+  <span class="token key atrule">podAffinity</span><span class="token punctuation">:</span>
+    <span class="token key atrule">requiredDuringSchedulingIgnoredDuringExecution</span><span class="token punctuation">:</span>
+    <span class="token punctuation">-</span> <span class="token key atrule">labelSelector</span><span class="token punctuation">:</span>
+      <span class="token key atrule">matchExpressions</span><span class="token punctuation">:</span>
+      <span class="token punctuation">-</span> <span class="token key atrule">key</span><span class="token punctuation">:</span> app
+        <span class="token key atrule">operator</span><span class="token punctuation">:</span> In
+        <span class="token key atrule">values</span><span class="token punctuation">:</span>
+          <span class="token punctuation">-</span> k8s
+      <span class="token key atrule">topologyKey</span><span class="token punctuation">:</span> kubernetes.io/hostname
+</code></pre>
+<h2 id="9-kubelet"><a href="#9-kubelet" class="headerlink" title="9. kubelet"></a>9. <code>kubelet</code></h2><blockquote>
+<p>官网:<a target="_blank" rel="noopener" href="https://kubernetes.io/docs/reference/command-line-tools-reference/kubelet/">https://kubernetes.io/docs/reference/command-line-tools-reference/kubelet/</a></p>
+</blockquote>
+<p>在k8s集群中,每个<code>Node</code> 上都会启动一个<code>kubelet</code> 服务进程,用于处理<code>master</code> 节点上发到本节点的任务</p>
+<p>管理<code>pod</code> 以及<code>pod</code> 中的容器,每个<code>kubelet</code> 进程会在<code>API Server</code> 上注册自身信息,定期向<code>master</code> 节点上汇报节点资源使用情况,并通过<code>cAdvisor</code> 监控容器和节点资源</p>
+<h2 id="10-kube-proxy"><a href="#10-kube-proxy" class="headerlink" title="10 .kube-proxy"></a>10 .<code>kube-proxy</code></h2><blockquote>
+<p> 官网:<a target="_blank" rel="noopener" href="https://kubernetes.io/docs/reference/command-line-tools-reference/kube-proxy/">https://kubernetes.io/docs/reference/command-line-tools-reference/kube-proxy/</a></p>
+</blockquote>
+<p>在k8s 集群中, 每个<code>Node</code> 上都会运行一个<code>kube-proxy</code> 进行, 它是<code>service</code> 的透明代理兼负载均器,核心功能是将某个<code>Service</code> 的访问请求转发到后端的多个<code>Pod</code> 实例上. </p>
+
+                
+            </div>
+            <hr/>
+
+            
+
+    <div class="reprint" id="reprint-statement">
+        
+            <div class="reprint__author">
+                <span class="reprint-meta" style="font-weight: bold;">
+                    <i class="fas fa-user">
+                        文章作者:
+                    </i>
+                </span>
+                <span class="reprint-info">
+                    <a href="/about" rel="external nofollow noreferrer">luyanan</a>
+                </span>
+            </div>
+            <div class="reprint__type">
+                <span class="reprint-meta" style="font-weight: bold;">
+                    <i class="fas fa-link">
+                        文章链接:
+                    </i>
+                </span>
+                <span class="reprint-info">
+                    <a href="https://rainsoil.github.io/2022/01/04/k8s/kubernetes-xi-tong-he-xin-zu-jian-10/">https://rainsoil.github.io/2022/01/04/k8s/kubernetes-xi-tong-he-xin-zu-jian-10/</a>
+                </span>
+            </div>
+            <div class="reprint__notice">
+                <span class="reprint-meta" style="font-weight: bold;">
+                    <i class="fas fa-copyright">
+                        版权声明:
+                    </i>
+                </span>
+                <span class="reprint-info">
+                    本博客所有文章除特別声明外，均采用
+                    <a href="https://creativecommons.org/licenses/by/4.0/deed.zh" rel="external nofollow noreferrer" target="_blank">CC BY 4.0</a>
+                    许可协议。转载请注明来源
+                    <a href="/about" target="_blank">luyanan</a>
+                    !
+                </span>
+            </div>
+        
+    </div>
+
+    <script async defer>
+      document.addEventListener("copy", function (e) {
+        let toastHTML = '<span>复制成功，请遵循本文的转载规则</span><button class="btn-flat toast-action" onclick="navToReprintStatement()" style="font-size: smaller">查看</a>';
+        M.toast({html: toastHTML})
+      });
+
+      function navToReprintStatement() {
+        $("html, body").animate({scrollTop: $("#reprint-statement").offset().top - 80}, 800);
+      }
+    </script>
+
+
+
+            <div class="tag_share" style="display: block;">
+                <div class="post-meta__tag-list" style="display: inline-block;">
+                    
+                        <div class="article-tag">
+                            <span class="chip bg-color">无标签</span>
+                        </div>
+                    
+                </div>
+                <div class="post_share" style="zoom: 80%; width: fit-content; display: inline-block; float: right; margin: -0.15rem 0;">
+                    <link rel="stylesheet" type="text/css" href="/libs/share/css/share.min.css">
+<div id="article-share">
+
+    
+    <div class="social-share" data-sites="twitter,facebook,google,qq,qzone,wechat,weibo,douban,linkedin" data-wechat-qrcode-helper="<p>微信扫一扫即可分享！</p>"></div>
+    <script src="/libs/share/js/social-share.min.js"></script>
+    
+
+    
+
+</div>
+
+                </div>
+            </div>
+            
+        </div>
+    </div>
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+<article id="prenext-posts" class="prev-next articles">
+    <div class="row article-row">
+        
+        <div class="article col s12 m6" data-aos="fade-up">
+            <div class="article-badge left-badge text-color">
+                <i class="fas fa-chevron-left"></i>&nbsp;上一篇</div>
+            <div class="card">
+                <a href="/2022/01/04/jvm/jvm-zhi-diao-you-5/">
+                    <div class="card-image">
+                        
+                        
+                        <img src="/medias/featureimages/13.jpg" class="responsive-img" alt="JVM之调优(5)">
+                        
+                        <span class="card-title">JVM之调优(5)</span>
+                    </div>
+                </a>
+                <div class="card-content article-content">
+                    <div class="summary block-with-text">
+                        
+                            
+                        
+                    </div>
+                    <div class="publish-info">
+                        <span class="publish-date">
+                            <i class="far fa-clock fa-fw icon-date"></i>2022-01-04
+                        </span>
+                        <span class="publish-author">
+                            
+                            <i class="fas fa-bookmark fa-fw icon-category"></i>
+                            
+                            <a href="/categories/jvm/" class="post-category">
+                                    jvm
+                                </a>
+                            
+                            <a href="/categories/jvm/jvm/" class="post-category">
+                                    jvm
+                                </a>
+                            
+                            
+                        </span>
+                    </div>
+                </div>
+                
+            </div>
+        </div>
+        
+        
+        <div class="article col s12 m6" data-aos="fade-up">
+            <div class="article-badge right-badge text-color">
+                下一篇&nbsp;<i class="fas fa-chevron-right"></i>
+            </div>
+            <div class="card">
+                <a href="/2022/01/04/linux/centos7-she-zhi-ding-shi-ren-wu/">
+                    <div class="card-image">
+                        
+                        
+                        <img src="/medias/featureimages/21.jpg" class="responsive-img" alt="Centos7设置定时任务">
+                        
+                        <span class="card-title">Centos7设置定时任务</span>
+                    </div>
+                </a>
+                <div class="card-content article-content">
+                    <div class="summary block-with-text">
+                        
+                            
+                        
+                    </div>
+                    <div class="publish-info">
+                            <span class="publish-date">
+                                <i class="far fa-clock fa-fw icon-date"></i>2022-01-04
+                            </span>
+                        <span class="publish-author">
+                            
+                            <i class="fas fa-bookmark fa-fw icon-category"></i>
+                            
+                            <a href="/categories/linux/" class="post-category">
+                                    linux
+                                </a>
+                            
+                            <a href="/categories/linux/linux/" class="post-category">
+                                    linux
+                                </a>
+                            
+                            
+                        </span>
+                    </div>
+                </div>
+                
+            </div>
+        </div>
+        
+    </div>
+</article>
+
+</div>
+
+
+
+<!-- 代码块功能依赖 -->
+<script type="text/javascript" src="/libs/codeBlock/codeBlockFuction.js"></script>
+
+<!-- 代码语言 -->
+
+<script type="text/javascript" src="/libs/codeBlock/codeLang.js"></script>
+
+
+<!-- 代码块复制 -->
+
+<script type="text/javascript" src="/libs/codeBlock/codeCopy.js"></script>
+
+
+<!-- 代码块收缩 -->
+
+<script type="text/javascript" src="/libs/codeBlock/codeShrink.js"></script>
+
+
+    </div>
+    <div id="toc-aside" class="expanded col l3 hide-on-med-and-down">
+        <div class="toc-widget card" style="background-color: white;">
+            <div class="toc-title"><i class="far fa-list-alt"></i>&nbsp;&nbsp;目录</div>
+            <div id="toc-content"></div>
+        </div>
+    </div>
+</div>
+
+<!-- TOC 悬浮按钮. -->
+
+<div id="floating-toc-btn" class="hide-on-med-and-down">
+    <a class="btn-floating btn-large bg-color">
+        <i class="fas fa-list-ul"></i>
+    </a>
+</div>
+
+
+<script src="/libs/tocbot/tocbot.min.js"></script>
+<script>
+    $(function () {
+        tocbot.init({
+            tocSelector: '#toc-content',
+            contentSelector: '#articleContent',
+            headingsOffset: -($(window).height() * 0.4 - 45),
+            collapseDepth: Number('0'),
+            headingSelector: 'h2, h3, h4'
+        });
+
+        // modify the toc link href to support Chinese.
+        let i = 0;
+        let tocHeading = 'toc-heading-';
+        $('#toc-content a').each(function () {
+            $(this).attr('href', '#' + tocHeading + (++i));
+        });
+
+        // modify the heading title id to support Chinese.
+        i = 0;
+        $('#articleContent').children('h2, h3, h4').each(function () {
+            $(this).attr('id', tocHeading + (++i));
+        });
+
+        // Set scroll toc fixed.
+        let tocHeight = parseInt($(window).height() * 0.4 - 64);
+        let $tocWidget = $('.toc-widget');
+        $(window).scroll(function () {
+            let scroll = $(window).scrollTop();
+            /* add post toc fixed. */
+            if (scroll > tocHeight) {
+                $tocWidget.addClass('toc-fixed');
+            } else {
+                $tocWidget.removeClass('toc-fixed');
+            }
+        });
+
+        
+        /* 修复文章卡片 div 的宽度. */
+        let fixPostCardWidth = function (srcId, targetId) {
+            let srcDiv = $('#' + srcId);
+            if (srcDiv.length === 0) {
+                return;
+            }
+
+            let w = srcDiv.width();
+            if (w >= 450) {
+                w = w + 21;
+            } else if (w >= 350 && w < 450) {
+                w = w + 18;
+            } else if (w >= 300 && w < 350) {
+                w = w + 16;
+            } else {
+                w = w + 14;
+            }
+            $('#' + targetId).width(w);
+        };
+
+        // 切换TOC目录展开收缩的相关操作.
+        const expandedClass = 'expanded';
+        let $tocAside = $('#toc-aside');
+        let $mainContent = $('#main-content');
+        $('#floating-toc-btn .btn-floating').click(function () {
+            if ($tocAside.hasClass(expandedClass)) {
+                $tocAside.removeClass(expandedClass).hide();
+                $mainContent.removeClass('l9');
+            } else {
+                $tocAside.addClass(expandedClass).show();
+                $mainContent.addClass('l9');
+            }
+            fixPostCardWidth('artDetail', 'prenext-posts');
+        });
+        
+    });
+</script>
+
+    
+
+</main>
+
+
+
+
+    <footer class="page-footer bg-color">
+    
+        <link rel="stylesheet" href="/libs/aplayer/APlayer.min.css">
+<style>
+    .aplayer .aplayer-lrc p {
+        
+        display: none;
+        
+        font-size: 12px;
+        font-weight: 700;
+        line-height: 16px !important;
+    }
+
+    .aplayer .aplayer-lrc p.aplayer-lrc-current {
+        
+        display: none;
+        
+        font-size: 15px;
+        color: #42b983;
+    }
+
+    
+    .aplayer.aplayer-fixed.aplayer-narrow .aplayer-body {
+        left: -66px !important;
+    }
+
+    .aplayer.aplayer-fixed.aplayer-narrow .aplayer-body:hover {
+        left: 0px !important;
+    }
+
+    
+</style>
+<div class="">
+    
+    <div class="row">
+        <meting-js class="col l8 offset-l2 m10 offset-m1 s12"
+                   server="netease"
+                   type="playlist"
+                   id="503838841"
+                   fixed='true'
+                   autoplay='false'
+                   theme='#42b983'
+                   loop='all'
+                   order='random'
+                   preload='auto'
+                   volume='0.7'
+                   list-folded='true'
+        >
+        </meting-js>
+    </div>
+</div>
+
+<script src="/libs/aplayer/APlayer.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/meting@2/dist/Meting.min.js"></script>
+
+    
+
+    <div class="container row center-align"
+         style="margin-bottom: 0px !important;">
+        <div class="col s12 m8 l8 copy-right">
+            Copyright&nbsp;&copy;
+            
+                <span id="year">2019-2022</span>
+            
+            <a href="/about" target="_blank">luyanan</a>
+            |&nbsp;Powered by&nbsp;<a href="https://hexo.io/" target="_blank">Hexo</a>
+            |&nbsp;Theme&nbsp;<a href="https://github.com/blinkfox/hexo-theme-matery" target="_blank">Matery</a>
+            <br>
+            
+                &nbsp;<i class="fas fa-chart-area"></i>&nbsp;站点总字数:&nbsp;<span
+                        class="white-color">803.3k</span>
+            
+            
+            
+                
+            
+            
+                <span id="busuanzi_container_site_pv">
+                &nbsp;|&nbsp;<i class="far fa-eye"></i>&nbsp;总访问量:&nbsp;
+                    <span id="busuanzi_value_site_pv" class="white-color"></span>
+            </span>
+            
+            
+                <span id="busuanzi_container_site_uv">
+                &nbsp;|&nbsp;<i class="fas fa-users"></i>&nbsp;总访问人数:&nbsp;
+                    <span id="busuanzi_value_site_uv" class="white-color"></span>
+            </span>
+            
+            <br>
+
+            <!-- 运行天数提醒. -->
+            
+            <br>
+            
+        </div>
+        <div class="col s12 m4 l4 social-link social-statis">
+    <a href="https://github.com/rainsoil" class="tooltipped" target="_blank" data-tooltip="访问我的GitHub" data-position="top" data-delay="50">
+        <i class="fab fa-github"></i>
+    </a>
+
+
+
+    <a href="mailto:luyanan0718@163.com" class="tooltipped" target="_blank" data-tooltip="邮件联系我" data-position="top" data-delay="50">
+        <i class="fas fa-envelope-open"></i>
+    </a>
+
+
+
+
+
+
+
+    <a href="tencent://AddContact/?fromId=50&fromSubId=1&subcmd=all&uin=914596513" class="tooltipped" target="_blank" data-tooltip="QQ联系我: 914596513" data-position="top" data-delay="50">
+        <i class="fab fa-qq"></i>
+    </a>
+
+
+
+
+
+
+
+    <a href="/atom.xml" class="tooltipped" target="_blank" data-tooltip="RSS 订阅" data-position="top" data-delay="50">
+        <i class="fas fa-rss"></i>
+    </a>
+
+</div>
+    </div>
+</footer>
+
+<div class="progress-bar"></div>
+
+
+    <!-- 搜索遮罩框 -->
+<div id="searchModal" class="modal">
+    <div class="modal-content">
+        <div class="search-header">
+            <span class="title"><i class="fas fa-search"></i>&nbsp;&nbsp;搜索</span>
+            <input type="search" id="searchInput" name="s" placeholder="请输入搜索的关键字"
+                   class="search-input">
+        </div>
+        <div id="searchResult"></div>
+    </div>
+</div>
+
+<script type="text/javascript">
+$(function () {
+    var searchFunc = function (path, search_id, content_id) {
+        'use strict';
+        $.ajax({
+            url: path,
+            dataType: "xml",
+            success: function (xmlResponse) {
+                // get the contents from search data
+                var datas = $("entry", xmlResponse).map(function () {
+                    return {
+                        title: $("title", this).text(),
+                        content: $("content", this).text(),
+                        url: $("url", this).text()
+                    };
+                }).get();
+                var $input = document.getElementById(search_id);
+                var $resultContent = document.getElementById(content_id);
+                $input.addEventListener('input', function () {
+                    var str = '<ul class=\"search-result-list\">';
+                    var keywords = this.value.trim().toLowerCase().split(/[\s\-]+/);
+                    $resultContent.innerHTML = "";
+                    if (this.value.trim().length <= 0) {
+                        return;
+                    }
+                    // perform local searching
+                    datas.forEach(function (data) {
+                        var isMatch = true;
+                        var data_title = data.title.trim().toLowerCase();
+                        var data_content = data.content.trim().replace(/<[^>]+>/g, "").toLowerCase();
+                        var data_url = data.url;
+                        data_url = data_url.indexOf('/') === 0 ? data.url : '/' + data_url;
+                        var index_title = -1;
+                        var index_content = -1;
+                        var first_occur = -1;
+                        // only match artiles with not empty titles and contents
+                        if (data_title !== '' && data_content !== '') {
+                            keywords.forEach(function (keyword, i) {
+                                index_title = data_title.indexOf(keyword);
+                                index_content = data_content.indexOf(keyword);
+                                if (index_title < 0 && index_content < 0) {
+                                    isMatch = false;
+                                } else {
+                                    if (index_content < 0) {
+                                        index_content = 0;
+                                    }
+                                    if (i === 0) {
+                                        first_occur = index_content;
+                                    }
+                                }
+                            });
+                        }
+                        // show search results
+                        if (isMatch) {
+                            str += "<li><a href='" + data_url + "' class='search-result-title'>" + data_title + "</a>";
+                            var content = data.content.trim().replace(/<[^>]+>/g, "");
+                            if (first_occur >= 0) {
+                                // cut out 100 characters
+                                var start = first_occur - 20;
+                                var end = first_occur + 80;
+                                if (start < 0) {
+                                    start = 0;
+                                }
+                                if (start === 0) {
+                                    end = 100;
+                                }
+                                if (end > content.length) {
+                                    end = content.length;
+                                }
+                                var match_content = content.substr(start, end);
+                                // highlight all keywords
+                                keywords.forEach(function (keyword) {
+                                    var regS = new RegExp(keyword, "gi");
+                                    match_content = match_content.replace(regS, "<em class=\"search-keyword\">" + keyword + "</em>");
+                                });
+
+                                str += "<p class=\"search-result\">" + match_content + "...</p>"
+                            }
+                            str += "</li>";
+                        }
+                    });
+                    str += "</ul>";
+                    $resultContent.innerHTML = str;
+                });
+            }
+        });
+    };
+
+    searchFunc('/search.xml', 'searchInput', 'searchResult');
+});
+</script>
+
+    <!-- 回到顶部按钮 -->
+<div id="backTop" class="top-scroll">
+    <a class="btn-floating btn-large waves-effect waves-light" href="#!">
+        <i class="fas fa-arrow-up"></i>
+    </a>
+</div>
+
+
+    <script src="/libs/materialize/materialize.min.js"></script>
+    <script src="/libs/masonry/masonry.pkgd.min.js"></script>
+    <script src="/libs/aos/aos.js"></script>
+    <script src="/libs/scrollprogress/scrollProgress.min.js"></script>
+    <script src="/libs/lightGallery/js/lightgallery-all.min.js"></script>
+    <script src="/js/matery.js"></script>
+
+    
+
+    
+
+    <!-- 雪花特效 -->
+    
+
+    <!-- 鼠标星星特效 -->
+    
+
+    <!-- Baidu Analytics -->
+
+    <!-- Baidu Push -->
+
+<script>
+    (function () {
+        var bp = document.createElement('script');
+        var curProtocol = window.location.protocol.split(':')[0];
+        if (curProtocol === 'https') {
+            bp.src = 'https://zz.bdstatic.com/linksubmit/push.js';
+        } else {
+            bp.src = 'http://push.zhanzhang.baidu.com/push.js';
+        }
+        var s = document.getElementsByTagName("script")[0];
+        s.parentNode.insertBefore(bp, s);
+    })();
+</script>
+
+    
+    <script src="/libs/others/clicklove.js" async="async"></script>
+    
+    
+    <script async src="/libs/others/busuanzi.pure.mini.js"></script>
+    
+
+    
+
+    
+
+    <!--腾讯兔小巢-->
+    
+    
+    <script type="text/javascript" color="0,0,255"
+        pointColor="0,0,255" opacity='0.7'
+        zIndex="-1" count="99"
+        src="/libs/background/canvas-nest.js"></script>
+    
+
+    
+
+    
+
+    
+    <script src="/libs/instantpage/instantpage.js" type="module"></script>
+    
+
+</body>
+
+</html>

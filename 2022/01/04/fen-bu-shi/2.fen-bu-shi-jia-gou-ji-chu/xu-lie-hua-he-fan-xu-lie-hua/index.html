@@ -1,0 +1,1518 @@
+<!DOCTYPE HTML>
+<html lang="zh-CN">
+
+
+<head>
+    <meta charset="utf-8">
+    <meta name="keywords" content="序列化和反序列化, railsoil">
+    <meta name="description" content="序列化和反序列化Java领域中对象如何传输基于socket 进行对象传输User
+package com.notes.serial;
+
+/**
+ * @author luyanan
+ * @since 2019/9/2
+ * &amp;lt;p&gt;&amp;">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="renderer" content="webkit|ie-stand|ie-comp">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="format-detection" content="telephone=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="referrer" content="no-referrer-when-downgrade">
+    <!-- Global site tag (gtag.js) - Google Analytics -->
+
+
+    <title>序列化和反序列化 | railsoil</title>
+    <link rel="icon" type="image/png" href="/favicon.png">
+
+    <link rel="stylesheet" type="text/css" href="/libs/awesome/css/all.min.css">
+    <link rel="stylesheet" type="text/css" href="/libs/materialize/materialize.min.css">
+    <link rel="stylesheet" type="text/css" href="/libs/aos/aos.css">
+    <link rel="stylesheet" type="text/css" href="/libs/animate/animate.min.css">
+    <link rel="stylesheet" type="text/css" href="/libs/lightGallery/css/lightgallery.min.css">
+    <link rel="stylesheet" type="text/css" href="/css/matery.css">
+    <link rel="stylesheet" type="text/css" href="/css/my.css">
+
+    <script src="/libs/jquery/jquery.min.js"></script>
+
+<meta name="generator" content="Hexo 5.4.0"><link rel="alternate" href="/atom.xml" title="railsoil" type="application/atom+xml">
+<link rel="stylesheet" href="/css/prism-tomorrow.css" type="text/css"></head>
+
+
+
+
+<body>
+    <header class="navbar-fixed">
+    <nav id="headNav" class="bg-color nav-transparent">
+        <div id="navContainer" class="nav-wrapper container">
+            <div class="brand-logo">
+                <a href="/" class="waves-effect waves-light">
+                    
+                    <img src="/medias/logo.png" class="logo-img" alt="LOGO">
+                    
+                    <span class="logo-span">railsoil</span>
+                </a>
+            </div>
+            
+
+<a href="#" data-target="mobile-nav" class="sidenav-trigger button-collapse"><i class="fas fa-bars"></i></a>
+<ul class="right nav-menu">
+  
+  <li class="hide-on-med-and-down nav-item">
+    
+    <a href="/" class="waves-effect waves-light">
+      
+      <i class="fas fa-home" style="zoom: 0.6;"></i>
+      
+      <span>首页</span>
+    </a>
+    
+  </li>
+  
+  <li class="hide-on-med-and-down nav-item">
+    
+    <a href="/tags" class="waves-effect waves-light">
+      
+      <i class="fas fa-tags" style="zoom: 0.6;"></i>
+      
+      <span>标签</span>
+    </a>
+    
+  </li>
+  
+  <li class="hide-on-med-and-down nav-item">
+    
+    <a href="/categories" class="waves-effect waves-light">
+      
+      <i class="fas fa-bookmark" style="zoom: 0.6;"></i>
+      
+      <span>分类</span>
+    </a>
+    
+  </li>
+  
+  <li class="hide-on-med-and-down nav-item">
+    
+    <a href="/archives" class="waves-effect waves-light">
+      
+      <i class="fas fa-archive" style="zoom: 0.6;"></i>
+      
+      <span>归档</span>
+    </a>
+    
+  </li>
+  
+  <li class="hide-on-med-and-down nav-item">
+    
+    <a href="/about" class="waves-effect waves-light">
+      
+      <i class="fas fa-user-circle" style="zoom: 0.6;"></i>
+      
+      <span>关于</span>
+    </a>
+    
+  </li>
+  
+  <li>
+    <a href="#searchModal" class="modal-trigger waves-effect waves-light">
+      <i id="searchIcon" class="fas fa-search" title="搜索" style="zoom: 0.85;"></i>
+    </a>
+  </li>
+</ul>
+
+
+<div id="mobile-nav" class="side-nav sidenav">
+
+    <div class="mobile-head bg-color">
+        
+        <img src="/medias/logo.png" class="logo-img circle responsive-img">
+        
+        <div class="logo-name">railsoil</div>
+        <div class="logo-desc">
+            
+            Never really desperate, only the lost of the soul.
+            
+        </div>
+    </div>
+
+    <ul class="menu-list mobile-menu-list">
+        
+        <li class="m-nav-item">
+	  
+		<a href="/" class="waves-effect waves-light">
+			
+			    <i class="fa-fw fas fa-home"></i>
+			
+			首页
+		</a>
+          
+        </li>
+        
+        <li class="m-nav-item">
+	  
+		<a href="/tags" class="waves-effect waves-light">
+			
+			    <i class="fa-fw fas fa-tags"></i>
+			
+			标签
+		</a>
+          
+        </li>
+        
+        <li class="m-nav-item">
+	  
+		<a href="/categories" class="waves-effect waves-light">
+			
+			    <i class="fa-fw fas fa-bookmark"></i>
+			
+			分类
+		</a>
+          
+        </li>
+        
+        <li class="m-nav-item">
+	  
+		<a href="/archives" class="waves-effect waves-light">
+			
+			    <i class="fa-fw fas fa-archive"></i>
+			
+			归档
+		</a>
+          
+        </li>
+        
+        <li class="m-nav-item">
+	  
+		<a href="/about" class="waves-effect waves-light">
+			
+			    <i class="fa-fw fas fa-user-circle"></i>
+			
+			关于
+		</a>
+          
+        </li>
+        
+        
+    </ul>
+</div>
+
+
+        </div>
+
+        
+    </nav>
+
+</header>
+
+    
+
+
+
+<div class="bg-cover pd-header post-cover" style="background-image: url('/medias/featureimages/9.jpg')">
+    <div class="container" style="right: 0px;left: 0px;">
+        <div class="row">
+            <div class="col s12 m12 l12">
+                <div class="brand">
+                    <h1 class="description center-align post-title">序列化和反序列化</h1>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+
+<main class="post-container content">
+
+    
+    <link rel="stylesheet" href="/libs/tocbot/tocbot.css">
+<style>
+    #articleContent h1::before,
+    #articleContent h2::before,
+    #articleContent h3::before,
+    #articleContent h4::before,
+    #articleContent h5::before,
+    #articleContent h6::before {
+        display: block;
+        content: " ";
+        height: 100px;
+        margin-top: -100px;
+        visibility: hidden;
+    }
+
+    #articleContent :focus {
+        outline: none;
+    }
+
+    .toc-fixed {
+        position: fixed;
+        top: 64px;
+    }
+
+    .toc-widget {
+        width: 345px;
+        padding-left: 20px;
+    }
+
+    .toc-widget .toc-title {
+        padding: 35px 0 15px 17px;
+        font-size: 1.5rem;
+        font-weight: bold;
+        line-height: 1.5rem;
+    }
+
+    .toc-widget ol {
+        padding: 0;
+        list-style: none;
+    }
+
+    #toc-content {
+        padding-bottom: 30px;
+        overflow: auto;
+    }
+
+    #toc-content ol {
+        padding-left: 10px;
+    }
+
+    #toc-content ol li {
+        padding-left: 10px;
+    }
+
+    #toc-content .toc-link:hover {
+        color: #42b983;
+        font-weight: 700;
+        text-decoration: underline;
+    }
+
+    #toc-content .toc-link::before {
+        background-color: transparent;
+        max-height: 25px;
+
+        position: absolute;
+        right: 23.5vw;
+        display: block;
+    }
+
+    #toc-content .is-active-link {
+        color: #42b983;
+    }
+
+    #floating-toc-btn {
+        position: fixed;
+        right: 15px;
+        bottom: 76px;
+        padding-top: 15px;
+        margin-bottom: 0;
+        z-index: 998;
+    }
+
+    #floating-toc-btn .btn-floating {
+        width: 48px;
+        height: 48px;
+    }
+
+    #floating-toc-btn .btn-floating i {
+        line-height: 48px;
+        font-size: 1.4rem;
+    }
+</style>
+<div class="row">
+    <div id="main-content" class="col s12 m12 l9">
+        <!-- 文章内容详情 -->
+<div id="artDetail">
+    <div class="card">
+        <div class="card-content article-info">
+            <div class="row tag-cate">
+                <div class="col s7">
+                    
+                          <div class="article-tag">
+                            <span class="chip bg-color">无标签</span>
+                          </div>
+                    
+                </div>
+                <div class="col s5 right-align">
+                    
+                    <div class="post-cate">
+                        <i class="fas fa-bookmark fa-fw icon-category"></i>
+                        
+                            <a href="/categories/2-%E5%88%86%E5%B8%83%E5%BC%8F%E6%9E%B6%E6%9E%84%E5%9F%BA%E7%A1%80/" class="post-category">
+                                2. 分布式架构基础
+                            </a>
+                        
+                            <a href="/categories/2-%E5%88%86%E5%B8%83%E5%BC%8F%E6%9E%B6%E6%9E%84%E5%9F%BA%E7%A1%80/%E5%88%86%E5%B8%83%E5%BC%8F/" class="post-category">
+                                分布式
+                            </a>
+                        
+                            <a href="/categories/2-%E5%88%86%E5%B8%83%E5%BC%8F%E6%9E%B6%E6%9E%84%E5%9F%BA%E7%A1%80/%E5%88%86%E5%B8%83%E5%BC%8F/%E5%88%86%E5%B8%83%E5%BC%8F/" class="post-category">
+                                分布式
+                            </a>
+                        
+                            <a href="/categories/2-%E5%88%86%E5%B8%83%E5%BC%8F%E6%9E%B6%E6%9E%84%E5%9F%BA%E7%A1%80/%E5%88%86%E5%B8%83%E5%BC%8F/%E5%88%86%E5%B8%83%E5%BC%8F/2-%E5%88%86%E5%B8%83%E5%BC%8F%E6%9E%B6%E6%9E%84%E5%9F%BA%E7%A1%80/" class="post-category">
+                                2. 分布式架构基础
+                            </a>
+                        
+                    </div>
+                    
+                </div>
+            </div>
+
+            <div class="post-info">
+                
+                <div class="post-date info-break-policy">
+                    <i class="far fa-calendar-minus fa-fw"></i>发布日期:&nbsp;&nbsp;
+                    2022-01-04
+                </div>
+                
+
+                
+
+                
+                <div class="info-break-policy">
+                    <i class="far fa-file-word fa-fw"></i>文章字数:&nbsp;&nbsp;
+                    5.4k
+                </div>
+                
+
+                
+                <div class="info-break-policy">
+                    <i class="far fa-clock fa-fw"></i>阅读时长:&nbsp;&nbsp;
+                    21 分
+                </div>
+                
+
+                
+                    <div id="busuanzi_container_page_pv" class="info-break-policy">
+                        <i class="far fa-eye fa-fw"></i>阅读次数:&nbsp;&nbsp;
+                        <span id="busuanzi_value_page_pv"></span>
+                    </div>
+				
+            </div>
+        </div>
+        <hr class="clearfix">
+
+        
+
+        
+
+        <div class="card-content article-card-content">
+            <div id="articleContent">
+                <h1 id="序列化和反序列化"><a href="#序列化和反序列化" class="headerlink" title="序列化和反序列化"></a>序列化和反序列化</h1><h2 id="Java领域中对象如何传输"><a href="#Java领域中对象如何传输" class="headerlink" title="Java领域中对象如何传输"></a>Java领域中对象如何传输</h2><h3 id="基于socket-进行对象传输"><a href="#基于socket-进行对象传输" class="headerlink" title="基于socket 进行对象传输"></a>基于socket 进行对象传输</h3><p>User</p>
+<pre class=" language-java"><code class="language-java"><span class="token keyword">package</span> com<span class="token punctuation">.</span>notes<span class="token punctuation">.</span>serial<span class="token punctuation">;</span>
+
+<span class="token comment" spellcheck="true">/**
+ * @author luyanan
+ * @since 2019/9/2
+ * &lt;p>&lt;/p>
+ **/</span>
+<span class="token keyword">public</span> <span class="token keyword">class</span> <span class="token class-name">User</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+
+    <span class="token keyword">private</span> String name<span class="token punctuation">;</span>
+
+    <span class="token keyword">private</span> Integer age<span class="token punctuation">;</span>
+
+
+    <span class="token keyword">public</span> <span class="token function">User</span><span class="token punctuation">(</span>String name<span class="token punctuation">,</span> Integer age<span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+        <span class="token keyword">this</span><span class="token punctuation">.</span>name <span class="token operator">=</span> name<span class="token punctuation">;</span>
+        <span class="token keyword">this</span><span class="token punctuation">.</span>age <span class="token operator">=</span> age<span class="token punctuation">;</span>
+    <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+
+    <span class="token keyword">public</span> String <span class="token function">getName</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+        <span class="token keyword">return</span> name<span class="token punctuation">;</span>
+    <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+
+    <span class="token keyword">public</span> <span class="token keyword">void</span> <span class="token function">setName</span><span class="token punctuation">(</span>String name<span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+        <span class="token keyword">this</span><span class="token punctuation">.</span>name <span class="token operator">=</span> name<span class="token punctuation">;</span>
+    <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+
+    <span class="token keyword">public</span> Integer <span class="token function">getAge</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+        <span class="token keyword">return</span> age<span class="token punctuation">;</span>
+    <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+
+    <span class="token keyword">public</span> <span class="token keyword">void</span> <span class="token function">setAge</span><span class="token punctuation">(</span>Integer age<span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+        <span class="token keyword">this</span><span class="token punctuation">.</span>age <span class="token operator">=</span> age<span class="token punctuation">;</span>
+    <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+
+    <span class="token annotation punctuation">@Override</span>
+    <span class="token keyword">public</span> String <span class="token function">toString</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+        <span class="token keyword">return</span> <span class="token string">"User&amp;#123;"</span> <span class="token operator">+</span>
+                <span class="token string">"name='"</span> <span class="token operator">+</span> name <span class="token operator">+</span> <span class="token string">'\''</span> <span class="token operator">+</span>
+                <span class="token string">", age="</span> <span class="token operator">+</span> age <span class="token operator">+</span>
+                <span class="token string">'&amp;#125;'</span><span class="token punctuation">;</span>
+    <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+<span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+</code></pre>
+<p>SocketServerProvider</p>
+<pre class=" language-java"><code class="language-java"><span class="token keyword">package</span> com<span class="token punctuation">.</span>notes<span class="token punctuation">.</span>serial<span class="token punctuation">;</span>
+
+<span class="token keyword">import</span> java<span class="token punctuation">.</span>io<span class="token punctuation">.</span>IOException<span class="token punctuation">;</span>
+<span class="token keyword">import</span> java<span class="token punctuation">.</span>io<span class="token punctuation">.</span>ObjectInputStream<span class="token punctuation">;</span>
+<span class="token keyword">import</span> java<span class="token punctuation">.</span>net<span class="token punctuation">.</span>ServerSocket<span class="token punctuation">;</span>
+<span class="token keyword">import</span> java<span class="token punctuation">.</span>net<span class="token punctuation">.</span>Socket<span class="token punctuation">;</span>
+
+<span class="token comment" spellcheck="true">/**
+ * @author luyanan
+ * @since 2019/9/2
+ * &lt;p>socker Service&lt;/p>
+ **/</span>
+<span class="token keyword">public</span> <span class="token keyword">class</span> <span class="token class-name">SocketServerProvider</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+
+    <span class="token keyword">public</span> <span class="token keyword">static</span> <span class="token keyword">void</span> <span class="token function">main</span><span class="token punctuation">(</span>String<span class="token punctuation">[</span><span class="token punctuation">]</span> args<span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+
+
+        ServerSocket serverSocket <span class="token operator">=</span> null<span class="token punctuation">;</span>
+        ObjectInputStream ois <span class="token operator">=</span> null<span class="token punctuation">;</span>
+        Socket socket <span class="token operator">=</span> null<span class="token punctuation">;</span>
+        <span class="token keyword">try</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+            serverSocket <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">ServerSocket</span><span class="token punctuation">(</span><span class="token number">8080</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+            socket <span class="token operator">=</span> serverSocket<span class="token punctuation">.</span><span class="token function">accept</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+            ois <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">ObjectInputStream</span><span class="token punctuation">(</span>socket<span class="token punctuation">.</span><span class="token function">getInputStream</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+            User user <span class="token operator">=</span> <span class="token punctuation">(</span>User<span class="token punctuation">)</span> ois<span class="token punctuation">.</span><span class="token function">readObject</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+            System<span class="token punctuation">.</span>out<span class="token punctuation">.</span><span class="token function">println</span><span class="token punctuation">(</span>user<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span> <span class="token keyword">catch</span> <span class="token punctuation">(</span><span class="token class-name">IOException</span> e<span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+            e<span class="token punctuation">.</span><span class="token function">printStackTrace</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span> <span class="token keyword">catch</span> <span class="token punctuation">(</span><span class="token class-name">ClassNotFoundException</span> e<span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+            e<span class="token punctuation">.</span><span class="token function">printStackTrace</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span> <span class="token keyword">finally</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+
+            <span class="token keyword">try</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+                serverSocket<span class="token punctuation">.</span><span class="token function">close</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+                socket<span class="token punctuation">.</span><span class="token function">close</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+                ois<span class="token punctuation">.</span><span class="token function">close</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span> <span class="token keyword">catch</span> <span class="token punctuation">(</span><span class="token class-name">IOException</span> e<span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+                e<span class="token punctuation">.</span><span class="token function">printStackTrace</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+        <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+    <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+
+<span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+</code></pre>
+<p>SocketClientConsumer</p>
+<pre class=" language-java"><code class="language-java"><span class="token keyword">package</span> com<span class="token punctuation">.</span>notes<span class="token punctuation">.</span>serial<span class="token punctuation">;</span>
+
+<span class="token keyword">import</span> java<span class="token punctuation">.</span>io<span class="token punctuation">.</span>IOException<span class="token punctuation">;</span>
+<span class="token keyword">import</span> java<span class="token punctuation">.</span>io<span class="token punctuation">.</span>ObjectOutputStream<span class="token punctuation">;</span>
+<span class="token keyword">import</span> java<span class="token punctuation">.</span>net<span class="token punctuation">.</span>Socket<span class="token punctuation">;</span>
+
+<span class="token comment" spellcheck="true">/**
+ * @author luyanan
+ * @since 2019/9/2
+ * &lt;p>&lt;/p>
+ **/</span>
+<span class="token keyword">public</span> <span class="token keyword">class</span> <span class="token class-name">SocketClientConsumer</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+
+    <span class="token keyword">public</span> <span class="token keyword">static</span> <span class="token keyword">void</span> <span class="token function">main</span><span class="token punctuation">(</span>String<span class="token punctuation">[</span><span class="token punctuation">]</span> args<span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+        Socket socket <span class="token operator">=</span> null<span class="token punctuation">;</span>
+        ObjectOutputStream oos <span class="token operator">=</span> null<span class="token punctuation">;</span>
+        <span class="token keyword">try</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+            socket <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">Socket</span><span class="token punctuation">(</span><span class="token string">"localhost"</span><span class="token punctuation">,</span> <span class="token number">8080</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+            oos <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">ObjectOutputStream</span><span class="token punctuation">(</span>socket<span class="token punctuation">.</span><span class="token function">getOutputStream</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+            User user <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">User</span><span class="token punctuation">(</span><span class="token string">"tom"</span><span class="token punctuation">,</span> <span class="token number">18</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+            oos<span class="token punctuation">.</span><span class="token function">writeObject</span><span class="token punctuation">(</span>user<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span> <span class="token keyword">catch</span> <span class="token punctuation">(</span><span class="token class-name">IOException</span> e<span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+            e<span class="token punctuation">.</span><span class="token function">printStackTrace</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span> <span class="token keyword">finally</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+            <span class="token keyword">try</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+                socket<span class="token punctuation">.</span><span class="token function">close</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+                oos<span class="token punctuation">.</span><span class="token function">close</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span> <span class="token keyword">catch</span> <span class="token punctuation">(</span><span class="token class-name">IOException</span> e<span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+                e<span class="token punctuation">.</span><span class="token function">printStackTrace</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+
+        <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+    <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+
+<span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+</code></pre>
+<p>运行结果</p>
+<pre class=" language-java"><code class="language-java">java<span class="token punctuation">.</span>io<span class="token punctuation">.</span>NotSerializableException<span class="token operator">:</span> com<span class="token punctuation">.</span>notes<span class="token punctuation">.</span>serial<span class="token punctuation">.</span>User
+    at java<span class="token punctuation">.</span>io<span class="token punctuation">.</span>ObjectOutputStream<span class="token punctuation">.</span><span class="token function">writeObject0</span><span class="token punctuation">(</span>ObjectOutputStream<span class="token punctuation">.</span>java<span class="token operator">:</span><span class="token number">1184</span><span class="token punctuation">)</span>
+    at java<span class="token punctuation">.</span>io<span class="token punctuation">.</span>ObjectOutputStream<span class="token punctuation">.</span><span class="token function">writeObject</span><span class="token punctuation">(</span>ObjectOutputStream<span class="token punctuation">.</span>java<span class="token operator">:</span><span class="token number">348</span><span class="token punctuation">)</span>
+    at com<span class="token punctuation">.</span>notes<span class="token punctuation">.</span>serial<span class="token punctuation">.</span>SocketClientConsumer<span class="token punctuation">.</span><span class="token function">main</span><span class="token punctuation">(</span>SocketClientConsumer<span class="token punctuation">.</span>java<span class="token operator">:</span><span class="token number">21</span><span class="token punctuation">)</span>
+</code></pre>
+<h4 id="如何解决这个问题呢"><a href="#如何解决这个问题呢" class="headerlink" title="如何解决这个问题呢?"></a>如何解决这个问题呢?</h4><p>对User对象实现一个Serializable 接口,再次运行就可以看到对象能够正常传输了</p>
+<pre class=" language-java"><code class="language-java"><span class="token keyword">package</span> com<span class="token punctuation">.</span>notes<span class="token punctuation">.</span>serial<span class="token punctuation">;</span>
+
+<span class="token keyword">import</span> java<span class="token punctuation">.</span>io<span class="token punctuation">.</span>Serializable<span class="token punctuation">;</span>
+
+<span class="token comment" spellcheck="true">/**
+ * @author luyanan
+ * @since 2019/9/2
+ * &lt;p>&lt;/p>
+ **/</span>
+<span class="token keyword">public</span> <span class="token keyword">class</span> <span class="token class-name">User</span>   <span class="token keyword">implements</span> <span class="token class-name">Serializable</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+
+    <span class="token keyword">private</span> <span class="token keyword">static</span> <span class="token keyword">final</span> <span class="token keyword">long</span> serialVersionUID <span class="token operator">=</span> 2771514728172982823L<span class="token punctuation">;</span>
+    <span class="token keyword">private</span> String name<span class="token punctuation">;</span>
+
+    <span class="token keyword">private</span> Integer age<span class="token punctuation">;</span>
+
+
+    <span class="token keyword">public</span> <span class="token function">User</span><span class="token punctuation">(</span>String name<span class="token punctuation">,</span> Integer age<span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+        <span class="token keyword">this</span><span class="token punctuation">.</span>name <span class="token operator">=</span> name<span class="token punctuation">;</span>
+        <span class="token keyword">this</span><span class="token punctuation">.</span>age <span class="token operator">=</span> age<span class="token punctuation">;</span>
+    <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+
+    <span class="token keyword">public</span> String <span class="token function">getName</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+        <span class="token keyword">return</span> name<span class="token punctuation">;</span>
+    <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+
+    <span class="token keyword">public</span> <span class="token keyword">void</span> <span class="token function">setName</span><span class="token punctuation">(</span>String name<span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+        <span class="token keyword">this</span><span class="token punctuation">.</span>name <span class="token operator">=</span> name<span class="token punctuation">;</span>
+    <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+
+    <span class="token keyword">public</span> Integer <span class="token function">getAge</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+        <span class="token keyword">return</span> age<span class="token punctuation">;</span>
+    <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+
+    <span class="token keyword">public</span> <span class="token keyword">void</span> <span class="token function">setAge</span><span class="token punctuation">(</span>Integer age<span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+        <span class="token keyword">this</span><span class="token punctuation">.</span>age <span class="token operator">=</span> age<span class="token punctuation">;</span>
+    <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+
+    <span class="token annotation punctuation">@Override</span>
+    <span class="token keyword">public</span> String <span class="token function">toString</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+        <span class="token keyword">return</span> <span class="token string">"User&amp;#123;"</span> <span class="token operator">+</span>
+                <span class="token string">"name='"</span> <span class="token operator">+</span> name <span class="token operator">+</span> <span class="token string">'\''</span> <span class="token operator">+</span>
+                <span class="token string">", age="</span> <span class="token operator">+</span> age <span class="token operator">+</span>
+                <span class="token string">'&amp;#125;'</span><span class="token punctuation">;</span>
+    <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+<span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+</code></pre>
+<p>运行结果</p>
+<pre class=" language-java"><code class="language-java">User<span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>name<span class="token operator">=</span><span class="token string">'tom'</span><span class="token punctuation">,</span> age<span class="token operator">=</span><span class="token number">18</span><span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+</code></pre>
+<h3 id="了解序列化的意义"><a href="#了解序列化的意义" class="headerlink" title="了解序列化的意义"></a>了解序列化的意义</h3><p>我们发现User这个类增加一个Serializable ,就可以解决java对象的网络传输问题,这就是今天给大家讲解序列化这块的意义.</p>
+<p>java平台允许我们在内存中创建可复用的java对象.但一般情况下,只有当JVM处于运行时，这些对象才可能存在. 即这些对象的生命周期不会比JVM的生命周期更长. 但是在现实应用中,就可能要求在JVM停止运行之后能够保存(持久化)指定的对象.并在将来重新读取被保存的对象.Java对象序列化就能够帮助我们实现该功能.</p>
+<p>简单来说:</p>
+<p>序列化就是把对象的状态信息转化为可存储或者传输的形式过程,也就是把对象转换为字节序列化的过程称为对象的序列化.</p>
+<p>反序列化是序列化的逆向过程, 把字节数组反序列化为对象,把字节序列恢复为对象的过程称为对象的反序列化.</p>
+<h2 id="序列化的高阶认识"><a href="#序列化的高阶认识" class="headerlink" title="序列化的高阶认识"></a>序列化的高阶认识</h2><h3 id="简单认识一下java原生序列化"><a href="#简单认识一下java原生序列化" class="headerlink" title="简单认识一下java原生序列化"></a>简单认识一下java原生序列化</h3><p>前面的代码中演示了,如何通过JDK提供了java 对象的序列化方式实现对象序列化传输, 主要通过输出流ObjectOutputStream和对象输入流 ObjectInputStream来实现.</p>
+<p>ObjectOutputStream: 表示对象输出流, 他的 writeObject(Object obj) 方法可以对参数指定的obj对象进行序列化,把得到的字节序列写到一个目标输出流中.</p>
+<p>ObjectInputStream: 表示对象输入流, 它的 readObject() 方法从输入流中读取字节序列, 再把他们反序列化称为一个对象, 并将其返回.</p>
+<p>需要注意的是, 被序列化的对象需要实现 Serializable 接口.,</p>
+<h3 id="序列化的高级认识"><a href="#序列化的高级认识" class="headerlink" title="序列化的高级认识"></a>序列化的高级认识</h3><h4 id="serialVersionUID-的作用"><a href="#serialVersionUID-的作用" class="headerlink" title="serialVersionUID 的作用"></a>serialVersionUID 的作用</h4><p> 在IDEA中通过如下设置可以生成 serialVersionUID</p>
+<p><img src="http://files.luyanan.com//img/20190903102233.png"></p>
+<p>字面意思是序列化的版本号, 凡是实现Serializable 接口的类 都有一个表示序列化版本标识符的静态变量</p>
+<p>演示步骤:</p>
+<ol>
+<li>先将user 对象序列化到文件中</li>
+<li>然后修改user对象,增加 serialVersionUID 字段</li>
+<li>然后通过反序列化来把对象提取出来</li>
+<li>演示结果: 提示无法反序列化</li>
+</ol>
+<h4 id="结论"><a href="#结论" class="headerlink" title="结论:"></a>结论:</h4><p>java的序列化机制是通过判断类的 serialVersionUID 来验证版本一致的. 在进行反序列化时，JVM会把传来的字节流中的 serialVersionUID 于本地相应实体类的 serialVersionUID 进行比较,如果相同就认为是一致的. 可以进行反序列化. 否则就会出现序列化版本不一致的异常. 即是 InvalidCastException</p>
+<p>从结果可以看出, 文件流中的class 和classpath 中的class ,也就是修改过后的 class, 不兼容了,处于安全机制考虑,程序抛出了错误,并且拒绝载入, 从错误结果来看, 如果没有为指定的class 配置serialVersionUID , 那么java 编译器会自动给这个class 进行一个摘要算法,类似于一个指纹算法,只要这个文件有任何改动, 得到的UID 就会截然不同， 可以保证在这么多类中, 这个编号是唯一的. 所以,由于没有显式的指定 serialVersionUID , 编译器又为我们生成了一个UID， 当然和前面保存在文件中的那个会不一样了, 于是就出现了2个序列化版本号不一致的算法. 因此, 只要我们自己指定了 serialVersionUID ,就可以在序列化后,去添加一个字段, 或者方法,而不会影响到后期的还原, 还原后的对象照样可以使用, 而且还多了方法或者属性可以用.</p>
+<blockquote>
+<p>tips: serialVersionUID  有两种显示的生成方式.</p>
+<p>一种是默认的1L,比如 private static final long serialVersionUID = 1L;</p>
+<p>二是根据类名,接口名、成员方法以及属性等来生成一个64位的哈希字段</p>
+<p>当实现 Serializable 接口的类没有显式的定义一个 serialVersionUID 变量的时候, java序列化机制会根据编译器的Class自动的生成一个 serialVersionUID 作为序列化版本使用, 这种情况下，如果Class文件(类名、方法名)没有发生变化(增加空格、换行、增加注释等等),就算再编译多次,serialVersionUID 也不会发生变化的.</p>
+</blockquote>
+<h4 id="Transient-关键字"><a href="#Transient-关键字" class="headerlink" title="Transient  关键字"></a>Transient  关键字</h4><p>Transient 关键字的作用是控制变量的序列化, 在变量声明前加上该关键字, 可以阻止该变量被序列化到文件中, 在反序列化后, Transient  变量的值被设置为初始值, 如Int 类型的值是0,对象型的是null.</p>
+<h5 id="绕开Transient-机制的办法"><a href="#绕开Transient-机制的办法" class="headerlink" title="绕开Transient  机制的办法"></a>绕开Transient  机制的办法</h5><p>虽然字段被Transient  修饰,但是可以通过重写 writeObject 和readObject  方法仍然使得 字段正确的被序列化和反序列化。</p>
+<pre class=" language-java"><code class="language-java"><span class="token keyword">package</span> com<span class="token punctuation">.</span>notes<span class="token punctuation">.</span>serial<span class="token punctuation">;</span>
+
+<span class="token keyword">import</span> java<span class="token punctuation">.</span>io<span class="token punctuation">.</span>IOException<span class="token punctuation">;</span>
+<span class="token keyword">import</span> java<span class="token punctuation">.</span>io<span class="token punctuation">.</span>Serializable<span class="token punctuation">;</span>
+
+<span class="token comment" spellcheck="true">/**
+ * @author luyanan
+ * @since 2019/9/2
+ * &lt;p>&lt;/p>
+ **/</span>
+<span class="token keyword">public</span> <span class="token keyword">class</span> <span class="token class-name">User</span> <span class="token keyword">implements</span> <span class="token class-name">Serializable</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+
+    <span class="token keyword">private</span> <span class="token keyword">static</span> <span class="token keyword">final</span> <span class="token keyword">long</span> serialVersionUID <span class="token operator">=</span> 2771514728172982823L<span class="token punctuation">;</span>
+    <span class="token keyword">private</span> <span class="token keyword">transient</span> String name<span class="token punctuation">;</span>
+
+    <span class="token keyword">private</span> Integer age<span class="token punctuation">;</span>
+
+
+    <span class="token keyword">public</span> <span class="token function">User</span><span class="token punctuation">(</span>String name<span class="token punctuation">,</span> Integer age<span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+        <span class="token keyword">this</span><span class="token punctuation">.</span>name <span class="token operator">=</span> name<span class="token punctuation">;</span>
+        <span class="token keyword">this</span><span class="token punctuation">.</span>age <span class="token operator">=</span> age<span class="token punctuation">;</span>
+    <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+
+    <span class="token keyword">public</span> String <span class="token function">getName</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+        <span class="token keyword">return</span> name<span class="token punctuation">;</span>
+    <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+
+    <span class="token keyword">public</span> <span class="token keyword">void</span> <span class="token function">setName</span><span class="token punctuation">(</span>String name<span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+        <span class="token keyword">this</span><span class="token punctuation">.</span>name <span class="token operator">=</span> name<span class="token punctuation">;</span>
+    <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+
+    <span class="token keyword">public</span> Integer <span class="token function">getAge</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+        <span class="token keyword">return</span> age<span class="token punctuation">;</span>
+    <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+
+    <span class="token keyword">public</span> <span class="token keyword">void</span> <span class="token function">setAge</span><span class="token punctuation">(</span>Integer age<span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+        <span class="token keyword">this</span><span class="token punctuation">.</span>age <span class="token operator">=</span> age<span class="token punctuation">;</span>
+    <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+
+    <span class="token annotation punctuation">@Override</span>
+    <span class="token keyword">public</span> String <span class="token function">toString</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+        <span class="token keyword">return</span> <span class="token string">"User&amp;#123;"</span> <span class="token operator">+</span>
+                <span class="token string">"name='"</span> <span class="token operator">+</span> name <span class="token operator">+</span> <span class="token string">'\''</span> <span class="token operator">+</span>
+                <span class="token string">", age="</span> <span class="token operator">+</span> age <span class="token operator">+</span>
+                <span class="token string">'&amp;#125;'</span><span class="token punctuation">;</span>
+    <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+
+    <span class="token keyword">private</span> <span class="token keyword">void</span> <span class="token function">writeObject</span><span class="token punctuation">(</span>java<span class="token punctuation">.</span>io<span class="token punctuation">.</span>ObjectOutputStream s<span class="token punctuation">)</span> <span class="token keyword">throws</span> IOException <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+        s<span class="token punctuation">.</span><span class="token function">defaultWriteObject</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+        s<span class="token punctuation">.</span><span class="token function">writeObject</span><span class="token punctuation">(</span>name<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+
+    <span class="token keyword">private</span> <span class="token keyword">void</span> <span class="token function">readObject</span><span class="token punctuation">(</span>java<span class="token punctuation">.</span>io<span class="token punctuation">.</span>ObjectInputStream s<span class="token punctuation">)</span> <span class="token keyword">throws</span> IOException<span class="token punctuation">,</span> ClassNotFoundException <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+        s<span class="token punctuation">.</span><span class="token function">defaultReadObject</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        name <span class="token operator">=</span> <span class="token punctuation">(</span>String<span class="token punctuation">)</span> s<span class="token punctuation">.</span><span class="token function">readObject</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+
+
+<span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+</code></pre>
+<h5 id="writeObject-和readObject-原理"><a href="#writeObject-和readObject-原理" class="headerlink" title="writeObject 和readObject 原理"></a>writeObject 和readObject 原理</h5><p>writeObject 和readObject 是两个私有方法， 他们是什么时候被调用的呢? 从运行结果上看,它确实被调用， 而且他们并不存在于Object,也没有在Serializable 中去声明, 我们唯一的猜想应该还是和ObjectInputStream和ObjectOutputStream   有关系, 所以 基于这个入口去看看在哪个地方调用.</p>
+<pre class=" language-java"><code class="language-java">    <span class="token keyword">void</span> <span class="token function">invokeReadObject</span><span class="token punctuation">(</span>Object obj<span class="token punctuation">,</span> ObjectInputStream in<span class="token punctuation">)</span>
+        <span class="token keyword">throws</span> ClassNotFoundException<span class="token punctuation">,</span> IOException<span class="token punctuation">,</span>
+               UnsupportedOperationException
+    <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+        <span class="token function">requireInitialized</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token keyword">if</span> <span class="token punctuation">(</span>readObjectMethod <span class="token operator">!=</span> null<span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+            <span class="token keyword">try</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+                readObjectMethod<span class="token punctuation">.</span><span class="token function">invoke</span><span class="token punctuation">(</span>obj<span class="token punctuation">,</span> <span class="token keyword">new</span> <span class="token class-name">Object</span><span class="token punctuation">[</span><span class="token punctuation">]</span><span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span> in <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span> <span class="token keyword">catch</span> <span class="token punctuation">(</span><span class="token class-name">InvocationTargetException</span> ex<span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+                Throwable th <span class="token operator">=</span> ex<span class="token punctuation">.</span><span class="token function">getTargetException</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+                <span class="token keyword">if</span> <span class="token punctuation">(</span>th <span class="token keyword">instanceof</span> <span class="token class-name">ClassNotFoundException</span><span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+                    <span class="token keyword">throw</span> <span class="token punctuation">(</span>ClassNotFoundException<span class="token punctuation">)</span> th<span class="token punctuation">;</span>
+                <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span> <span class="token keyword">else</span> <span class="token keyword">if</span> <span class="token punctuation">(</span>th <span class="token keyword">instanceof</span> <span class="token class-name">IOException</span><span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+                    <span class="token keyword">throw</span> <span class="token punctuation">(</span>IOException<span class="token punctuation">)</span> th<span class="token punctuation">;</span>
+                <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span> <span class="token keyword">else</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+                    <span class="token function">throwMiscException</span><span class="token punctuation">(</span>th<span class="token punctuation">)</span><span class="token punctuation">;</span>
+                <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+            <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span> <span class="token keyword">catch</span> <span class="token punctuation">(</span><span class="token class-name">IllegalAccessException</span> ex<span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+                <span class="token comment" spellcheck="true">// should not occur, as access checks have been suppressed</span>
+                <span class="token keyword">throw</span> <span class="token keyword">new</span> <span class="token class-name">InternalError</span><span class="token punctuation">(</span>ex<span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+        <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span> <span class="token keyword">else</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+            <span class="token keyword">throw</span> <span class="token keyword">new</span> <span class="token class-name">UnsupportedOperationException</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+    <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+    
+</code></pre>
+<p>从源码的层面来可以分析到,  readObject 是通过反射调用的.,</p>
+<p>其实我们在很多地方可以看到 readObject 和writeObject 的调用，比如HashMap .</p>
+<h4 id="Java序列化的一些简单总结"><a href="#Java序列化的一些简单总结" class="headerlink" title="Java序列化的一些简单总结"></a>Java序列化的一些简单总结</h4><ol>
+<li>Java 序列化只是针对对象的状态进行保存,至于对象里的方法, 序列化不关心</li>
+<li>当一个父类实现了序列化， 那么子类会自动实现序列化,不需要显示实现序列化接口.</li>
+<li>当一个对象的实例变量引用了其他对象,序列化和这个对象的时候会自动把引入的对象也进行序列化(实现深度克隆)</li>
+<li>当某个字段被声明为 transient 后,默认的序列化机制会忽略这个字段.</li>
+<li>被申明为 transient 的字段,如果需要被序列化，可以添加两个私有方法 readObject 和writeObject</li>
+</ol>
+<h2 id="分布式架构下的常见的序列化技术"><a href="#分布式架构下的常见的序列化技术" class="headerlink" title="分布式架构下的常见的序列化技术"></a>分布式架构下的常见的序列化技术</h2><p>初步了解了java序列化的知识以后,我们又回到了分布式架构中,了解序列化的发展过程.</p>
+<h3 id="了解序列化的发展"><a href="#了解序列化的发展" class="headerlink" title="了解序列化的发展"></a>了解序列化的发展</h3><p>随着分布式架构、微服务架构的普及,服务于服务之间的通信成了最基本的需求. 这个时候, 我们不仅需要考虑通信的性能, 也需要考虑到语言多元化的问题.</p>
+<p>所以,对于序列化来说,如何去提升序列化性能以及解决跨语言问题,就成了一个重点考虑的问题.</p>
+<p>由于java本身提供的序列化机制存在两个问题:</p>
+<ol>
+<li>序列化的数据比较大, 传输效率低</li>
+<li>其他语言无法识别和对接.</li>
+</ol>
+<p>以至于在后来的很长一段时间, 基于XML 格式编码的对象序列化机制成为主流, 一方面解决了多语言兼容的问题,另一方面比二进制序列化的方式更容易理解. 以至于基于XML的SOAP协议以及对应的WebService 框架在很长一段时间内成为各个主流开发语言的必备的技术.</p>
+<p>再到后来, 基于SJON的简单文本格式编码的HTTP REST 接口又基本取代了复杂的Web Service接口, 成为分布式架构中远程通信的首要选择. 但是,JSON 序列化存储占用的空间大,性能低的问题, 同时移动客户端应用需要更高效的传输数据来提升用户体验. 在这种情况下于语言无关并且高效的二进制编码协议就成了大家追求的热点技术之一, 首先诞生的一个开源的二进制序列化框架-MessagePack. 他比google的Protocol Buffers 出现的还早.</p>
+<h3 id="简单了解各种序列化技术"><a href="#简单了解各种序列化技术" class="headerlink" title="简单了解各种序列化技术"></a>简单了解各种序列化技术</h3><h4 id="XML-序列化框架介绍"><a href="#XML-序列化框架介绍" class="headerlink" title="XML 序列化框架介绍"></a>XML 序列化框架介绍</h4><p>XML序列化的好处在于可读性好,方便阅读和调试, 但是序列化后的字节码文件比较大, 而且效率不高, 适用于对性能不高,而且QPS 较低的企业级内部系统之间的数据交换的场景, 同时XML 又具有语言无关性,所以还可以用于异构系统之间的数据交换和协议, 比如我们熟知的WebService,就是采用XML格式对数据进行序列化. XML 序列化/反序列化的实现方式有很多, 熟知的方式有XStream 和java自带的XML序列化和反序列化两种.</p>
+<h4 id="JSON序列化框架"><a href="#JSON序列化框架" class="headerlink" title="JSON序列化框架"></a>JSON序列化框架</h4><p>JSON(JavaScript Object Notaion) 是一种轻量级的数据交换格式, 相对于XML来说, JSON 的字节流更小, 而且可读性也非常好. 现在的JSON数据格式在企业中运行是最普遍的.</p>
+<ol>
+<li>jackson  （<a target="_blank" rel="noopener" href="https://github.com/FasterXML/jackson%EF%BC%89">https://github.com/FasterXML/jackson）</a> </li>
+<li>阿里开源的FastJson （<a target="_blank" rel="noopener" href="https://github.com/alibaba/fastjon%EF%BC%89">https://github.com/alibaba/fastjon）</a> </li>
+<li>Google 的GSON (<a target="_blank" rel="noopener" href="https://github.com/google/gson">https://github.com/google/gson</a>) </li>
+</ol>
+<p>这几种json序列化工具中, jackson 和fastjson 要比GSON的性能要好,但是 jackson、GSON 的稳定性要比Fastjson 好, 而fastjson 的优势在于提供的api 非常容易使用.</p>
+<h4 id="Hessian-序列化框架"><a href="#Hessian-序列化框架" class="headerlink" title="Hessian 序列化框架"></a>Hessian 序列化框架</h4><p>Hessian 是一个支持跨语言传输的二进制序列化协议, 相对于java默认的 序列化机制来说,Hessian 具有更好的性能和易用性, 而且支持多种不同的语言。</p>
+<p>实际上Dubbo 采用的就是Hessian序列化来实现, 只不过Dubbo 对Hessian 进行了重构, 性能更高.</p>
+<h4 id="Avro-序列化"><a href="#Avro-序列化" class="headerlink" title="Avro 序列化"></a>Avro 序列化</h4><p>Avro是一个数据序列化系统, 设计用于支持大批量数据交换的应用.它的主要特点有: 支持二进制序列化方式,可以便携,快速的处理大量数据,动态语言友好,Avro提供的机制使动态语言可以方便的处理Avro数据.</p>
+<h4 id="Kyro序列化框架"><a href="#Kyro序列化框架" class="headerlink" title="Kyro序列化框架"></a>Kyro序列化框架</h4><p>Kyro 是一种非常成熟的序列化实现, 已经在Hive、Storm 中使用的比较广泛, 不过他不能跨语言, 目前dubbo 已经在2.6 版本支持了 kyro 的序列化机制, 它的性能要优于之前的hessian2</p>
+<h4 id="Protobuf-序列化框架"><a href="#Protobuf-序列化框架" class="headerlink" title="Protobuf 序列化框架"></a>Protobuf 序列化框架</h4><p>Protobuf是Google 的一种数据交换格式, 它独立于语言,独立于平台.Google 提供了多种语言来实现, 比如Java、C、Go、Python,每一种实现都包含了相应语言的编译器和库文件, Protobuf  是一个纯粹的表示层协议, 可以和各种传输层协议一起使用.</p>
+<p>Protobuf 使用比较广泛, 主要是内存开销小,和性能比较好, 非常适用于公司内部对性能要求高的RPC调用,. 另外由于解析比较高, 序列化以后数据量相对较少, 所以也可以应用在对象的持久化场景中.</p>
+<p>但是要使用 Protobuf 会相对来说比较麻烦, 因为它有自己的语法, 有自己的编译器, 如果需要用到的话必须投入到成本在这个技术的学习中.</p>
+<p>Protobuf 有个缺点就是要传输的每一个类的结构都要生成对应的proto 文件, 如果某个类发生修改, 还得重新生成该类对应的proto 文件。</p>
+<h5 id="Protobuf-序列化原理"><a href="#Protobuf-序列化原理" class="headerlink" title="Protobuf  序列化原理"></a>Protobuf  序列化原理</h5><p>使用Protobuf  开发的一般步骤是:</p>
+<ol>
+<li>配置开发环境, 按照 Protobuf compiler 代码编译器</li>
+<li>编写.proto 文件, 定义序列化对象的数据结构.</li>
+<li>基于编写的 .proto 文件,使用 Protobuf compiler 编译器生成对应的序列化/反序列化工具类</li>
+<li>基于自动生成的代码, 编写自己的序列化应用.</li>
+</ol>
+<h5 id="Protobuf-案例演示"><a href="#Protobuf-案例演示" class="headerlink" title="Protobuf 案例演示"></a>Protobuf 案例演示</h5><p>下载 Protobuf  工具</p>
+<p><a target="_blank" rel="noopener" href="https://github.com/google/protobuf/releases">https://github.com/google/protobuf/releases</a>   找到 protoc-3.5.1-win32.zip</p>
+<p>编写proto文件</p>
+<pre class=" language-protobuf"><code class="language-protobuf">syntax <span class="token operator">=</span> <span class="token string">"proto2"</span><span class="token punctuation">;</span>
+<span class="token keyword">package</span> com<span class="token punctuation">.</span>notes<span class="token punctuation">.</span>serial<span class="token punctuation">;</span>
+option java_package <span class="token operator">=</span> <span class="token string">"com.notes.serial"</span><span class="token punctuation">;</span>
+option java_outer_classname <span class="token operator">=</span> <span class="token string">"UserProtos"</span><span class="token punctuation">;</span>
+<span class="token keyword">message</span> User<span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+<span class="token builtin">required</span> <span class="token primitive symbol">string</span> name <span class="token operator">=</span> <span class="token number">1</span><span class="token punctuation">;</span>
+<span class="token builtin">required</span> <span class="token primitive symbol">int32</span> age <span class="token operator">=</span> <span class="token number">2</span><span class="token punctuation">;</span>
+<span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+</code></pre>
+<blockquote>
+<p>数据类型</p>
+<p>string/bytes/bool/int32(4个字节)/int64/float/double</p>
+<p>enum 枚举类</p>
+<p>message  自定义类</p>
+<p>修饰符:</p>
+<p>   required   表示必填的字段</p>
+<p>  optional   表示可选字段</p>
+<p>  repeated   可重复 表示集合</p>
+<p>1,2,3,4  需要在当前范围内是唯一的, 表示顺序</p>
+</blockquote>
+<p>生成实体类<br>解压文件,到bin目录下 ,执行</p>
+<blockquote>
+<p>./protoc.exe   –java_out ./   ./user.proto</p>
+</blockquote>
+<p>会生成一个UserProtos的文件</p>
+<p>实现序列化</p>
+<p>项目导入</p>
+<pre class=" language-xml"><code class="language-xml"><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>dependency</span><span class="token punctuation">></span></span>
+      <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>groupId</span><span class="token punctuation">></span></span>com.google.protobuf<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>groupId</span><span class="token punctuation">></span></span>
+      <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>artifactId</span><span class="token punctuation">></span></span>protobuf-java<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>artifactId</span><span class="token punctuation">></span></span>
+      <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>version</span><span class="token punctuation">></span></span>3.9.1<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>version</span><span class="token punctuation">></span></span>
+    <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>dependency</span><span class="token punctuation">></span></span>
+</code></pre>
+<pre class=" language-java"><code class="language-java"> <span class="token keyword">public</span> <span class="token keyword">static</span> <span class="token keyword">void</span> <span class="token function">main</span><span class="token punctuation">(</span>String<span class="token punctuation">[</span><span class="token punctuation">]</span> args<span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+        UserProtos<span class="token punctuation">.</span>User user <span class="token operator">=</span> UserProtos<span class="token punctuation">.</span>User<span class="token punctuation">.</span><span class="token function">newBuilder</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">setAge</span><span class="token punctuation">(</span><span class="token number">300</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">setName</span><span class="token punctuation">(</span><span class="token string">"TOM"</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">build</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+        <span class="token keyword">byte</span><span class="token punctuation">[</span><span class="token punctuation">]</span> bytes <span class="token operator">=</span> user<span class="token punctuation">.</span><span class="token function">toByteArray</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token keyword">for</span> <span class="token punctuation">(</span><span class="token keyword">byte</span> aByte <span class="token operator">:</span> bytes<span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+            System<span class="token punctuation">.</span>out<span class="token punctuation">.</span><span class="token function">print</span><span class="token punctuation">(</span>aByte<span class="token operator">+</span><span class="token string">" "</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+        System<span class="token punctuation">.</span>out<span class="token punctuation">.</span><span class="token function">println</span><span class="token punctuation">(</span><span class="token string">"\n"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+        <span class="token keyword">try</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+            UserProtos<span class="token punctuation">.</span>User parse <span class="token operator">=</span> UserProtos<span class="token punctuation">.</span>User<span class="token punctuation">.</span><span class="token function">parseFrom</span><span class="token punctuation">(</span>bytes<span class="token punctuation">)</span><span class="token punctuation">;</span>
+            System<span class="token punctuation">.</span>out<span class="token punctuation">.</span><span class="token function">println</span><span class="token punctuation">(</span>parse<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span> <span class="token keyword">catch</span> <span class="token punctuation">(</span><span class="token class-name">InvalidProtocolBufferException</span> e<span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+            e<span class="token punctuation">.</span><span class="token function">printStackTrace</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+    <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+</code></pre>
+<p>运行结果</p>
+<pre class=" language-java"><code class="language-java"><span class="token number">10</span> <span class="token number">3</span> <span class="token number">84</span> <span class="token number">79</span> <span class="token number">77</span> <span class="token number">16</span> <span class="token operator">-</span><span class="token number">84</span> <span class="token number">2</span>
+
+name<span class="token operator">:</span> <span class="token string">"TOM"</span>
+age<span class="token operator">:</span> <span class="token number">18</span>
+</code></pre>
+<p>序列化出来的结果为 10 3 84 79 77 16 -84 2, 序列化出来的数字基本看不懂, 但是序列化之后的数据缺失小了, 那我们接下来带大家去了解一下底层的原理</p>
+<p>正常来说, 要达到最小的序列化结果,一定会用到压缩的技术, 而 protobuf 里面用到了两种压缩 算法, 一种是 varint, 一种是 zigzag.</p>
+<h5 id="varint"><a href="#varint" class="headerlink" title="varint"></a>varint</h5><p>先说第一种, 我们先来看 age = 300 这个数字是如何被压缩的.</p>
+<p><img src="http://files.luyanan.com//img/20190903141253.png"></p>
+<p>这两个字节分别的结果是: -84、2</p>
+<p>-84 怎么计算来的呢? 我们知道在二进制中表示负数的方法, 高位设置为1, 并且是对应数组的二进制取反以后再计算补码表示(补码是反码+1)</p>
+<p>所以如果要反过来计算</p>
+<ol>
+<li>[补码] 10101100 -1 得到  10101011</li>
+<li>[反码] 01010100 得到的结果为84, 由于最高位是1, 表示负数, 所以为 -84</li>
+</ol>
+<h6 id="字符串如何编码呢"><a href="#字符串如何编码呢" class="headerlink" title="字符串如何编码呢?"></a>字符串如何编码呢?</h6><p>“TOM” 这个字符,需要根据ASCII对照表转换为数字</p>
+<p>T = 84，O = 79, M = 77</p>
+<p>所以结果为  84 79 77</p>
+<p>大家肯定有一个疑问, 这里的结果为什么直接就是ASCII编码的值呢? 怎么没有做压缩呢? </p>
+<p>原因是 varint是对字节码做压缩, 但是如果这个数字的二进制只需要一个字节表示的时候, 其实最终编码出来的结果是不会变化的.</p>
+<p>还有两个数字，3 和16 表示什么呢? 这就要了解protobuf 的存储格式了</p>
+<h6 id="存储格式"><a href="#存储格式" class="headerlink" title="存储格式"></a>存储格式</h6><p>protobuf 采用T-L-V 作为存储格式</p>
+<p><img src="http://files.luyanan.com//img/20190903142314.png"></p>
+<p>tag的计算方式是   field_number(当前字段的编号) &lt;&lt;3|wire_type</p>
+<p>比如 TOM 的字段编号是1,类型 wire_type 的值为2, 所以 1 &lt;&lt; 3 |2 = 10</p>
+<p>age = 300 的字段编号是2, 类型 wire_type 的值为0, 所以 2 &lt;&lt;3 | 0 = 16</p>
+<p>第一个数字10,代表的是key,剩下的为value</p>
+<h5 id="负数的存储-zigzag"><a href="#负数的存储-zigzag" class="headerlink" title="负数的存储(zigzag)"></a>负数的存储(zigzag)</h5><p>在计算机中, 负数会被表示为很大的整数, 因为计算机定义负数符号位为数字的最高位, 所以如果采用 varint 编码表示一个负数, 那么一定需要5个比特位, 所以在 protobuf 中通过  sint32/sint64 类型表示负数, 负数的处理形式是先采用 zigzag 编码(把符号数转换为无符号数),再采用 varint 编码</p>
+<p>sint32: ( n &lt;&lt; 1)^ (n &gt;&gt;31)</p>
+<p>sint64: (n &lt;&lt; 1) ^ (n&gt;&gt; 63)</p>
+<p>比如要存储一个(-300)的值, </p>
+<blockquote>
+<p>-300</p>
+<p>原码 : 0001 0010 1100 </p>
+<p>取反: 1110 1101 0011 </p>
+<p>加1 : 1110 1101 0100 </p>
+<p>n &lt;&lt;1: 整体左移1位, 右边补零 -&gt;1101 1010 1000 </p>
+<p>n &gt;&gt; 31 : 整体右移31位, 左边补1 -&gt; 1111 1111 1111 </p>
+<p>n &lt;&lt;1 ^ n &gt;&gt;31 </p>
+<p>1101 1010 1000 ^ 1111 1111 1111 = 0020 0202 0222 </p>
+<p>十进制 0010 0101 0111 = 599</p>
+<p>varint 算法: 从右往左, 选取7位, 高位补 1/0 (取决于字节数)</p>
+<p>得到两个字节</p>
+<p> 1101 0111 0000 0100</p>
+<p>​    -41         4</p>
+</blockquote>
+<h5 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h5><p>Protobuf Buffer 的性能好, 主要体现在 序列化后的数据体积小, 序列化速度快, 最终使得传输效率高, 其原因如下：</p>
+<h6 id="序列化速度快的原因"><a href="#序列化速度快的原因" class="headerlink" title="序列化速度快的原因"></a>序列化速度快的原因</h6><ol>
+<li>编码/解码 方式简单(只需要简单的数学运算 = 位移等等)</li>
+<li>采用Protobuf Buffer 自身的框架代码和编译器 共同完成</li>
+</ol>
+<h6 id="序列化后的数据量体积小-即数据压缩效果好-的原因"><a href="#序列化后的数据量体积小-即数据压缩效果好-的原因" class="headerlink" title="序列化后的数据量体积小,(即数据压缩效果好) 的原因:"></a>序列化后的数据量体积小,(即数据压缩效果好) 的原因:</h6><ol>
+<li>采用了独特的编码方式, 如 varint、 zigzag 编码方式等</li>
+<li>采用 T - L - V的数据存储方式, 减少了分隔符的使用,使得数据存储的更加紧凑</li>
+</ol>
+<h2 id="序列化技术的选型"><a href="#序列化技术的选型" class="headerlink" title="序列化技术的选型"></a>序列化技术的选型</h2><h3 id="技术层面"><a href="#技术层面" class="headerlink" title="技术层面"></a>技术层面</h3><ol>
+<li>序列化空间开销, 也就是序列化产生的结果太小, 这个影响到传输的性能</li>
+<li>序列化过程中消耗的时长, 序列化消耗时间过长影响到业务的响应时间</li>
+<li>序列化协议是否支持跨平台、跨语言. 因为现在的架构更加灵活,如果存在异构系统通信需求,那么这个是必须要考虑的.</li>
+<li>可扩展性、兼容性,在实际业务开发中,系统往往需要随着需求的迭代来实现快速更新,这就要求我们采用的序列化协议基于良好的可扩展性/兼容性, 比如在现在的序列化数据结构中新增一个业务字段, 不会影响到现在的服务.</li>
+<li>技术的流行程序, 越流行的技术意味着使用的公司多,那么很多坑都已经淌过并且得到了解决,技术解决方案也相对成熟</li>
+<li>学习难度和易用性</li>
+</ol>
+<h3 id="选型建议"><a href="#选型建议" class="headerlink" title="选型建议"></a>选型建议</h3><ol>
+<li>对性能要求不高的场景,可以采用基于XML的SOAP协议</li>
+<li>对性能和间接性有比较高要求的场景, 那么Hessian、Protobuf、Thrift、Avro都可以.</li>
+<li>基于前后端分离, 或者独立的对外的API 服务, 选用JSON 是比较好的, 对于调试, 可读性都不错.</li>
+<li>Avro 设计理念偏于动态类型语言, 那么这类的场景使用Acro是可以的</li>
+</ol>
+<h2 id="各个序列化技术的性能比较"><a href="#各个序列化技术的性能比较" class="headerlink" title="各个序列化技术的性能比较"></a>各个序列化技术的性能比较</h2><p>这个地址有针对不同序列化技术进行性能比较：<a target="_blank" rel="noopener" href="https://github.com/eishay/jvmserializers/wiki">https://github.com/eishay/jvmserializers/wiki</a> </p>
+
+                
+            </div>
+            <hr/>
+
+            
+
+    <div class="reprint" id="reprint-statement">
+        
+            <div class="reprint__author">
+                <span class="reprint-meta" style="font-weight: bold;">
+                    <i class="fas fa-user">
+                        文章作者:
+                    </i>
+                </span>
+                <span class="reprint-info">
+                    <a href="/about" rel="external nofollow noreferrer">luyanan</a>
+                </span>
+            </div>
+            <div class="reprint__type">
+                <span class="reprint-meta" style="font-weight: bold;">
+                    <i class="fas fa-link">
+                        文章链接:
+                    </i>
+                </span>
+                <span class="reprint-info">
+                    <a href="https://rainsoil.github.io/2022/01/04/fen-bu-shi/2.fen-bu-shi-jia-gou-ji-chu/xu-lie-hua-he-fan-xu-lie-hua/">https://rainsoil.github.io/2022/01/04/fen-bu-shi/2.fen-bu-shi-jia-gou-ji-chu/xu-lie-hua-he-fan-xu-lie-hua/</a>
+                </span>
+            </div>
+            <div class="reprint__notice">
+                <span class="reprint-meta" style="font-weight: bold;">
+                    <i class="fas fa-copyright">
+                        版权声明:
+                    </i>
+                </span>
+                <span class="reprint-info">
+                    本博客所有文章除特別声明外，均采用
+                    <a href="https://creativecommons.org/licenses/by/4.0/deed.zh" rel="external nofollow noreferrer" target="_blank">CC BY 4.0</a>
+                    许可协议。转载请注明来源
+                    <a href="/about" target="_blank">luyanan</a>
+                    !
+                </span>
+            </div>
+        
+    </div>
+
+    <script async defer>
+      document.addEventListener("copy", function (e) {
+        let toastHTML = '<span>复制成功，请遵循本文的转载规则</span><button class="btn-flat toast-action" onclick="navToReprintStatement()" style="font-size: smaller">查看</a>';
+        M.toast({html: toastHTML})
+      });
+
+      function navToReprintStatement() {
+        $("html, body").animate({scrollTop: $("#reprint-statement").offset().top - 80}, 800);
+      }
+    </script>
+
+
+
+            <div class="tag_share" style="display: block;">
+                <div class="post-meta__tag-list" style="display: inline-block;">
+                    
+                        <div class="article-tag">
+                            <span class="chip bg-color">无标签</span>
+                        </div>
+                    
+                </div>
+                <div class="post_share" style="zoom: 80%; width: fit-content; display: inline-block; float: right; margin: -0.15rem 0;">
+                    <link rel="stylesheet" type="text/css" href="/libs/share/css/share.min.css">
+<div id="article-share">
+
+    
+    <div class="social-share" data-sites="twitter,facebook,google,qq,qzone,wechat,weibo,douban,linkedin" data-wechat-qrcode-helper="<p>微信扫一扫即可分享！</p>"></div>
+    <script src="/libs/share/js/social-share.min.js"></script>
+    
+
+    
+
+</div>
+
+                </div>
+            </div>
+            
+        </div>
+    </div>
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+<article id="prenext-posts" class="prev-next articles">
+    <div class="row article-row">
+        
+        <div class="article col s12 m6" data-aos="fade-up">
+            <div class="article-badge left-badge text-color">
+                <i class="fas fa-chevron-left"></i>&nbsp;上一篇</div>
+            <div class="card">
+                <a href="/2022/01/04/qian-duan/es6/es6/">
+                    <div class="card-image">
+                        
+                        
+                        <img src="/medias/featureimages/8.jpg" class="responsive-img" alt="ES6">
+                        
+                        <span class="card-title">ES6</span>
+                    </div>
+                </a>
+                <div class="card-content article-content">
+                    <div class="summary block-with-text">
+                        
+                            
+                        
+                    </div>
+                    <div class="publish-info">
+                        <span class="publish-date">
+                            <i class="far fa-clock fa-fw icon-date"></i>2022-01-04
+                        </span>
+                        <span class="publish-author">
+                            
+                            <i class="fas fa-bookmark fa-fw icon-category"></i>
+                            
+                            <a href="/categories/ES6/" class="post-category">
+                                    ES6
+                                </a>
+                            
+                            <a href="/categories/ES6/%E5%89%8D%E7%AB%AF/" class="post-category">
+                                    前端
+                                </a>
+                            
+                            <a href="/categories/ES6/%E5%89%8D%E7%AB%AF/%E5%89%8D%E7%AB%AF/" class="post-category">
+                                    前端
+                                </a>
+                            
+                            <a href="/categories/ES6/%E5%89%8D%E7%AB%AF/%E5%89%8D%E7%AB%AF/ES6/" class="post-category">
+                                    ES6
+                                </a>
+                            
+                            
+                        </span>
+                    </div>
+                </div>
+                
+            </div>
+        </div>
+        
+        
+        <div class="article col s12 m6" data-aos="fade-up">
+            <div class="article-badge right-badge text-color">
+                下一篇&nbsp;<i class="fas fa-chevron-right"></i>
+            </div>
+            <div class="card">
+                <a href="/2022/01/04/fen-bu-shi/2.fen-bu-shi-jia-gou-ji-chu/http-tong-xin-xie-yi/">
+                    <div class="card-image">
+                        
+                        
+                        <img src="/medias/featureimages/10.jpg" class="responsive-img" alt="Http 通信协议">
+                        
+                        <span class="card-title">Http 通信协议</span>
+                    </div>
+                </a>
+                <div class="card-content article-content">
+                    <div class="summary block-with-text">
+                        
+                            
+                        
+                    </div>
+                    <div class="publish-info">
+                            <span class="publish-date">
+                                <i class="far fa-clock fa-fw icon-date"></i>2022-01-04
+                            </span>
+                        <span class="publish-author">
+                            
+                            <i class="fas fa-bookmark fa-fw icon-category"></i>
+                            
+                            <a href="/categories/2-%E5%88%86%E5%B8%83%E5%BC%8F%E6%9E%B6%E6%9E%84%E5%9F%BA%E7%A1%80/" class="post-category">
+                                    2. 分布式架构基础
+                                </a>
+                            
+                            <a href="/categories/2-%E5%88%86%E5%B8%83%E5%BC%8F%E6%9E%B6%E6%9E%84%E5%9F%BA%E7%A1%80/%E5%88%86%E5%B8%83%E5%BC%8F/" class="post-category">
+                                    分布式
+                                </a>
+                            
+                            <a href="/categories/2-%E5%88%86%E5%B8%83%E5%BC%8F%E6%9E%B6%E6%9E%84%E5%9F%BA%E7%A1%80/%E5%88%86%E5%B8%83%E5%BC%8F/%E5%88%86%E5%B8%83%E5%BC%8F/" class="post-category">
+                                    分布式
+                                </a>
+                            
+                            <a href="/categories/2-%E5%88%86%E5%B8%83%E5%BC%8F%E6%9E%B6%E6%9E%84%E5%9F%BA%E7%A1%80/%E5%88%86%E5%B8%83%E5%BC%8F/%E5%88%86%E5%B8%83%E5%BC%8F/2-%E5%88%86%E5%B8%83%E5%BC%8F%E6%9E%B6%E6%9E%84%E5%9F%BA%E7%A1%80/" class="post-category">
+                                    2. 分布式架构基础
+                                </a>
+                            
+                            
+                        </span>
+                    </div>
+                </div>
+                
+            </div>
+        </div>
+        
+    </div>
+</article>
+
+</div>
+
+
+
+<!-- 代码块功能依赖 -->
+<script type="text/javascript" src="/libs/codeBlock/codeBlockFuction.js"></script>
+
+<!-- 代码语言 -->
+
+<script type="text/javascript" src="/libs/codeBlock/codeLang.js"></script>
+
+
+<!-- 代码块复制 -->
+
+<script type="text/javascript" src="/libs/codeBlock/codeCopy.js"></script>
+
+
+<!-- 代码块收缩 -->
+
+<script type="text/javascript" src="/libs/codeBlock/codeShrink.js"></script>
+
+
+    </div>
+    <div id="toc-aside" class="expanded col l3 hide-on-med-and-down">
+        <div class="toc-widget card" style="background-color: white;">
+            <div class="toc-title"><i class="far fa-list-alt"></i>&nbsp;&nbsp;目录</div>
+            <div id="toc-content"></div>
+        </div>
+    </div>
+</div>
+
+<!-- TOC 悬浮按钮. -->
+
+<div id="floating-toc-btn" class="hide-on-med-and-down">
+    <a class="btn-floating btn-large bg-color">
+        <i class="fas fa-list-ul"></i>
+    </a>
+</div>
+
+
+<script src="/libs/tocbot/tocbot.min.js"></script>
+<script>
+    $(function () {
+        tocbot.init({
+            tocSelector: '#toc-content',
+            contentSelector: '#articleContent',
+            headingsOffset: -($(window).height() * 0.4 - 45),
+            collapseDepth: Number('0'),
+            headingSelector: 'h2, h3, h4'
+        });
+
+        // modify the toc link href to support Chinese.
+        let i = 0;
+        let tocHeading = 'toc-heading-';
+        $('#toc-content a').each(function () {
+            $(this).attr('href', '#' + tocHeading + (++i));
+        });
+
+        // modify the heading title id to support Chinese.
+        i = 0;
+        $('#articleContent').children('h2, h3, h4').each(function () {
+            $(this).attr('id', tocHeading + (++i));
+        });
+
+        // Set scroll toc fixed.
+        let tocHeight = parseInt($(window).height() * 0.4 - 64);
+        let $tocWidget = $('.toc-widget');
+        $(window).scroll(function () {
+            let scroll = $(window).scrollTop();
+            /* add post toc fixed. */
+            if (scroll > tocHeight) {
+                $tocWidget.addClass('toc-fixed');
+            } else {
+                $tocWidget.removeClass('toc-fixed');
+            }
+        });
+
+        
+        /* 修复文章卡片 div 的宽度. */
+        let fixPostCardWidth = function (srcId, targetId) {
+            let srcDiv = $('#' + srcId);
+            if (srcDiv.length === 0) {
+                return;
+            }
+
+            let w = srcDiv.width();
+            if (w >= 450) {
+                w = w + 21;
+            } else if (w >= 350 && w < 450) {
+                w = w + 18;
+            } else if (w >= 300 && w < 350) {
+                w = w + 16;
+            } else {
+                w = w + 14;
+            }
+            $('#' + targetId).width(w);
+        };
+
+        // 切换TOC目录展开收缩的相关操作.
+        const expandedClass = 'expanded';
+        let $tocAside = $('#toc-aside');
+        let $mainContent = $('#main-content');
+        $('#floating-toc-btn .btn-floating').click(function () {
+            if ($tocAside.hasClass(expandedClass)) {
+                $tocAside.removeClass(expandedClass).hide();
+                $mainContent.removeClass('l9');
+            } else {
+                $tocAside.addClass(expandedClass).show();
+                $mainContent.addClass('l9');
+            }
+            fixPostCardWidth('artDetail', 'prenext-posts');
+        });
+        
+    });
+</script>
+
+    
+
+</main>
+
+
+
+
+    <footer class="page-footer bg-color">
+    
+        <link rel="stylesheet" href="/libs/aplayer/APlayer.min.css">
+<style>
+    .aplayer .aplayer-lrc p {
+        
+        display: none;
+        
+        font-size: 12px;
+        font-weight: 700;
+        line-height: 16px !important;
+    }
+
+    .aplayer .aplayer-lrc p.aplayer-lrc-current {
+        
+        display: none;
+        
+        font-size: 15px;
+        color: #42b983;
+    }
+
+    
+    .aplayer.aplayer-fixed.aplayer-narrow .aplayer-body {
+        left: -66px !important;
+    }
+
+    .aplayer.aplayer-fixed.aplayer-narrow .aplayer-body:hover {
+        left: 0px !important;
+    }
+
+    
+</style>
+<div class="">
+    
+    <div class="row">
+        <meting-js class="col l8 offset-l2 m10 offset-m1 s12"
+                   server="netease"
+                   type="playlist"
+                   id="503838841"
+                   fixed='true'
+                   autoplay='false'
+                   theme='#42b983'
+                   loop='all'
+                   order='random'
+                   preload='auto'
+                   volume='0.7'
+                   list-folded='true'
+        >
+        </meting-js>
+    </div>
+</div>
+
+<script src="/libs/aplayer/APlayer.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/meting@2/dist/Meting.min.js"></script>
+
+    
+
+    <div class="container row center-align"
+         style="margin-bottom: 0px !important;">
+        <div class="col s12 m8 l8 copy-right">
+            Copyright&nbsp;&copy;
+            
+                <span id="year">2019-2022</span>
+            
+            <a href="/about" target="_blank">luyanan</a>
+            |&nbsp;Powered by&nbsp;<a href="https://hexo.io/" target="_blank">Hexo</a>
+            |&nbsp;Theme&nbsp;<a href="https://github.com/blinkfox/hexo-theme-matery" target="_blank">Matery</a>
+            <br>
+            
+                &nbsp;<i class="fas fa-chart-area"></i>&nbsp;站点总字数:&nbsp;<span
+                        class="white-color">803.3k</span>
+            
+            
+            
+                
+            
+            
+                <span id="busuanzi_container_site_pv">
+                &nbsp;|&nbsp;<i class="far fa-eye"></i>&nbsp;总访问量:&nbsp;
+                    <span id="busuanzi_value_site_pv" class="white-color"></span>
+            </span>
+            
+            
+                <span id="busuanzi_container_site_uv">
+                &nbsp;|&nbsp;<i class="fas fa-users"></i>&nbsp;总访问人数:&nbsp;
+                    <span id="busuanzi_value_site_uv" class="white-color"></span>
+            </span>
+            
+            <br>
+
+            <!-- 运行天数提醒. -->
+            
+            <br>
+            
+        </div>
+        <div class="col s12 m4 l4 social-link social-statis">
+    <a href="https://github.com/rainsoil" class="tooltipped" target="_blank" data-tooltip="访问我的GitHub" data-position="top" data-delay="50">
+        <i class="fab fa-github"></i>
+    </a>
+
+
+
+    <a href="mailto:luyanan0718@163.com" class="tooltipped" target="_blank" data-tooltip="邮件联系我" data-position="top" data-delay="50">
+        <i class="fas fa-envelope-open"></i>
+    </a>
+
+
+
+
+
+
+
+    <a href="tencent://AddContact/?fromId=50&fromSubId=1&subcmd=all&uin=914596513" class="tooltipped" target="_blank" data-tooltip="QQ联系我: 914596513" data-position="top" data-delay="50">
+        <i class="fab fa-qq"></i>
+    </a>
+
+
+
+
+
+
+
+    <a href="/atom.xml" class="tooltipped" target="_blank" data-tooltip="RSS 订阅" data-position="top" data-delay="50">
+        <i class="fas fa-rss"></i>
+    </a>
+
+</div>
+    </div>
+</footer>
+
+<div class="progress-bar"></div>
+
+
+    <!-- 搜索遮罩框 -->
+<div id="searchModal" class="modal">
+    <div class="modal-content">
+        <div class="search-header">
+            <span class="title"><i class="fas fa-search"></i>&nbsp;&nbsp;搜索</span>
+            <input type="search" id="searchInput" name="s" placeholder="请输入搜索的关键字"
+                   class="search-input">
+        </div>
+        <div id="searchResult"></div>
+    </div>
+</div>
+
+<script type="text/javascript">
+$(function () {
+    var searchFunc = function (path, search_id, content_id) {
+        'use strict';
+        $.ajax({
+            url: path,
+            dataType: "xml",
+            success: function (xmlResponse) {
+                // get the contents from search data
+                var datas = $("entry", xmlResponse).map(function () {
+                    return {
+                        title: $("title", this).text(),
+                        content: $("content", this).text(),
+                        url: $("url", this).text()
+                    };
+                }).get();
+                var $input = document.getElementById(search_id);
+                var $resultContent = document.getElementById(content_id);
+                $input.addEventListener('input', function () {
+                    var str = '<ul class=\"search-result-list\">';
+                    var keywords = this.value.trim().toLowerCase().split(/[\s\-]+/);
+                    $resultContent.innerHTML = "";
+                    if (this.value.trim().length <= 0) {
+                        return;
+                    }
+                    // perform local searching
+                    datas.forEach(function (data) {
+                        var isMatch = true;
+                        var data_title = data.title.trim().toLowerCase();
+                        var data_content = data.content.trim().replace(/<[^>]+>/g, "").toLowerCase();
+                        var data_url = data.url;
+                        data_url = data_url.indexOf('/') === 0 ? data.url : '/' + data_url;
+                        var index_title = -1;
+                        var index_content = -1;
+                        var first_occur = -1;
+                        // only match artiles with not empty titles and contents
+                        if (data_title !== '' && data_content !== '') {
+                            keywords.forEach(function (keyword, i) {
+                                index_title = data_title.indexOf(keyword);
+                                index_content = data_content.indexOf(keyword);
+                                if (index_title < 0 && index_content < 0) {
+                                    isMatch = false;
+                                } else {
+                                    if (index_content < 0) {
+                                        index_content = 0;
+                                    }
+                                    if (i === 0) {
+                                        first_occur = index_content;
+                                    }
+                                }
+                            });
+                        }
+                        // show search results
+                        if (isMatch) {
+                            str += "<li><a href='" + data_url + "' class='search-result-title'>" + data_title + "</a>";
+                            var content = data.content.trim().replace(/<[^>]+>/g, "");
+                            if (first_occur >= 0) {
+                                // cut out 100 characters
+                                var start = first_occur - 20;
+                                var end = first_occur + 80;
+                                if (start < 0) {
+                                    start = 0;
+                                }
+                                if (start === 0) {
+                                    end = 100;
+                                }
+                                if (end > content.length) {
+                                    end = content.length;
+                                }
+                                var match_content = content.substr(start, end);
+                                // highlight all keywords
+                                keywords.forEach(function (keyword) {
+                                    var regS = new RegExp(keyword, "gi");
+                                    match_content = match_content.replace(regS, "<em class=\"search-keyword\">" + keyword + "</em>");
+                                });
+
+                                str += "<p class=\"search-result\">" + match_content + "...</p>"
+                            }
+                            str += "</li>";
+                        }
+                    });
+                    str += "</ul>";
+                    $resultContent.innerHTML = str;
+                });
+            }
+        });
+    };
+
+    searchFunc('/search.xml', 'searchInput', 'searchResult');
+});
+</script>
+
+    <!-- 回到顶部按钮 -->
+<div id="backTop" class="top-scroll">
+    <a class="btn-floating btn-large waves-effect waves-light" href="#!">
+        <i class="fas fa-arrow-up"></i>
+    </a>
+</div>
+
+
+    <script src="/libs/materialize/materialize.min.js"></script>
+    <script src="/libs/masonry/masonry.pkgd.min.js"></script>
+    <script src="/libs/aos/aos.js"></script>
+    <script src="/libs/scrollprogress/scrollProgress.min.js"></script>
+    <script src="/libs/lightGallery/js/lightgallery-all.min.js"></script>
+    <script src="/js/matery.js"></script>
+
+    
+
+    
+
+    <!-- 雪花特效 -->
+    
+
+    <!-- 鼠标星星特效 -->
+    
+
+    <!-- Baidu Analytics -->
+
+    <!-- Baidu Push -->
+
+<script>
+    (function () {
+        var bp = document.createElement('script');
+        var curProtocol = window.location.protocol.split(':')[0];
+        if (curProtocol === 'https') {
+            bp.src = 'https://zz.bdstatic.com/linksubmit/push.js';
+        } else {
+            bp.src = 'http://push.zhanzhang.baidu.com/push.js';
+        }
+        var s = document.getElementsByTagName("script")[0];
+        s.parentNode.insertBefore(bp, s);
+    })();
+</script>
+
+    
+    <script src="/libs/others/clicklove.js" async="async"></script>
+    
+    
+    <script async src="/libs/others/busuanzi.pure.mini.js"></script>
+    
+
+    
+
+    
+
+    <!--腾讯兔小巢-->
+    
+    
+    <script type="text/javascript" color="0,0,255"
+        pointColor="0,0,255" opacity='0.7'
+        zIndex="-1" count="99"
+        src="/libs/background/canvas-nest.js"></script>
+    
+
+    
+
+    
+
+    
+    <script src="/libs/instantpage/instantpage.js" type="module"></script>
+    
+
+</body>
+
+</html>

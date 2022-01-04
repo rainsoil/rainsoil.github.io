@@ -1,0 +1,1436 @@
+<!DOCTYPE HTML>
+<html lang="zh-CN">
+
+
+<head>
+    <meta charset="utf-8">
+    <meta name="keywords" content="Netty高性能之道(6), railsoil">
+    <meta name="description" content="Netty高性能之道1. 背景介绍1. Netty惊人的性能数据通过使用Netty(NIO框架) 相比于传统基于Java 序列化+ BIO(同步阻塞IO)的通信框架， 性能提升了8倍多.
+2. 传统RPC 调用性能差的三宗罪网络传输方式问题">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="renderer" content="webkit|ie-stand|ie-comp">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="format-detection" content="telephone=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="referrer" content="no-referrer-when-downgrade">
+    <!-- Global site tag (gtag.js) - Google Analytics -->
+
+
+    <title>Netty高性能之道(6) | railsoil</title>
+    <link rel="icon" type="image/png" href="/favicon.png">
+
+    <link rel="stylesheet" type="text/css" href="/libs/awesome/css/all.min.css">
+    <link rel="stylesheet" type="text/css" href="/libs/materialize/materialize.min.css">
+    <link rel="stylesheet" type="text/css" href="/libs/aos/aos.css">
+    <link rel="stylesheet" type="text/css" href="/libs/animate/animate.min.css">
+    <link rel="stylesheet" type="text/css" href="/libs/lightGallery/css/lightgallery.min.css">
+    <link rel="stylesheet" type="text/css" href="/css/matery.css">
+    <link rel="stylesheet" type="text/css" href="/css/my.css">
+
+    <script src="/libs/jquery/jquery.min.js"></script>
+
+<meta name="generator" content="Hexo 5.4.0"><link rel="alternate" href="/atom.xml" title="railsoil" type="application/atom+xml">
+<link rel="stylesheet" href="/css/prism-tomorrow.css" type="text/css"></head>
+
+
+
+
+<body>
+    <header class="navbar-fixed">
+    <nav id="headNav" class="bg-color nav-transparent">
+        <div id="navContainer" class="nav-wrapper container">
+            <div class="brand-logo">
+                <a href="/" class="waves-effect waves-light">
+                    
+                    <img src="/medias/logo.png" class="logo-img" alt="LOGO">
+                    
+                    <span class="logo-span">railsoil</span>
+                </a>
+            </div>
+            
+
+<a href="#" data-target="mobile-nav" class="sidenav-trigger button-collapse"><i class="fas fa-bars"></i></a>
+<ul class="right nav-menu">
+  
+  <li class="hide-on-med-and-down nav-item">
+    
+    <a href="/" class="waves-effect waves-light">
+      
+      <i class="fas fa-home" style="zoom: 0.6;"></i>
+      
+      <span>首页</span>
+    </a>
+    
+  </li>
+  
+  <li class="hide-on-med-and-down nav-item">
+    
+    <a href="/tags" class="waves-effect waves-light">
+      
+      <i class="fas fa-tags" style="zoom: 0.6;"></i>
+      
+      <span>标签</span>
+    </a>
+    
+  </li>
+  
+  <li class="hide-on-med-and-down nav-item">
+    
+    <a href="/categories" class="waves-effect waves-light">
+      
+      <i class="fas fa-bookmark" style="zoom: 0.6;"></i>
+      
+      <span>分类</span>
+    </a>
+    
+  </li>
+  
+  <li class="hide-on-med-and-down nav-item">
+    
+    <a href="/archives" class="waves-effect waves-light">
+      
+      <i class="fas fa-archive" style="zoom: 0.6;"></i>
+      
+      <span>归档</span>
+    </a>
+    
+  </li>
+  
+  <li class="hide-on-med-and-down nav-item">
+    
+    <a href="/about" class="waves-effect waves-light">
+      
+      <i class="fas fa-user-circle" style="zoom: 0.6;"></i>
+      
+      <span>关于</span>
+    </a>
+    
+  </li>
+  
+  <li>
+    <a href="#searchModal" class="modal-trigger waves-effect waves-light">
+      <i id="searchIcon" class="fas fa-search" title="搜索" style="zoom: 0.85;"></i>
+    </a>
+  </li>
+</ul>
+
+
+<div id="mobile-nav" class="side-nav sidenav">
+
+    <div class="mobile-head bg-color">
+        
+        <img src="/medias/logo.png" class="logo-img circle responsive-img">
+        
+        <div class="logo-name">railsoil</div>
+        <div class="logo-desc">
+            
+            Never really desperate, only the lost of the soul.
+            
+        </div>
+    </div>
+
+    <ul class="menu-list mobile-menu-list">
+        
+        <li class="m-nav-item">
+	  
+		<a href="/" class="waves-effect waves-light">
+			
+			    <i class="fa-fw fas fa-home"></i>
+			
+			首页
+		</a>
+          
+        </li>
+        
+        <li class="m-nav-item">
+	  
+		<a href="/tags" class="waves-effect waves-light">
+			
+			    <i class="fa-fw fas fa-tags"></i>
+			
+			标签
+		</a>
+          
+        </li>
+        
+        <li class="m-nav-item">
+	  
+		<a href="/categories" class="waves-effect waves-light">
+			
+			    <i class="fa-fw fas fa-bookmark"></i>
+			
+			分类
+		</a>
+          
+        </li>
+        
+        <li class="m-nav-item">
+	  
+		<a href="/archives" class="waves-effect waves-light">
+			
+			    <i class="fa-fw fas fa-archive"></i>
+			
+			归档
+		</a>
+          
+        </li>
+        
+        <li class="m-nav-item">
+	  
+		<a href="/about" class="waves-effect waves-light">
+			
+			    <i class="fa-fw fas fa-user-circle"></i>
+			
+			关于
+		</a>
+          
+        </li>
+        
+        
+    </ul>
+</div>
+
+
+        </div>
+
+        
+    </nav>
+
+</header>
+
+    
+
+
+
+<div class="bg-cover pd-header post-cover" style="background-image: url('/medias/featureimages/23.jpg')">
+    <div class="container" style="right: 0px;left: 0px;">
+        <div class="row">
+            <div class="col s12 m12 l12">
+                <div class="brand">
+                    <h1 class="description center-align post-title">Netty高性能之道(6)</h1>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+
+<main class="post-container content">
+
+    
+    <link rel="stylesheet" href="/libs/tocbot/tocbot.css">
+<style>
+    #articleContent h1::before,
+    #articleContent h2::before,
+    #articleContent h3::before,
+    #articleContent h4::before,
+    #articleContent h5::before,
+    #articleContent h6::before {
+        display: block;
+        content: " ";
+        height: 100px;
+        margin-top: -100px;
+        visibility: hidden;
+    }
+
+    #articleContent :focus {
+        outline: none;
+    }
+
+    .toc-fixed {
+        position: fixed;
+        top: 64px;
+    }
+
+    .toc-widget {
+        width: 345px;
+        padding-left: 20px;
+    }
+
+    .toc-widget .toc-title {
+        padding: 35px 0 15px 17px;
+        font-size: 1.5rem;
+        font-weight: bold;
+        line-height: 1.5rem;
+    }
+
+    .toc-widget ol {
+        padding: 0;
+        list-style: none;
+    }
+
+    #toc-content {
+        padding-bottom: 30px;
+        overflow: auto;
+    }
+
+    #toc-content ol {
+        padding-left: 10px;
+    }
+
+    #toc-content ol li {
+        padding-left: 10px;
+    }
+
+    #toc-content .toc-link:hover {
+        color: #42b983;
+        font-weight: 700;
+        text-decoration: underline;
+    }
+
+    #toc-content .toc-link::before {
+        background-color: transparent;
+        max-height: 25px;
+
+        position: absolute;
+        right: 23.5vw;
+        display: block;
+    }
+
+    #toc-content .is-active-link {
+        color: #42b983;
+    }
+
+    #floating-toc-btn {
+        position: fixed;
+        right: 15px;
+        bottom: 76px;
+        padding-top: 15px;
+        margin-bottom: 0;
+        z-index: 998;
+    }
+
+    #floating-toc-btn .btn-floating {
+        width: 48px;
+        height: 48px;
+    }
+
+    #floating-toc-btn .btn-floating i {
+        line-height: 48px;
+        font-size: 1.4rem;
+    }
+</style>
+<div class="row">
+    <div id="main-content" class="col s12 m12 l9">
+        <!-- 文章内容详情 -->
+<div id="artDetail">
+    <div class="card">
+        <div class="card-content article-info">
+            <div class="row tag-cate">
+                <div class="col s7">
+                    
+                          <div class="article-tag">
+                            <span class="chip bg-color">无标签</span>
+                          </div>
+                    
+                </div>
+                <div class="col s5 right-align">
+                    
+                    <div class="post-cate">
+                        <i class="fas fa-bookmark fa-fw icon-category"></i>
+                        
+                            <a href="/categories/Netty/" class="post-category">
+                                Netty
+                            </a>
+                        
+                            <a href="/categories/Netty/Netty/" class="post-category">
+                                Netty
+                            </a>
+                        
+                    </div>
+                    
+                </div>
+            </div>
+
+            <div class="post-info">
+                
+                <div class="post-date info-break-policy">
+                    <i class="far fa-calendar-minus fa-fw"></i>发布日期:&nbsp;&nbsp;
+                    2022-01-04
+                </div>
+                
+
+                
+
+                
+                <div class="info-break-policy">
+                    <i class="far fa-file-word fa-fw"></i>文章字数:&nbsp;&nbsp;
+                    6.1k
+                </div>
+                
+
+                
+                <div class="info-break-policy">
+                    <i class="far fa-clock fa-fw"></i>阅读时长:&nbsp;&nbsp;
+                    24 分
+                </div>
+                
+
+                
+                    <div id="busuanzi_container_page_pv" class="info-break-policy">
+                        <i class="far fa-eye fa-fw"></i>阅读次数:&nbsp;&nbsp;
+                        <span id="busuanzi_value_page_pv"></span>
+                    </div>
+				
+            </div>
+        </div>
+        <hr class="clearfix">
+
+        
+
+        
+
+        <div class="card-content article-card-content">
+            <div id="articleContent">
+                <h1 id="Netty高性能之道"><a href="#Netty高性能之道" class="headerlink" title="Netty高性能之道"></a>Netty高性能之道</h1><h2 id="1-背景介绍"><a href="#1-背景介绍" class="headerlink" title="1. 背景介绍"></a>1. 背景介绍</h2><h3 id="1-Netty惊人的性能数据"><a href="#1-Netty惊人的性能数据" class="headerlink" title="1. Netty惊人的性能数据"></a>1. Netty惊人的性能数据</h3><p>通过使用Netty(NIO框架) 相比于传统基于Java 序列化+ BIO(同步阻塞IO)的通信框架， 性能提升了8倍多.</p>
+<h3 id="2-传统RPC-调用性能差的三宗罪"><a href="#2-传统RPC-调用性能差的三宗罪" class="headerlink" title="2. 传统RPC 调用性能差的三宗罪"></a>2. 传统RPC 调用性能差的三宗罪</h3><p>网络传输方式问题: 传统的RPC框架或者基于RMI等方式的远程服务(过程) 调用采用了同步阻塞IO,当客户端的并发压力或者网络时延增大后, 同步阻塞IO 会由于频繁的wait 导致IO线程经常性的阻塞, 由于线程无法高效的工作，io处理能力自然下降. 下面, 我们通过BIO 通信模型看下BIO通信的弊端.</p>
+<p><img src="http://files.luyanan.com//img/20190921143042.png"></p>
+<p>采用BIO通信模型的服务端，通常由一个独立的Acceptor 线程负责客户端的连接, 接收到客户端连接后, 为客户端连接创建一个新的线程处理请求消息. 处理完成后, 返回应答消息给客户端, 线程销毁。 这就是典型的一线程一应答模型. 该架构最大的问题就是不具备弹性伸缩能力, 当并发访问量增加后, 服务端的线程个数和并发访问数呈线性正比, 由于线程是JAVA 虚拟机非常宝贵的资源, 当线程数膨胀后，系统的性能急剧下降, 随着并发量的继续增加，可能会发生句柄溢出、线程堆栈溢出等问题, 并最终导致服务端宕机.</p>
+<p>序列化方式问题: Java 序列化存在如下几个典型的问题:</p>
+<ol>
+<li>Java 序列化机制是Java内部的一种对象编解码技术, 无法跨语言使用, 例如对于异构系统之间的对接,Java序列化后的码流需要能过够通过其他语言反序列化成原始对象(副本),目前很难支持.</li>
+<li>相比于其他开源的序列化框架，Java序列化后的码流太大, 无论是网络传输还是持久化到磁盘, 都会导致额外的资源占用.</li>
+<li>序列化性能差(CPU资源占用高)</li>
+<li>线程模型问题: 由于采用同步阻塞IO，这会导致每个TCP 连接都占用一个线程, 由于线程资源是JVM 虚拟机最宝贵的资源, 当IO读写阻塞导致线程无法及时释放时, 会导致系统性能急剧下降, 严重的甚至会导致虚拟机无法创建新的线程.</li>
+</ol>
+<h3 id="3-高性能的三个主题"><a href="#3-高性能的三个主题" class="headerlink" title="3. 高性能的三个主题"></a>3. 高性能的三个主题</h3><ol>
+<li>传输: 用什么样的通道将数据发送给对方, BIO、NIO 或者AIO,IO模型在很大程度上决定了框架的性能.</li>
+<li>协议: 采用什么样的通信协议, HTTP或者内部私有协议. 协议的选择不同,性能模型也不同, 相比于公有协议, 内部私有协议的性能通常可以被设计的更优.</li>
+<li>线程: 数据包如何读取, 读取之后的百年编解码在哪个线程进行, 编解码后的消息如何派发, Peactor 线程模型的不同, 对性能的影响也非常大.</li>
+</ol>
+<h2 id="2-Netty-高性能之道"><a href="#2-Netty-高性能之道" class="headerlink" title="2. Netty 高性能之道"></a>2. Netty 高性能之道</h2><h3 id="1-异步非阻塞通信"><a href="#1-异步非阻塞通信" class="headerlink" title="1 异步非阻塞通信"></a>1 异步非阻塞通信</h3><p>在IO编写过程中, 当需要同时处理多个客户端接入请求时， 可以利用多线程或者IO多路复用技术进行处理。 IO多路复用通过把多个IO阻塞复用到同一个select 的阻塞上, 从而使得系统在单线程的情况下可以同时处理多个客户端请求. 与传统的多线程/多进程模型相比, io 多路复用的最大优势是系统开销小. 系统不需要创建新的额外的进程或者线程, 也不需要维护这些进程和线程的运行, 降低了系统的维护工作量, 节省了系统资源。</p>
+<p>JDK1.4 提供了对非阻塞IO(NIO)的支持, JDK1.5_update10 版本使用epoll 替代了传统的 select/poll , 极大的提升了NIO通信的性能. JDK NIO 通信模型如下所示：</p>
+<p><img src="http://files.luyanan.com//img/20190923100808.png"></p>
+<p>于Socket类和ServerSocket类相比, NIO 也提供了SocketChannel 和ServerSocketChannel 两种不同的套接字通道实现, 这两种新增的通道都支持阻塞和非阻塞两种模式, 阻塞模式使用非常简单, 但是性能和可靠性都不好, 非阻塞模型正好相反. 开发人员一般可以根据自己的需要来选择合适的开发模型, 一般来说, 低负载、低并发的应用程序可以选择同步阻塞IO 以降低编程复杂度. 但是对于高负载、高并发的网络应用, 需要使用NIO的非阻塞模型进行开发, Netty 架构按照Reactor模式设计和实现, 他的服务端通信序列图如下:</p>
+<p><img src="http://files.luyanan.com//img/20190923101835.png"></p>
+<p>客户端通信序列图如下:</p>
+<p><img src="http://files.luyanan.com//img/20190923101901.png"></p>
+<p>Netty的IO线程 NioEventLoop 聚合了多路复用器 Selector, 可以同时并发处理成百上千个客户端 Channel, 由于读写操作都是非阻塞的, 这就可以充分提升IO线程的运行效率, 避免由于频繁IO阻塞导致的线程挂起. 另外， 由于Netty 采用了异步通信模型, 一个IO线程可以并发处理N个客户端连接和读写操作， 这就从根据上解决了传统同步IO阻塞 <code>一连接一线程</code> 模型, 架构的性能, 弹性伸缩能力和可靠性都得到了极大的提升.</p>
+<h3 id="2-零拷贝"><a href="#2-零拷贝" class="headerlink" title="2. 零拷贝"></a>2. 零拷贝</h3><p>Netty的<code>零拷贝</code> 主要体现在如下三个方面:</p>
+<ol>
+<li>Netty的接收和发送ByteBuffer 采用 <code>DIRECT BUFFERS</code>, 使用堆外直接内存进行Socket 读写， 不需要进行字节缓存区的二次拷贝, 如果使用传统的堆内存(HEAP BUFFERS) 使用Socket读写,  JVM 会将堆内存Buffer 拷贝一份到直接内存中, 然后才写入到Socket, 相比于堆外直接内存, 消息在发送过程中多了一次缓冲区的内存拷贝。 </li>
+<li>Netty 提供了组合Buffer对象, 可以聚合多个ByteBuffer 对象, 用户可以像操作一个Buffer 那样方便的对组合Buffer 进行操作, 避免了传统使用内存拷贝的方式将几个小Buffer 合并成一个大的Buffer .</li>
+<li>Netty 的文件传输采用了 transferTo() 方法, 它可以直接将文件缓冲区的数据发送到目标Channel, 避免了传统通过 循环 write() 方式导致的内存拷贝问题.</li>
+</ol>
+<p>下面, 我们对上述的三种<code>零拷贝</code> 进行说明, 先看Netty 接受Buffer的创建</p>
+<p>打开 AbstractNioByteChannel的 NioByteUnsafe</p>
+<pre class=" language-java"><code class="language-java">     <span class="token annotation punctuation">@Override</span>
+        <span class="token keyword">public</span> <span class="token keyword">final</span> <span class="token keyword">void</span> <span class="token function">read</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+            <span class="token keyword">final</span> ChannelConfig config <span class="token operator">=</span> <span class="token function">config</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <span class="token keyword">final</span> ChannelPipeline pipeline <span class="token operator">=</span> <span class="token function">pipeline</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <span class="token keyword">final</span> ByteBufAllocator allocator <span class="token operator">=</span> config<span class="token punctuation">.</span><span class="token function">getAllocator</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <span class="token keyword">final</span> RecvByteBufAllocator<span class="token punctuation">.</span>Handle allocHandle <span class="token operator">=</span> <span class="token function">recvBufAllocHandle</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+            allocHandle<span class="token punctuation">.</span><span class="token function">reset</span><span class="token punctuation">(</span>config<span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+            ByteBuf byteBuf <span class="token operator">=</span> null<span class="token punctuation">;</span>
+            <span class="token keyword">boolean</span> close <span class="token operator">=</span> <span class="token boolean">false</span><span class="token punctuation">;</span>
+            <span class="token keyword">try</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+                <span class="token keyword">do</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+                    byteBuf <span class="token operator">=</span> allocHandle<span class="token punctuation">.</span><span class="token function">allocate</span><span class="token punctuation">(</span>allocator<span class="token punctuation">)</span><span class="token punctuation">;</span>
+                    allocHandle<span class="token punctuation">.</span><span class="token function">lastBytesRead</span><span class="token punctuation">(</span><span class="token function">doReadBytes</span><span class="token punctuation">(</span>byteBuf<span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+                    <span class="token keyword">if</span> <span class="token punctuation">(</span>allocHandle<span class="token punctuation">.</span><span class="token function">lastBytesRead</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">&lt;=</span> <span class="token number">0</span><span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+                        <span class="token comment" spellcheck="true">// nothing was read. release the buffer.</span>
+                        byteBuf<span class="token punctuation">.</span><span class="token function">release</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+                        byteBuf <span class="token operator">=</span> null<span class="token punctuation">;</span>
+                        close <span class="token operator">=</span> allocHandle<span class="token punctuation">.</span><span class="token function">lastBytesRead</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">&lt;</span> <span class="token number">0</span><span class="token punctuation">;</span>
+                        <span class="token keyword">break</span><span class="token punctuation">;</span>
+                    <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+
+                    allocHandle<span class="token punctuation">.</span><span class="token function">incMessagesRead</span><span class="token punctuation">(</span><span class="token number">1</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+                    readPending <span class="token operator">=</span> <span class="token boolean">false</span><span class="token punctuation">;</span>
+                    pipeline<span class="token punctuation">.</span><span class="token function">fireChannelRead</span><span class="token punctuation">(</span>byteBuf<span class="token punctuation">)</span><span class="token punctuation">;</span>
+                    byteBuf <span class="token operator">=</span> null<span class="token punctuation">;</span>
+                <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span> <span class="token keyword">while</span> <span class="token punctuation">(</span>allocHandle<span class="token punctuation">.</span><span class="token function">continueReading</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+                allocHandle<span class="token punctuation">.</span><span class="token function">readComplete</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+                pipeline<span class="token punctuation">.</span><span class="token function">fireChannelReadComplete</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+                <span class="token keyword">if</span> <span class="token punctuation">(</span>close<span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+                    <span class="token function">closeOnRead</span><span class="token punctuation">(</span>pipeline<span class="token punctuation">)</span><span class="token punctuation">;</span>
+                <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+            <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span> <span class="token keyword">catch</span> <span class="token punctuation">(</span><span class="token class-name">Throwable</span> t<span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+                <span class="token function">handleReadException</span><span class="token punctuation">(</span>pipeline<span class="token punctuation">,</span> byteBuf<span class="token punctuation">,</span> t<span class="token punctuation">,</span> close<span class="token punctuation">,</span> allocHandle<span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span> <span class="token keyword">finally</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+                <span class="token comment" spellcheck="true">// Check if there is a readPending which was not processed yet.</span>
+                <span class="token comment" spellcheck="true">// This could be for two reasons:</span>
+                <span class="token comment" spellcheck="true">// * The user called Channel.read() or ChannelHandlerContext.read() in channelRead(...) method</span>
+                <span class="token comment" spellcheck="true">// * The user called Channel.read() or ChannelHandlerContext.read() in channelReadComplete(...) method</span>
+                <span class="token comment" spellcheck="true">//</span>
+                <span class="token comment" spellcheck="true">// See https://github.com/netty/netty/issues/2254</span>
+                <span class="token keyword">if</span> <span class="token punctuation">(</span><span class="token operator">!</span>readPending <span class="token operator">&amp;&amp;</span> <span class="token operator">!</span>config<span class="token punctuation">.</span><span class="token function">isAutoRead</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+                    <span class="token function">removeReadOp</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+                <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+            <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+        <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+</code></pre>
+<p>再找到  do while 中的 <code>allocHandle.allocate(allocator)</code> 方法, 实际上调用的是</p>
+<p>DefaultMaxMessagesRecvByteBufAllocator中的MaxMessageHandle的 allocate 方法</p>
+<pre class=" language-java"><code class="language-java">   <span class="token annotation punctuation">@Override</span>
+        <span class="token keyword">public</span> ByteBuf <span class="token function">allocate</span><span class="token punctuation">(</span>ByteBufAllocator alloc<span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+            <span class="token keyword">return</span> alloc<span class="token punctuation">.</span><span class="token function">ioBuffer</span><span class="token punctuation">(</span><span class="token function">guess</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+</code></pre>
+<p>相当于每次循环读取一次消息, 就通过 AbstractByteBufAllocator的 ioBuffer 方法获取 ByteBuf 对象， 下面继续看他的接口定义</p>
+<pre class=" language-java"><code class="language-java"><span class="token keyword">public</span> <span class="token keyword">abstract</span> <span class="token keyword">class</span> <span class="token class-name">ByteBuf</span> <span class="token keyword">implements</span> <span class="token class-name">ReferenceCounted</span><span class="token punctuation">,</span> Comparable<span class="token operator">&lt;</span>ByteBuf<span class="token operator">></span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+<span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+</code></pre>
+<p>当进行 Socket IO 读写的时候, 为了避免从堆内存拷贝一份副本到直接内存, Netty的ByteBuf 分配器直接创建非堆内存避免缓冲区的二次拷贝, 通过<code>零拷贝</code> 来提升读写性能.</p>
+<p>下面我们继续看第二种 <code>零拷贝</code> 的 实现 CompositeByteBuf, 他对外将多个 ByteBuf 封装成一个ByteBuf, 对外提供统一封装后的 ByteBuf接口, 他的类定义如下:</p>
+<p><img src="http://files.luyanan.com//img/20190923110501.png"></p>
+<p>通过继承关系我们可以看出CompositeByteBuf  实际上就是个 ByteBuf的包装器, 它将多个 ByteBuf 的包装器, 他将多个ByteBuf 组合成一个集合, 然后对外提供统一的ByteBuf 接口, 相关定义如下:</p>
+<pre class=" language-java"><code class="language-java">    <span class="token keyword">private</span> <span class="token keyword">static</span> <span class="token keyword">final</span> ByteBuffer EMPTY_NIO_BUFFER <span class="token operator">=</span> Unpooled<span class="token punctuation">.</span>EMPTY_BUFFER<span class="token punctuation">.</span><span class="token function">nioBuffer</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token keyword">private</span> <span class="token keyword">static</span> <span class="token keyword">final</span> Iterator<span class="token operator">&lt;</span>ByteBuf<span class="token operator">></span> EMPTY_ITERATOR <span class="token operator">=</span> Collections<span class="token punctuation">.</span>&lt;ByteBuf<span class="token operator">></span><span class="token function">emptyList</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">iterator</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+    <span class="token keyword">private</span> <span class="token keyword">final</span> ByteBufAllocator alloc<span class="token punctuation">;</span>
+    <span class="token keyword">private</span> <span class="token keyword">final</span> <span class="token keyword">boolean</span> direct<span class="token punctuation">;</span>
+    <span class="token keyword">private</span> <span class="token keyword">final</span> List<span class="token operator">&lt;</span>Component<span class="token operator">></span> components<span class="token punctuation">;</span>
+    <span class="token keyword">private</span> <span class="token keyword">final</span> <span class="token keyword">int</span> maxNumComponents<span class="token punctuation">;</span>
+
+    <span class="token keyword">private</span> <span class="token keyword">boolean</span> freed<span class="token punctuation">;</span>
+</code></pre>
+<p>添加ByteBuf ,  不需要做内存拷贝, 相关代码如下：</p>
+<pre class=" language-java"><code class="language-java">  <span class="token keyword">private</span> <span class="token keyword">int</span> <span class="token function">addComponent0</span><span class="token punctuation">(</span><span class="token keyword">boolean</span> increaseWriterIndex<span class="token punctuation">,</span> <span class="token keyword">int</span> cIndex<span class="token punctuation">,</span> ByteBuf buffer<span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+        <span class="token keyword">assert</span> buffer <span class="token operator">!=</span> null<span class="token punctuation">;</span>
+        <span class="token keyword">boolean</span> wasAdded <span class="token operator">=</span> <span class="token boolean">false</span><span class="token punctuation">;</span>
+        <span class="token keyword">try</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+            <span class="token function">checkComponentIndex</span><span class="token punctuation">(</span>cIndex<span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+            <span class="token keyword">int</span> readableBytes <span class="token operator">=</span> buffer<span class="token punctuation">.</span><span class="token function">readableBytes</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+            <span class="token comment" spellcheck="true">// No need to consolidate - just add a component to the list.</span>
+            <span class="token annotation punctuation">@SuppressWarnings</span><span class="token punctuation">(</span><span class="token string">"deprecation"</span><span class="token punctuation">)</span>
+            Component c <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">Component</span><span class="token punctuation">(</span>buffer<span class="token punctuation">.</span><span class="token function">order</span><span class="token punctuation">(</span>ByteOrder<span class="token punctuation">.</span>BIG_ENDIAN<span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">slice</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <span class="token keyword">if</span> <span class="token punctuation">(</span>cIndex <span class="token operator">==</span> components<span class="token punctuation">.</span><span class="token function">size</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+                wasAdded <span class="token operator">=</span> components<span class="token punctuation">.</span><span class="token function">add</span><span class="token punctuation">(</span>c<span class="token punctuation">)</span><span class="token punctuation">;</span>
+                <span class="token keyword">if</span> <span class="token punctuation">(</span>cIndex <span class="token operator">==</span> <span class="token number">0</span><span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+                    c<span class="token punctuation">.</span>endOffset <span class="token operator">=</span> readableBytes<span class="token punctuation">;</span>
+                <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span> <span class="token keyword">else</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+                    Component prev <span class="token operator">=</span> components<span class="token punctuation">.</span><span class="token function">get</span><span class="token punctuation">(</span>cIndex <span class="token operator">-</span> <span class="token number">1</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+                    c<span class="token punctuation">.</span>offset <span class="token operator">=</span> prev<span class="token punctuation">.</span>endOffset<span class="token punctuation">;</span>
+                    c<span class="token punctuation">.</span>endOffset <span class="token operator">=</span> c<span class="token punctuation">.</span>offset <span class="token operator">+</span> readableBytes<span class="token punctuation">;</span>
+                <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+            <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span> <span class="token keyword">else</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+                components<span class="token punctuation">.</span><span class="token function">add</span><span class="token punctuation">(</span>cIndex<span class="token punctuation">,</span> c<span class="token punctuation">)</span><span class="token punctuation">;</span>
+                wasAdded <span class="token operator">=</span> <span class="token boolean">true</span><span class="token punctuation">;</span>
+                <span class="token keyword">if</span> <span class="token punctuation">(</span>readableBytes <span class="token operator">!=</span> <span class="token number">0</span><span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+                    <span class="token function">updateComponentOffsets</span><span class="token punctuation">(</span>cIndex<span class="token punctuation">)</span><span class="token punctuation">;</span>
+                <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+            <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+            <span class="token keyword">if</span> <span class="token punctuation">(</span>increaseWriterIndex<span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+                <span class="token function">writerIndex</span><span class="token punctuation">(</span><span class="token function">writerIndex</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">+</span> buffer<span class="token punctuation">.</span><span class="token function">readableBytes</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+            <span class="token keyword">return</span> cIndex<span class="token punctuation">;</span>
+        <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span> <span class="token keyword">finally</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+            <span class="token keyword">if</span> <span class="token punctuation">(</span><span class="token operator">!</span>wasAdded<span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+                buffer<span class="token punctuation">.</span><span class="token function">release</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+        <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+    <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+</code></pre>
+<p>最后, 我们看一下文件传输的 <code>零拷贝</code></p>
+<pre class=" language-java"><code class="language-java">    <span class="token annotation punctuation">@Override</span>
+    <span class="token keyword">public</span> <span class="token keyword">long</span> <span class="token function">transferTo</span><span class="token punctuation">(</span>WritableByteChannel target<span class="token punctuation">,</span> <span class="token keyword">long</span> position<span class="token punctuation">)</span> <span class="token keyword">throws</span> IOException <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+        <span class="token keyword">long</span> count <span class="token operator">=</span> <span class="token keyword">this</span><span class="token punctuation">.</span>count <span class="token operator">-</span> position<span class="token punctuation">;</span>
+        <span class="token keyword">if</span> <span class="token punctuation">(</span>count <span class="token operator">&lt;</span> <span class="token number">0</span> <span class="token operator">||</span> position <span class="token operator">&lt;</span> <span class="token number">0</span><span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+            <span class="token keyword">throw</span> <span class="token keyword">new</span> <span class="token class-name">IllegalArgumentException</span><span class="token punctuation">(</span>
+                    <span class="token string">"position out of range: "</span> <span class="token operator">+</span> position <span class="token operator">+</span>
+                    <span class="token string">" (expected: 0 - "</span> <span class="token operator">+</span> <span class="token punctuation">(</span><span class="token keyword">this</span><span class="token punctuation">.</span>count <span class="token operator">-</span> <span class="token number">1</span><span class="token punctuation">)</span> <span class="token operator">+</span> <span class="token string">')'</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+        <span class="token keyword">if</span> <span class="token punctuation">(</span>count <span class="token operator">==</span> <span class="token number">0</span><span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+            <span class="token keyword">return</span> 0L<span class="token punctuation">;</span>
+        <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+        <span class="token keyword">if</span> <span class="token punctuation">(</span><span class="token function">refCnt</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">==</span> <span class="token number">0</span><span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+            <span class="token keyword">throw</span> <span class="token keyword">new</span> <span class="token class-name">IllegalReferenceCountException</span><span class="token punctuation">(</span><span class="token number">0</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+        <span class="token comment" spellcheck="true">// Call open to make sure fc is initialized. This is a no-oop if we called it before.</span>
+        <span class="token function">open</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+        <span class="token keyword">long</span> written <span class="token operator">=</span> file<span class="token punctuation">.</span><span class="token function">transferTo</span><span class="token punctuation">(</span><span class="token keyword">this</span><span class="token punctuation">.</span>position <span class="token operator">+</span> position<span class="token punctuation">,</span> count<span class="token punctuation">,</span> target<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token keyword">if</span> <span class="token punctuation">(</span>written <span class="token operator">></span> <span class="token number">0</span><span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+            transferred <span class="token operator">+=</span> written<span class="token punctuation">;</span>
+        <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+        <span class="token keyword">return</span> written<span class="token punctuation">;</span>
+    <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+</code></pre>
+<p>Netty文件传输  <code>DefaultFileRegion</code> 通过 transferTo 方法将文件 发送到目标Channel, 下面重点看 FileChannel 的 transferTo  方法， 它的API DOC 说明如下:</p>
+<pre class=" language-java"><code class="language-java">
+    <span class="token comment" spellcheck="true">/**
+     * Transfers bytes from this channel's file to the given writable byte
+     * channel.
+     *
+     * &lt;p> An attempt is made to read up to &lt;tt>count&lt;/tt> bytes starting at
+     * the given &lt;tt>position&lt;/tt> in this channel's file and write them to the
+     * target channel.  An invocation of this method may or may not transfer
+     * all of the requested bytes; whether or not it does so depends upon the
+     * natures and states of the channels.  Fewer than the requested number of
+     * bytes are transferred if this channel's file contains fewer than
+     * &lt;tt>count&lt;/tt> bytes starting at the given &lt;tt>position&lt;/tt>, or if the
+     * target channel is non-blocking and it has fewer than &lt;tt>count&lt;/tt>
+     * bytes free in its output buffer.
+     *
+     * &lt;p> This method does not modify this channel's position.  If the given
+     * position is greater than the file's current size then no bytes are
+     * transferred.  If the target channel has a position then bytes are
+     * written starting at that position and then the position is incremented
+     * by the number of bytes written.
+     *
+     * &lt;p> This method is potentially much more efficient than a simple loop
+     * that reads from this channel and writes to the target channel.  Many
+     * operating systems can transfer bytes directly from the filesystem cache
+     * to the target channel without actually copying them.  &lt;/p>
+     *
+     * @param  position
+     *         The position within the file at which the transfer is to begin;
+     *         must be non-negative
+     *
+     * @param  count
+     *         The maximum number of bytes to be transferred; must be
+     *         non-negative
+     *
+     * @param  target
+     *         The target channel
+     *
+     * @return  The number of bytes, possibly zero,
+     *          that were actually transferred
+     *
+     * @throws IllegalArgumentException
+     *         If the preconditions on the parameters do not hold
+     *
+     * @throws  NonReadableChannelException
+     *          If this channel was not opened for reading
+     *
+     * @throws  NonWritableChannelException
+     *          If the target channel was not opened for writing
+     *
+     * @throws  ClosedChannelException
+     *          If either this channel or the target channel is closed
+     *
+     * @throws  AsynchronousCloseException
+     *          If another thread closes either channel
+     *          while the transfer is in progress
+     *
+     * @throws  ClosedByInterruptException
+     *          If another thread interrupts the current thread while the
+     *          transfer is in progress, thereby closing both channels and
+     *          setting the current thread's interrupt status
+     *
+     * @throws  IOException
+     *          If some other I/O error occurs
+     */</span>
+    <span class="token keyword">public</span> <span class="token keyword">abstract</span> <span class="token keyword">long</span> <span class="token function">transferTo</span><span class="token punctuation">(</span><span class="token keyword">long</span> position<span class="token punctuation">,</span> <span class="token keyword">long</span> count<span class="token punctuation">,</span>
+                                    WritableByteChannel target<span class="token punctuation">)</span>
+        <span class="token keyword">throws</span> IOException<span class="token punctuation">;</span>
+</code></pre>
+<p>对于很多操作系统它直接将文件缓冲区的内容发送到目标Channel, 而不需要通过拷贝的方式, 这是一种更加高效的传输方式, 它实现了文件传输的<code>零拷贝</code></p>
+<h3 id="3-内存池"><a href="#3-内存池" class="headerlink" title="3. 内存池"></a>3. 内存池</h3><p>随着JVM 虚拟机和JIT 及时编译技术的发展, 对象的分配和回收是个非常轻量级的工作. 但是对于缓存区Buffer,情况却稍有不同, 特别是对于堆外内存的分配和回收， 是一件耗时的操作. 为了尽量重用缓冲区, Netty 提供了基于内存池的缓冲区重用机制, 下面我们一起看下Netty ByteBuf 的实现</p>
+<p><img src="http://files.luyanan.com//img/20190923112727.png"></p>
+<p>Netty 提供了多种内存管理策略, 通过在启动辅助类中配置相关参数, 可以实现差异化的定制， </p>
+<p>下面通过性能测试, 我们看下基于内存池循环利用的ByteBuf 和普通的 ByteBuf 的性能差异</p>
+<pre class=" language-java"><code class="language-java"><span class="token keyword">package</span> com<span class="token punctuation">.</span>formula<span class="token punctuation">.</span>netty<span class="token punctuation">.</span>base<span class="token punctuation">.</span>buffer<span class="token punctuation">;</span>
+
+<span class="token keyword">import</span> io<span class="token punctuation">.</span>netty<span class="token punctuation">.</span>buffer<span class="token punctuation">.</span>ByteBuf<span class="token punctuation">;</span>
+<span class="token keyword">import</span> io<span class="token punctuation">.</span>netty<span class="token punctuation">.</span>buffer<span class="token punctuation">.</span>PooledByteBufAllocator<span class="token punctuation">;</span>
+<span class="token keyword">import</span> io<span class="token punctuation">.</span>netty<span class="token punctuation">.</span>buffer<span class="token punctuation">.</span>Unpooled<span class="token punctuation">;</span>
+
+<span class="token comment" spellcheck="true">/**
+ * @author luyanan
+ * @since 2019/9/23
+ * &lt;p> 基于内存池循环利用的 ByteBuf 和普通 ByteBuf 的性能差异&lt;/p>
+ **/</span>
+<span class="token keyword">public</span> <span class="token keyword">class</span> <span class="token class-name">ByteBufDemo</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+
+    <span class="token keyword">public</span> <span class="token keyword">static</span> <span class="token keyword">void</span> <span class="token function">main</span><span class="token punctuation">(</span>String<span class="token punctuation">[</span><span class="token punctuation">]</span> args<span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+        <span class="token keyword">final</span> <span class="token keyword">byte</span><span class="token punctuation">[</span><span class="token punctuation">]</span> CONTENT <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">byte</span><span class="token punctuation">[</span><span class="token number">1024</span><span class="token punctuation">]</span><span class="token punctuation">;</span>
+        <span class="token keyword">int</span> loop <span class="token operator">=</span> <span class="token number">1800000</span><span class="token punctuation">;</span>
+        <span class="token keyword">long</span> startTime <span class="token operator">=</span> System<span class="token punctuation">.</span><span class="token function">currentTimeMillis</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        ByteBuf poolBuffer <span class="token operator">=</span> null<span class="token punctuation">;</span>
+        <span class="token keyword">for</span> <span class="token punctuation">(</span><span class="token keyword">int</span> i <span class="token operator">=</span> <span class="token number">0</span><span class="token punctuation">;</span> i <span class="token operator">&lt;</span> loop<span class="token punctuation">;</span> i<span class="token operator">++</span><span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+            poolBuffer <span class="token operator">=</span> PooledByteBufAllocator<span class="token punctuation">.</span>DEFAULT<span class="token punctuation">.</span><span class="token function">directBuffer</span><span class="token punctuation">(</span><span class="token number">1024</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+            poolBuffer<span class="token punctuation">.</span><span class="token function">writeBytes</span><span class="token punctuation">(</span>CONTENT<span class="token punctuation">)</span><span class="token punctuation">;</span>
+            poolBuffer<span class="token punctuation">.</span><span class="token function">release</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+        <span class="token keyword">long</span> endTime <span class="token operator">=</span> System<span class="token punctuation">.</span><span class="token function">currentTimeMillis</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        System<span class="token punctuation">.</span>out<span class="token punctuation">.</span><span class="token function">println</span><span class="token punctuation">(</span><span class="token string">"内存池分配缓冲区耗时："</span> <span class="token operator">+</span> <span class="token punctuation">(</span>endTime <span class="token operator">-</span> startTime<span class="token punctuation">)</span> <span class="token operator">+</span> <span class="token string">"ms"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+
+        <span class="token keyword">long</span> startTime2 <span class="token operator">=</span> System<span class="token punctuation">.</span><span class="token function">currentTimeMillis</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+        ByteBuf buf <span class="token operator">=</span> null<span class="token punctuation">;</span>
+
+        <span class="token keyword">for</span> <span class="token punctuation">(</span><span class="token keyword">int</span> i <span class="token operator">=</span> <span class="token number">0</span><span class="token punctuation">;</span> i <span class="token operator">&lt;</span> loop<span class="token punctuation">;</span> i<span class="token operator">++</span><span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+            buf <span class="token operator">=</span> Unpooled<span class="token punctuation">.</span><span class="token function">directBuffer</span><span class="token punctuation">(</span><span class="token number">1024</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+            buf<span class="token punctuation">.</span><span class="token function">writeBytes</span><span class="token punctuation">(</span>CONTENT<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+        <span class="token keyword">long</span> endTime2 <span class="token operator">=</span> System<span class="token punctuation">.</span><span class="token function">currentTimeMillis</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        System<span class="token punctuation">.</span>out<span class="token punctuation">.</span><span class="token function">println</span><span class="token punctuation">(</span><span class="token string">"非内存池分配缓冲区耗时: "</span> <span class="token operator">+</span> <span class="token punctuation">(</span>endTime2 <span class="token operator">-</span> startTime2<span class="token punctuation">)</span> <span class="token operator">+</span> <span class="token string">"ms"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+<span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+</code></pre>
+<p>各执行 180万次, 性能对比结果如下:</p>
+<pre><code>内存池分配缓冲区耗时：773ms
+非内存池分配缓冲区耗时: 1705ms
+</code></pre>
+<p>性能测试表明, 采用内存池的ByteBuf 相比于 于朝生夕灭的ByteBuf,性能高了23倍左右(性能数据与使用场景强相关), 下面我们一起简单分析下 Netty 内存池的内存分配</p>
+<pre class=" language-java"><code class="language-java">    <span class="token annotation punctuation">@Override</span>
+    <span class="token keyword">public</span> ByteBuf <span class="token function">directBuffer</span><span class="token punctuation">(</span><span class="token keyword">int</span> initialCapacity<span class="token punctuation">,</span> <span class="token keyword">int</span> maxCapacity<span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+        <span class="token keyword">if</span> <span class="token punctuation">(</span>initialCapacity <span class="token operator">==</span> <span class="token number">0</span> <span class="token operator">&amp;&amp;</span> maxCapacity <span class="token operator">==</span> <span class="token number">0</span><span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+            <span class="token keyword">return</span> emptyBuf<span class="token punctuation">;</span>
+        <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+        <span class="token function">validate</span><span class="token punctuation">(</span>initialCapacity<span class="token punctuation">,</span> maxCapacity<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token keyword">return</span> <span class="token function">newDirectBuffer</span><span class="token punctuation">(</span>initialCapacity<span class="token punctuation">,</span> maxCapacity<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+</code></pre>
+<p>继续看 newDirectBuffer 方法, 我们发现他是一个抽象方法, 由  AbstractByteBufAllocator的子类 负责具体实现. 代码如下:</p>
+<p><img src="http://files.luyanan.com//img/20190923114708.png"></p>
+<p>代码跳转到 PooledByteBufAllocator的 newDirectBuffer 方法. 从Cache 中获取内存区域 PoolArena, 调用它的 allocate 方法进行内存分配</p>
+<pre class=" language-java"><code class="language-java"> <span class="token annotation punctuation">@Override</span>
+    <span class="token keyword">protected</span> ByteBuf <span class="token function">newDirectBuffer</span><span class="token punctuation">(</span><span class="token keyword">int</span> initialCapacity<span class="token punctuation">,</span> <span class="token keyword">int</span> maxCapacity<span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+        PoolThreadCache cache <span class="token operator">=</span> threadCache<span class="token punctuation">.</span><span class="token function">get</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        PoolArena<span class="token operator">&lt;</span>ByteBuffer<span class="token operator">></span> directArena <span class="token operator">=</span> cache<span class="token punctuation">.</span>directArena<span class="token punctuation">;</span>
+
+        ByteBuf buf<span class="token punctuation">;</span>
+        <span class="token keyword">if</span> <span class="token punctuation">(</span>directArena <span class="token operator">!=</span> null<span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+            buf <span class="token operator">=</span> directArena<span class="token punctuation">.</span><span class="token function">allocate</span><span class="token punctuation">(</span>cache<span class="token punctuation">,</span> initialCapacity<span class="token punctuation">,</span> maxCapacity<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span> <span class="token keyword">else</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+            <span class="token keyword">if</span> <span class="token punctuation">(</span>PlatformDependent<span class="token punctuation">.</span><span class="token function">hasUnsafe</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+                buf <span class="token operator">=</span> UnsafeByteBufUtil<span class="token punctuation">.</span><span class="token function">newUnsafeDirectByteBuf</span><span class="token punctuation">(</span><span class="token keyword">this</span><span class="token punctuation">,</span> initialCapacity<span class="token punctuation">,</span> maxCapacity<span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span> <span class="token keyword">else</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+                buf <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">UnpooledDirectByteBuf</span><span class="token punctuation">(</span><span class="token keyword">this</span><span class="token punctuation">,</span> initialCapacity<span class="token punctuation">,</span> maxCapacity<span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+        <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+
+        <span class="token keyword">return</span> <span class="token function">toLeakAwareBuffer</span><span class="token punctuation">(</span>buf<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+</code></pre>
+<p>PoolArena的 allocate 方法如下： </p>
+<pre class=" language-java"><code class="language-java">    PooledByteBuf<span class="token operator">&lt;</span>T<span class="token operator">></span> <span class="token function">allocate</span><span class="token punctuation">(</span>PoolThreadCache cache<span class="token punctuation">,</span> <span class="token keyword">int</span> reqCapacity<span class="token punctuation">,</span> <span class="token keyword">int</span> maxCapacity<span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+        PooledByteBuf<span class="token operator">&lt;</span>T<span class="token operator">></span> buf <span class="token operator">=</span> <span class="token function">newByteBuf</span><span class="token punctuation">(</span>maxCapacity<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token function">allocate</span><span class="token punctuation">(</span>cache<span class="token punctuation">,</span> buf<span class="token punctuation">,</span> reqCapacity<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token keyword">return</span> buf<span class="token punctuation">;</span>
+    <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+</code></pre>
+<p>我们重点分析newByteBuf 的实现, 他同样是个抽象方法, 由子类 DirectArena 和 HeapArena 来实现不同类型的缓冲区分配, 由于测试用例使用的是 堆外内存</p>
+<p><img src="http://files.luyanan.com//img/20190923115636.png"></p>
+<p>因此重点分析 DirectArena 的实现, 如果没有开启使用 sun的 unsafe ,则</p>
+<pre class=" language-java"><code class="language-java"> <span class="token annotation punctuation">@Override</span>
+        <span class="token keyword">protected</span> PooledByteBuf<span class="token operator">&lt;</span>ByteBuffer<span class="token operator">></span> <span class="token function">newByteBuf</span><span class="token punctuation">(</span><span class="token keyword">int</span> maxCapacity<span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+            <span class="token keyword">if</span> <span class="token punctuation">(</span>HAS_UNSAFE<span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+                <span class="token keyword">return</span> PooledUnsafeDirectByteBuf<span class="token punctuation">.</span><span class="token function">newInstance</span><span class="token punctuation">(</span>maxCapacity<span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span> <span class="token keyword">else</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+                <span class="token keyword">return</span> PooledDirectByteBuf<span class="token punctuation">.</span><span class="token function">newInstance</span><span class="token punctuation">(</span>maxCapacity<span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+        <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+</code></pre>
+<p>执行 PooledDirectByteBuf.newInstance 的方法，代码如下:</p>
+<pre class=" language-java"><code class="language-java">    <span class="token keyword">static</span> PooledDirectByteBuf <span class="token function">newInstance</span><span class="token punctuation">(</span><span class="token keyword">int</span> maxCapacity<span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+        PooledDirectByteBuf buf <span class="token operator">=</span> RECYCLER<span class="token punctuation">.</span><span class="token function">get</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        buf<span class="token punctuation">.</span><span class="token function">reuse</span><span class="token punctuation">(</span>maxCapacity<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token keyword">return</span> buf<span class="token punctuation">;</span>
+    <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+</code></pre>
+<p>通过 RECYCLER的get 方法循环使用ByteBuf 对象， 如果是非内存池实现, 则直接创建一个新的ByteBuf 对象, 从缓冲池中获取ByteBuf 之后, 调用 AbstractReferenceCountedByteBuf的 setRefCnt 方法设置引用计数器, 用于对象的引用计数和内存回收(类似于JVM垃圾回收机制)</p>
+<h3 id="4-高效的Reactor-线程模型"><a href="#4-高效的Reactor-线程模型" class="headerlink" title="4. 高效的Reactor 线程模型"></a>4. 高效的Reactor 线程模型</h3><p>常见的Reactor模型有三种, 分别如下:</p>
+<ol>
+<li><p>Reactor 单线程模型</p>
+<p>  Reactor 单线程模型,指的是所有的IO操作都在同一个NIO 线程上面完成, NIO线程的职责如下:</p>
+<ol>
+<li>作为NIO服务端， 接受客户端的TCP连接</li>
+<li>作为NIO客户端, 想服务端发起TCP连接</li>
+<li>读取通信对端的请求或者应答消息</li>
+<li>想通信对端发送消息请求或者应答请求.</li>
+</ol>
+<p>Reactor 单线程模型示意图如下所示</p>
+<p><img src="http://files.luyanan.com//img/20190923133948.png"></p>
+<p>由于Reactor 模式使用的是异步非阻塞IO， 所有的IO操作都不会导致阻塞, 理论上一个线程可以独立处理所有的IO相关的操作. 从架构层面上, 一个NIO线程确实可以完成其承担的职责, 例如, 通过Accepter 接受客户端的TCP 连接请求消息, 链路 建立成功后,通过Dispatch 将对用的ByteBuf 派发到指定的 Handler 上进行消息解码. 用户的Handler 可以通过NIO线程 将消息发送至客户端.</p>
+<p>对于一个小容量应用场景, 可以使用单线程模型. 但是对于高负载、大并发的应用却不合适, 主要原因如下：</p>
+<ol>
+<li>一个NIO线程同时处理成百上千的链路, 性能上无法支持, 及时NIO的线程的CPU负荷达到100%, 也无法满足海量消息的解码、编码、读取和发送,</li>
+<li>当NIO 线程负载过重后， 处理速度将变慢,这会导致大量客户端连接超时, 超时之后往往会进行重发， 这更加重了NIO线程的负载, 最终会导致大量消息积压和处理超时, NIO线程会成为系统的性能瓶颈,</li>
+<li>可靠性问题: 一旦NIO线程 意外跑飞, 或者进入死循环, 会导致整个系统通信模块不可用, 不能接受和处理外部消息， 造成节点故障.</li>
+</ol>
+<p>为了解决这些问题, 演进出了 Reactor 多线程模型, 接下来我们一起来学习一下Reactor 多线程模型</p>
+</li>
+<li><p>Reactor 多线程模型</p>
+<p> Reactor 多线程模型与单线程模型最大的区别就是有一组NIO线程处理IO操作, 它的原理图如下：</p>
+<p><img src="http://files.luyanan.com//img/20190923135226.png"></p>
+<p>Reactor 多线程模型的特点如下：</p>
+<ol>
+<li>专门有一个NIO线程 Acceptor 线程用于监听服务端, 接受客户端TCP连接请求.</li>
+<li>网络IO操作-读、写等由一个NIO线程池负责, 线程池可以采用标准的JDK 线程池实现, 它包含了一个任务队列和N个可用的线程, 由这些线程负责消息的读取、解码、编码和发送.</li>
+<li>1个NIO线程可以同时处理N个链路, 但是1个链路只对用1个线程, 防止发生并发操作问题.</li>
+</ol>
+<p>​       在绝大数场景下, Reactor 多线程模型都可以满足性能需求, 但是, 在极特殊应用场景中, 一个NIO 线程负责监听和处理所有的客户端连接可能会存在性能问题, 例如百万客户端并发链接，或者服务端需要对客户端的握手消息进行安全认证, 认证本身非常耗损性能, 这这些场景下， 单独一个Accepter 线程可能会存在性能不足问题, 为了解决性能问题, 产生了第三种Reactor线程模型 - 主从Reactor 多线程模型.</p>
+</li>
+<li><p>主从Reactor  多线程模型</p>
+<p> 主从Reactor 线程模型的特点是: 服务端用于接收客户端连接的不再是一个单独的NIO线程, 而是一个独立的NIO线程池, Acceptor 接收到客户端TCP 连接请求处理完成后(可能包含接入认证), 将新创建的 SocketChannel 注册到IO线程池(sub reactor 线程池) 的某个IO 线程上, 由他负责 SocketChannel 的读写和编解码工作. Acceptor 线程池仅仅只用于客户端的登录、握手和安全认证, 一旦链路建立成功, 就将链路注册到后端 subReactor 线程池的IO线程上, 由IO线程负责后续的IO操作.</p>
+<p>它的线程模型如下图所示:</p>
+<p><img src="http://files.luyanan.com//img/20190923140323.png"></p>
+<p>利用主从IO线程模型, 可以解决1 个服务端监听线程无法有效处理所有客户端连接的性能不足问题, 因此, 在Netty 的官方demo中, 推荐使用该线程模型.</p>
+<p>事实上, Netty的线程模型并非固定不变, 通过在启动辅助类中创建不同的EventLoopGroup 实例并通过适当的参数配置， 就可以支持上述三种Reactor 线程模型, 正是因为Netty 对Reactor 线程模型的支持提供了灵活的定制能力, 所以可以满足不同业务场景的性能诉求.</p>
+</li>
+</ol>
+<h3 id="5-无锁化的串行设计理念"><a href="#5-无锁化的串行设计理念" class="headerlink" title="5. 无锁化的串行设计理念."></a>5. 无锁化的串行设计理念.</h3><p>   在大多数场景下, 并行多线程处理可以提升系统的并发性能. 但是, 如果对于共享资源的并发访问处理不当, 会带来严重的锁竞争, 这最终会导致性能的下降. 为了尽可能的避免锁竞争带来的性能损耗，可以通过串行化设计, 即消息的处理尽可能在同一个线程内完成, 期间不进行线程切换, 这样就避免了多线程竞争和同步锁。</p>
+<p>为了尽可能的提升性能, Netty采用了串行无锁化设计, 在IO线程内部进行串行操作, 避免多线程竞争导致的性能下降, 表面上看, 串行化设计似乎CPU利用率不高， 并发程度不够, 但是, 通过调整NIO线程池的线程参数, 可以同时启动多个串行化的线程并行运行, 这种局部无锁化的串行线程设计相比一个队列-多个工作线程模型性能更优.</p>
+<p>Netty 的串行化设计工作原理如下:</p>
+<p><img src="http://files.luyanan.com//img/20190923141322.png"></p>
+<p>Netty的 NioEventLoop  读取到消息后, 直接调用 ChannelPipeline 的 fireChannelRead(Object msg)，只要用户不主动切换线程, 一直会由 NioEventLoop 调用到用户的handler, 期间不进行线程切换, 这种串行化处理方式避免了多线程操作导致的锁的竞争, 从性能角度看是最优的. </p>
+<h3 id="6-高效的并发编程"><a href="#6-高效的并发编程" class="headerlink" title="6. 高效的并发编程."></a>6. 高效的并发编程.</h3><p>Netty的高效并发编程主要体现在如下几点:</p>
+<ol>
+<li>volatile 的大量、正确使用</li>
+<li>CAS 和原子类的广泛使用</li>
+<li>线程安全容器的使用</li>
+<li>通过读写锁提升并发性能.</li>
+</ol>
+<h3 id="7-高性能的序列化框架"><a href="#7-高性能的序列化框架" class="headerlink" title="7. 高性能的序列化框架"></a>7. 高性能的序列化框架</h3><p>影响序列化性能的关键因素总结如下:</p>
+<ol>
+<li>序列化后的码流大小(网络带宽的占用)</li>
+<li>序列化&amp;反序列化的性能(CPU资源占用)</li>
+<li>是否支持跨语言(异构系统的对接和开发语言切换)</li>
+<li>Netty 默认提供了对Google Protobuf的支持， 通过扩展 Netty的编解码接口, 用户可以实现其他的高性能序列化框架, 例如 Thrift 的压缩二进制编解码框架, 下面我们一起来看一下 不同序列化&amp;反序列化框架序列化后的字节数组大小.</li>
+</ol>
+<p><img src="http://files.luyanan.com//img/20190923142442.png"></p>
+<p>从上图可以看出, Protobuf 序列化后的码流只有Java 序列化后的1/4左右, 正是由于Java原生序列化性能表现太差, 才催生了各种高性能的开源序列化技术和框架(性能差只是其中的一个原因, 还有跨语言、IDL定义等其他因素)</p>
+<h3 id="8-灵活的TCP参数配置能力"><a href="#8-灵活的TCP参数配置能力" class="headerlink" title="8. 灵活的TCP参数配置能力"></a>8. 灵活的TCP参数配置能力</h3><p>合理设置TCP参数在某些场景下对于性能的提升可以起到显著的效果, 例如SO_RCVBUF 和 SO_SNDBUF。如果设置不当, 对性能的影响是非常大的, 下面我们总结一下对性能影响比较大的几个配置项.</p>
+<ol>
+<li>SO_RCVBUF 和 SO_SNDBUF : 通常建议值设置为128K 或者256K</li>
+<li>SO_TCPNODELAY：NAGLE算法通过将缓冲区内的小封包自动相连. 组成较大的封包, 阻止大量小封包的发送阻塞网络, 从而提高网络应用效率. 但是对于时延敏感的应用场景来说需要关闭该优化算法.</li>
+<li>软中断: 如果linux 内核版本支持 RPS(2.6.35 以上版本),开启 RPS 后可以实现软中断, 提升网络吞吐量, RPS 根据数据包的源地址, 目的地址,以及目的源地址和端口,计算出一个hash值, 然后根据这个hash值来选择软中断 运行的CPU， 从上层来看, 也就是将每个链接和cpu绑定, 并通过这个hash值, 来均衡软中断在多个cpu上, 提升网络并行处理性能.</li>
+</ol>
+<p>Netty在启动辅助类中可以灵活的配置TCP参数, 满足不同的用户场景, 相关配置接口定义如下：</p>
+<p><img src="http://files.luyanan.com//img/20190923143722.png"></p>
+
+                
+            </div>
+            <hr/>
+
+            
+
+    <div class="reprint" id="reprint-statement">
+        
+            <div class="reprint__author">
+                <span class="reprint-meta" style="font-weight: bold;">
+                    <i class="fas fa-user">
+                        文章作者:
+                    </i>
+                </span>
+                <span class="reprint-info">
+                    <a href="/about" rel="external nofollow noreferrer">luyanan</a>
+                </span>
+            </div>
+            <div class="reprint__type">
+                <span class="reprint-meta" style="font-weight: bold;">
+                    <i class="fas fa-link">
+                        文章链接:
+                    </i>
+                </span>
+                <span class="reprint-info">
+                    <a href="https://rainsoil.github.io/2022/01/04/netty/netty-gao-xing-neng-zhi-dao-6/">https://rainsoil.github.io/2022/01/04/netty/netty-gao-xing-neng-zhi-dao-6/</a>
+                </span>
+            </div>
+            <div class="reprint__notice">
+                <span class="reprint-meta" style="font-weight: bold;">
+                    <i class="fas fa-copyright">
+                        版权声明:
+                    </i>
+                </span>
+                <span class="reprint-info">
+                    本博客所有文章除特別声明外，均采用
+                    <a href="https://creativecommons.org/licenses/by/4.0/deed.zh" rel="external nofollow noreferrer" target="_blank">CC BY 4.0</a>
+                    许可协议。转载请注明来源
+                    <a href="/about" target="_blank">luyanan</a>
+                    !
+                </span>
+            </div>
+        
+    </div>
+
+    <script async defer>
+      document.addEventListener("copy", function (e) {
+        let toastHTML = '<span>复制成功，请遵循本文的转载规则</span><button class="btn-flat toast-action" onclick="navToReprintStatement()" style="font-size: smaller">查看</a>';
+        M.toast({html: toastHTML})
+      });
+
+      function navToReprintStatement() {
+        $("html, body").animate({scrollTop: $("#reprint-statement").offset().top - 80}, 800);
+      }
+    </script>
+
+
+
+            <div class="tag_share" style="display: block;">
+                <div class="post-meta__tag-list" style="display: inline-block;">
+                    
+                        <div class="article-tag">
+                            <span class="chip bg-color">无标签</span>
+                        </div>
+                    
+                </div>
+                <div class="post_share" style="zoom: 80%; width: fit-content; display: inline-block; float: right; margin: -0.15rem 0;">
+                    <link rel="stylesheet" type="text/css" href="/libs/share/css/share.min.css">
+<div id="article-share">
+
+    
+    <div class="social-share" data-sites="twitter,facebook,google,qq,qzone,wechat,weibo,douban,linkedin" data-wechat-qrcode-helper="<p>微信扫一扫即可分享！</p>"></div>
+    <script src="/libs/share/js/social-share.min.js"></script>
+    
+
+    
+
+</div>
+
+                </div>
+            </div>
+            
+        </div>
+    </div>
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+<article id="prenext-posts" class="prev-next articles">
+    <div class="row article-row">
+        
+        <div class="article col s12 m6" data-aos="fade-up">
+            <div class="article-badge left-badge text-color">
+                <i class="fas fa-chevron-left"></i>&nbsp;上一篇</div>
+            <div class="card">
+                <a href="/2022/01/04/netty/ji-yu-netty-chong-gou-rpc-kuang-jia-4/">
+                    <div class="card-image">
+                        
+                        
+                        <img src="/medias/featureimages/19.jpg" class="responsive-img" alt="基于Netty重构RPC框架(4)">
+                        
+                        <span class="card-title">基于Netty重构RPC框架(4)</span>
+                    </div>
+                </a>
+                <div class="card-content article-content">
+                    <div class="summary block-with-text">
+                        
+                            
+                        
+                    </div>
+                    <div class="publish-info">
+                        <span class="publish-date">
+                            <i class="far fa-clock fa-fw icon-date"></i>2022-01-04
+                        </span>
+                        <span class="publish-author">
+                            
+                            <i class="fas fa-bookmark fa-fw icon-category"></i>
+                            
+                            <a href="/categories/Netty/" class="post-category">
+                                    Netty
+                                </a>
+                            
+                            <a href="/categories/Netty/Netty/" class="post-category">
+                                    Netty
+                                </a>
+                            
+                            
+                        </span>
+                    </div>
+                </div>
+                
+            </div>
+        </div>
+        
+        
+        <div class="article col s12 m6" data-aos="fade-up">
+            <div class="article-badge right-badge text-color">
+                下一篇&nbsp;<i class="fas fa-chevron-right"></i>
+            </div>
+            <div class="card">
+                <a href="/2022/01/04/netty/shi-yong-netty-shou-xie-tomcat-3/">
+                    <div class="card-image">
+                        
+                        
+                        <img src="/medias/featureimages/13.jpg" class="responsive-img" alt="使用Netty手写tomcat(3)">
+                        
+                        <span class="card-title">使用Netty手写tomcat(3)</span>
+                    </div>
+                </a>
+                <div class="card-content article-content">
+                    <div class="summary block-with-text">
+                        
+                            
+                        
+                    </div>
+                    <div class="publish-info">
+                            <span class="publish-date">
+                                <i class="far fa-clock fa-fw icon-date"></i>2022-01-04
+                            </span>
+                        <span class="publish-author">
+                            
+                            <i class="fas fa-bookmark fa-fw icon-category"></i>
+                            
+                            <a href="/categories/Netty/" class="post-category">
+                                    Netty
+                                </a>
+                            
+                            <a href="/categories/Netty/Netty/" class="post-category">
+                                    Netty
+                                </a>
+                            
+                            
+                        </span>
+                    </div>
+                </div>
+                
+            </div>
+        </div>
+        
+    </div>
+</article>
+
+</div>
+
+
+
+<!-- 代码块功能依赖 -->
+<script type="text/javascript" src="/libs/codeBlock/codeBlockFuction.js"></script>
+
+<!-- 代码语言 -->
+
+<script type="text/javascript" src="/libs/codeBlock/codeLang.js"></script>
+
+
+<!-- 代码块复制 -->
+
+<script type="text/javascript" src="/libs/codeBlock/codeCopy.js"></script>
+
+
+<!-- 代码块收缩 -->
+
+<script type="text/javascript" src="/libs/codeBlock/codeShrink.js"></script>
+
+
+    </div>
+    <div id="toc-aside" class="expanded col l3 hide-on-med-and-down">
+        <div class="toc-widget card" style="background-color: white;">
+            <div class="toc-title"><i class="far fa-list-alt"></i>&nbsp;&nbsp;目录</div>
+            <div id="toc-content"></div>
+        </div>
+    </div>
+</div>
+
+<!-- TOC 悬浮按钮. -->
+
+<div id="floating-toc-btn" class="hide-on-med-and-down">
+    <a class="btn-floating btn-large bg-color">
+        <i class="fas fa-list-ul"></i>
+    </a>
+</div>
+
+
+<script src="/libs/tocbot/tocbot.min.js"></script>
+<script>
+    $(function () {
+        tocbot.init({
+            tocSelector: '#toc-content',
+            contentSelector: '#articleContent',
+            headingsOffset: -($(window).height() * 0.4 - 45),
+            collapseDepth: Number('0'),
+            headingSelector: 'h2, h3, h4'
+        });
+
+        // modify the toc link href to support Chinese.
+        let i = 0;
+        let tocHeading = 'toc-heading-';
+        $('#toc-content a').each(function () {
+            $(this).attr('href', '#' + tocHeading + (++i));
+        });
+
+        // modify the heading title id to support Chinese.
+        i = 0;
+        $('#articleContent').children('h2, h3, h4').each(function () {
+            $(this).attr('id', tocHeading + (++i));
+        });
+
+        // Set scroll toc fixed.
+        let tocHeight = parseInt($(window).height() * 0.4 - 64);
+        let $tocWidget = $('.toc-widget');
+        $(window).scroll(function () {
+            let scroll = $(window).scrollTop();
+            /* add post toc fixed. */
+            if (scroll > tocHeight) {
+                $tocWidget.addClass('toc-fixed');
+            } else {
+                $tocWidget.removeClass('toc-fixed');
+            }
+        });
+
+        
+        /* 修复文章卡片 div 的宽度. */
+        let fixPostCardWidth = function (srcId, targetId) {
+            let srcDiv = $('#' + srcId);
+            if (srcDiv.length === 0) {
+                return;
+            }
+
+            let w = srcDiv.width();
+            if (w >= 450) {
+                w = w + 21;
+            } else if (w >= 350 && w < 450) {
+                w = w + 18;
+            } else if (w >= 300 && w < 350) {
+                w = w + 16;
+            } else {
+                w = w + 14;
+            }
+            $('#' + targetId).width(w);
+        };
+
+        // 切换TOC目录展开收缩的相关操作.
+        const expandedClass = 'expanded';
+        let $tocAside = $('#toc-aside');
+        let $mainContent = $('#main-content');
+        $('#floating-toc-btn .btn-floating').click(function () {
+            if ($tocAside.hasClass(expandedClass)) {
+                $tocAside.removeClass(expandedClass).hide();
+                $mainContent.removeClass('l9');
+            } else {
+                $tocAside.addClass(expandedClass).show();
+                $mainContent.addClass('l9');
+            }
+            fixPostCardWidth('artDetail', 'prenext-posts');
+        });
+        
+    });
+</script>
+
+    
+
+</main>
+
+
+
+
+    <footer class="page-footer bg-color">
+    
+        <link rel="stylesheet" href="/libs/aplayer/APlayer.min.css">
+<style>
+    .aplayer .aplayer-lrc p {
+        
+        display: none;
+        
+        font-size: 12px;
+        font-weight: 700;
+        line-height: 16px !important;
+    }
+
+    .aplayer .aplayer-lrc p.aplayer-lrc-current {
+        
+        display: none;
+        
+        font-size: 15px;
+        color: #42b983;
+    }
+
+    
+    .aplayer.aplayer-fixed.aplayer-narrow .aplayer-body {
+        left: -66px !important;
+    }
+
+    .aplayer.aplayer-fixed.aplayer-narrow .aplayer-body:hover {
+        left: 0px !important;
+    }
+
+    
+</style>
+<div class="">
+    
+    <div class="row">
+        <meting-js class="col l8 offset-l2 m10 offset-m1 s12"
+                   server="netease"
+                   type="playlist"
+                   id="503838841"
+                   fixed='true'
+                   autoplay='false'
+                   theme='#42b983'
+                   loop='all'
+                   order='random'
+                   preload='auto'
+                   volume='0.7'
+                   list-folded='true'
+        >
+        </meting-js>
+    </div>
+</div>
+
+<script src="/libs/aplayer/APlayer.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/meting@2/dist/Meting.min.js"></script>
+
+    
+
+    <div class="container row center-align"
+         style="margin-bottom: 0px !important;">
+        <div class="col s12 m8 l8 copy-right">
+            Copyright&nbsp;&copy;
+            
+                <span id="year">2019-2022</span>
+            
+            <a href="/about" target="_blank">luyanan</a>
+            |&nbsp;Powered by&nbsp;<a href="https://hexo.io/" target="_blank">Hexo</a>
+            |&nbsp;Theme&nbsp;<a href="https://github.com/blinkfox/hexo-theme-matery" target="_blank">Matery</a>
+            <br>
+            
+                &nbsp;<i class="fas fa-chart-area"></i>&nbsp;站点总字数:&nbsp;<span
+                        class="white-color">803.3k</span>
+            
+            
+            
+                
+            
+            
+                <span id="busuanzi_container_site_pv">
+                &nbsp;|&nbsp;<i class="far fa-eye"></i>&nbsp;总访问量:&nbsp;
+                    <span id="busuanzi_value_site_pv" class="white-color"></span>
+            </span>
+            
+            
+                <span id="busuanzi_container_site_uv">
+                &nbsp;|&nbsp;<i class="fas fa-users"></i>&nbsp;总访问人数:&nbsp;
+                    <span id="busuanzi_value_site_uv" class="white-color"></span>
+            </span>
+            
+            <br>
+
+            <!-- 运行天数提醒. -->
+            
+            <br>
+            
+        </div>
+        <div class="col s12 m4 l4 social-link social-statis">
+    <a href="https://github.com/rainsoil" class="tooltipped" target="_blank" data-tooltip="访问我的GitHub" data-position="top" data-delay="50">
+        <i class="fab fa-github"></i>
+    </a>
+
+
+
+    <a href="mailto:luyanan0718@163.com" class="tooltipped" target="_blank" data-tooltip="邮件联系我" data-position="top" data-delay="50">
+        <i class="fas fa-envelope-open"></i>
+    </a>
+
+
+
+
+
+
+
+    <a href="tencent://AddContact/?fromId=50&fromSubId=1&subcmd=all&uin=914596513" class="tooltipped" target="_blank" data-tooltip="QQ联系我: 914596513" data-position="top" data-delay="50">
+        <i class="fab fa-qq"></i>
+    </a>
+
+
+
+
+
+
+
+    <a href="/atom.xml" class="tooltipped" target="_blank" data-tooltip="RSS 订阅" data-position="top" data-delay="50">
+        <i class="fas fa-rss"></i>
+    </a>
+
+</div>
+    </div>
+</footer>
+
+<div class="progress-bar"></div>
+
+
+    <!-- 搜索遮罩框 -->
+<div id="searchModal" class="modal">
+    <div class="modal-content">
+        <div class="search-header">
+            <span class="title"><i class="fas fa-search"></i>&nbsp;&nbsp;搜索</span>
+            <input type="search" id="searchInput" name="s" placeholder="请输入搜索的关键字"
+                   class="search-input">
+        </div>
+        <div id="searchResult"></div>
+    </div>
+</div>
+
+<script type="text/javascript">
+$(function () {
+    var searchFunc = function (path, search_id, content_id) {
+        'use strict';
+        $.ajax({
+            url: path,
+            dataType: "xml",
+            success: function (xmlResponse) {
+                // get the contents from search data
+                var datas = $("entry", xmlResponse).map(function () {
+                    return {
+                        title: $("title", this).text(),
+                        content: $("content", this).text(),
+                        url: $("url", this).text()
+                    };
+                }).get();
+                var $input = document.getElementById(search_id);
+                var $resultContent = document.getElementById(content_id);
+                $input.addEventListener('input', function () {
+                    var str = '<ul class=\"search-result-list\">';
+                    var keywords = this.value.trim().toLowerCase().split(/[\s\-]+/);
+                    $resultContent.innerHTML = "";
+                    if (this.value.trim().length <= 0) {
+                        return;
+                    }
+                    // perform local searching
+                    datas.forEach(function (data) {
+                        var isMatch = true;
+                        var data_title = data.title.trim().toLowerCase();
+                        var data_content = data.content.trim().replace(/<[^>]+>/g, "").toLowerCase();
+                        var data_url = data.url;
+                        data_url = data_url.indexOf('/') === 0 ? data.url : '/' + data_url;
+                        var index_title = -1;
+                        var index_content = -1;
+                        var first_occur = -1;
+                        // only match artiles with not empty titles and contents
+                        if (data_title !== '' && data_content !== '') {
+                            keywords.forEach(function (keyword, i) {
+                                index_title = data_title.indexOf(keyword);
+                                index_content = data_content.indexOf(keyword);
+                                if (index_title < 0 && index_content < 0) {
+                                    isMatch = false;
+                                } else {
+                                    if (index_content < 0) {
+                                        index_content = 0;
+                                    }
+                                    if (i === 0) {
+                                        first_occur = index_content;
+                                    }
+                                }
+                            });
+                        }
+                        // show search results
+                        if (isMatch) {
+                            str += "<li><a href='" + data_url + "' class='search-result-title'>" + data_title + "</a>";
+                            var content = data.content.trim().replace(/<[^>]+>/g, "");
+                            if (first_occur >= 0) {
+                                // cut out 100 characters
+                                var start = first_occur - 20;
+                                var end = first_occur + 80;
+                                if (start < 0) {
+                                    start = 0;
+                                }
+                                if (start === 0) {
+                                    end = 100;
+                                }
+                                if (end > content.length) {
+                                    end = content.length;
+                                }
+                                var match_content = content.substr(start, end);
+                                // highlight all keywords
+                                keywords.forEach(function (keyword) {
+                                    var regS = new RegExp(keyword, "gi");
+                                    match_content = match_content.replace(regS, "<em class=\"search-keyword\">" + keyword + "</em>");
+                                });
+
+                                str += "<p class=\"search-result\">" + match_content + "...</p>"
+                            }
+                            str += "</li>";
+                        }
+                    });
+                    str += "</ul>";
+                    $resultContent.innerHTML = str;
+                });
+            }
+        });
+    };
+
+    searchFunc('/search.xml', 'searchInput', 'searchResult');
+});
+</script>
+
+    <!-- 回到顶部按钮 -->
+<div id="backTop" class="top-scroll">
+    <a class="btn-floating btn-large waves-effect waves-light" href="#!">
+        <i class="fas fa-arrow-up"></i>
+    </a>
+</div>
+
+
+    <script src="/libs/materialize/materialize.min.js"></script>
+    <script src="/libs/masonry/masonry.pkgd.min.js"></script>
+    <script src="/libs/aos/aos.js"></script>
+    <script src="/libs/scrollprogress/scrollProgress.min.js"></script>
+    <script src="/libs/lightGallery/js/lightgallery-all.min.js"></script>
+    <script src="/js/matery.js"></script>
+
+    
+
+    
+
+    <!-- 雪花特效 -->
+    
+
+    <!-- 鼠标星星特效 -->
+    
+
+    <!-- Baidu Analytics -->
+
+    <!-- Baidu Push -->
+
+<script>
+    (function () {
+        var bp = document.createElement('script');
+        var curProtocol = window.location.protocol.split(':')[0];
+        if (curProtocol === 'https') {
+            bp.src = 'https://zz.bdstatic.com/linksubmit/push.js';
+        } else {
+            bp.src = 'http://push.zhanzhang.baidu.com/push.js';
+        }
+        var s = document.getElementsByTagName("script")[0];
+        s.parentNode.insertBefore(bp, s);
+    })();
+</script>
+
+    
+    <script src="/libs/others/clicklove.js" async="async"></script>
+    
+    
+    <script async src="/libs/others/busuanzi.pure.mini.js"></script>
+    
+
+    
+
+    
+
+    <!--腾讯兔小巢-->
+    
+    
+    <script type="text/javascript" color="0,0,255"
+        pointColor="0,0,255" opacity='0.7'
+        zIndex="-1" count="99"
+        src="/libs/background/canvas-nest.js"></script>
+    
+
+    
+
+    
+
+    
+    <script src="/libs/instantpage/instantpage.js" type="module"></script>
+    
+
+</body>
+
+</html>

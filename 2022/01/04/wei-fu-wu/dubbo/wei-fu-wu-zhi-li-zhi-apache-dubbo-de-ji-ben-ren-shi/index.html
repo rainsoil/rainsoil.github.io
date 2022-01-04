@@ -1,0 +1,1400 @@
+<!DOCTYPE HTML>
+<html lang="zh-CN">
+
+
+<head>
+    <meta charset="utf-8">
+    <meta name="keywords" content="微服务治理之Apache Dubbo 的基本认识, railsoil">
+    <meta name="description" content="微服务治理之Apache Dubbo 的基本认识为什么要使用dubbo远程通信背景技术架构的发展从单体到分布式，是一种顺势而为的架构演进,也是一种被逼无奈的技术变革. 架构的复杂度能够体现公司的业务的复杂度,也能从侧面体现公司的产品的发展势">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="renderer" content="webkit|ie-stand|ie-comp">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="format-detection" content="telephone=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="referrer" content="no-referrer-when-downgrade">
+    <!-- Global site tag (gtag.js) - Google Analytics -->
+
+
+    <title>微服务治理之Apache Dubbo 的基本认识 | railsoil</title>
+    <link rel="icon" type="image/png" href="/favicon.png">
+
+    <link rel="stylesheet" type="text/css" href="/libs/awesome/css/all.min.css">
+    <link rel="stylesheet" type="text/css" href="/libs/materialize/materialize.min.css">
+    <link rel="stylesheet" type="text/css" href="/libs/aos/aos.css">
+    <link rel="stylesheet" type="text/css" href="/libs/animate/animate.min.css">
+    <link rel="stylesheet" type="text/css" href="/libs/lightGallery/css/lightgallery.min.css">
+    <link rel="stylesheet" type="text/css" href="/css/matery.css">
+    <link rel="stylesheet" type="text/css" href="/css/my.css">
+
+    <script src="/libs/jquery/jquery.min.js"></script>
+
+<meta name="generator" content="Hexo 5.4.0"><link rel="alternate" href="/atom.xml" title="railsoil" type="application/atom+xml">
+<link rel="stylesheet" href="/css/prism-tomorrow.css" type="text/css"></head>
+
+
+
+
+<body>
+    <header class="navbar-fixed">
+    <nav id="headNav" class="bg-color nav-transparent">
+        <div id="navContainer" class="nav-wrapper container">
+            <div class="brand-logo">
+                <a href="/" class="waves-effect waves-light">
+                    
+                    <img src="/medias/logo.png" class="logo-img" alt="LOGO">
+                    
+                    <span class="logo-span">railsoil</span>
+                </a>
+            </div>
+            
+
+<a href="#" data-target="mobile-nav" class="sidenav-trigger button-collapse"><i class="fas fa-bars"></i></a>
+<ul class="right nav-menu">
+  
+  <li class="hide-on-med-and-down nav-item">
+    
+    <a href="/" class="waves-effect waves-light">
+      
+      <i class="fas fa-home" style="zoom: 0.6;"></i>
+      
+      <span>首页</span>
+    </a>
+    
+  </li>
+  
+  <li class="hide-on-med-and-down nav-item">
+    
+    <a href="/tags" class="waves-effect waves-light">
+      
+      <i class="fas fa-tags" style="zoom: 0.6;"></i>
+      
+      <span>标签</span>
+    </a>
+    
+  </li>
+  
+  <li class="hide-on-med-and-down nav-item">
+    
+    <a href="/categories" class="waves-effect waves-light">
+      
+      <i class="fas fa-bookmark" style="zoom: 0.6;"></i>
+      
+      <span>分类</span>
+    </a>
+    
+  </li>
+  
+  <li class="hide-on-med-and-down nav-item">
+    
+    <a href="/archives" class="waves-effect waves-light">
+      
+      <i class="fas fa-archive" style="zoom: 0.6;"></i>
+      
+      <span>归档</span>
+    </a>
+    
+  </li>
+  
+  <li class="hide-on-med-and-down nav-item">
+    
+    <a href="/about" class="waves-effect waves-light">
+      
+      <i class="fas fa-user-circle" style="zoom: 0.6;"></i>
+      
+      <span>关于</span>
+    </a>
+    
+  </li>
+  
+  <li>
+    <a href="#searchModal" class="modal-trigger waves-effect waves-light">
+      <i id="searchIcon" class="fas fa-search" title="搜索" style="zoom: 0.85;"></i>
+    </a>
+  </li>
+</ul>
+
+
+<div id="mobile-nav" class="side-nav sidenav">
+
+    <div class="mobile-head bg-color">
+        
+        <img src="/medias/logo.png" class="logo-img circle responsive-img">
+        
+        <div class="logo-name">railsoil</div>
+        <div class="logo-desc">
+            
+            Never really desperate, only the lost of the soul.
+            
+        </div>
+    </div>
+
+    <ul class="menu-list mobile-menu-list">
+        
+        <li class="m-nav-item">
+	  
+		<a href="/" class="waves-effect waves-light">
+			
+			    <i class="fa-fw fas fa-home"></i>
+			
+			首页
+		</a>
+          
+        </li>
+        
+        <li class="m-nav-item">
+	  
+		<a href="/tags" class="waves-effect waves-light">
+			
+			    <i class="fa-fw fas fa-tags"></i>
+			
+			标签
+		</a>
+          
+        </li>
+        
+        <li class="m-nav-item">
+	  
+		<a href="/categories" class="waves-effect waves-light">
+			
+			    <i class="fa-fw fas fa-bookmark"></i>
+			
+			分类
+		</a>
+          
+        </li>
+        
+        <li class="m-nav-item">
+	  
+		<a href="/archives" class="waves-effect waves-light">
+			
+			    <i class="fa-fw fas fa-archive"></i>
+			
+			归档
+		</a>
+          
+        </li>
+        
+        <li class="m-nav-item">
+	  
+		<a href="/about" class="waves-effect waves-light">
+			
+			    <i class="fa-fw fas fa-user-circle"></i>
+			
+			关于
+		</a>
+          
+        </li>
+        
+        
+    </ul>
+</div>
+
+
+        </div>
+
+        
+    </nav>
+
+</header>
+
+    
+
+
+
+<div class="bg-cover pd-header post-cover" style="background-image: url('/medias/featureimages/10.jpg')">
+    <div class="container" style="right: 0px;left: 0px;">
+        <div class="row">
+            <div class="col s12 m12 l12">
+                <div class="brand">
+                    <h1 class="description center-align post-title">微服务治理之Apache Dubbo 的基本认识</h1>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+
+<main class="post-container content">
+
+    
+    <link rel="stylesheet" href="/libs/tocbot/tocbot.css">
+<style>
+    #articleContent h1::before,
+    #articleContent h2::before,
+    #articleContent h3::before,
+    #articleContent h4::before,
+    #articleContent h5::before,
+    #articleContent h6::before {
+        display: block;
+        content: " ";
+        height: 100px;
+        margin-top: -100px;
+        visibility: hidden;
+    }
+
+    #articleContent :focus {
+        outline: none;
+    }
+
+    .toc-fixed {
+        position: fixed;
+        top: 64px;
+    }
+
+    .toc-widget {
+        width: 345px;
+        padding-left: 20px;
+    }
+
+    .toc-widget .toc-title {
+        padding: 35px 0 15px 17px;
+        font-size: 1.5rem;
+        font-weight: bold;
+        line-height: 1.5rem;
+    }
+
+    .toc-widget ol {
+        padding: 0;
+        list-style: none;
+    }
+
+    #toc-content {
+        padding-bottom: 30px;
+        overflow: auto;
+    }
+
+    #toc-content ol {
+        padding-left: 10px;
+    }
+
+    #toc-content ol li {
+        padding-left: 10px;
+    }
+
+    #toc-content .toc-link:hover {
+        color: #42b983;
+        font-weight: 700;
+        text-decoration: underline;
+    }
+
+    #toc-content .toc-link::before {
+        background-color: transparent;
+        max-height: 25px;
+
+        position: absolute;
+        right: 23.5vw;
+        display: block;
+    }
+
+    #toc-content .is-active-link {
+        color: #42b983;
+    }
+
+    #floating-toc-btn {
+        position: fixed;
+        right: 15px;
+        bottom: 76px;
+        padding-top: 15px;
+        margin-bottom: 0;
+        z-index: 998;
+    }
+
+    #floating-toc-btn .btn-floating {
+        width: 48px;
+        height: 48px;
+    }
+
+    #floating-toc-btn .btn-floating i {
+        line-height: 48px;
+        font-size: 1.4rem;
+    }
+</style>
+<div class="row">
+    <div id="main-content" class="col s12 m12 l9">
+        <!-- 文章内容详情 -->
+<div id="artDetail">
+    <div class="card">
+        <div class="card-content article-info">
+            <div class="row tag-cate">
+                <div class="col s7">
+                    
+                          <div class="article-tag">
+                            <span class="chip bg-color">无标签</span>
+                          </div>
+                    
+                </div>
+                <div class="col s5 right-align">
+                    
+                    <div class="post-cate">
+                        <i class="fas fa-bookmark fa-fw icon-category"></i>
+                        
+                            <a href="/categories/dubbo/" class="post-category">
+                                dubbo
+                            </a>
+                        
+                            <a href="/categories/dubbo/%E5%BE%AE%E6%9C%8D%E5%8A%A1/" class="post-category">
+                                微服务
+                            </a>
+                        
+                            <a href="/categories/dubbo/%E5%BE%AE%E6%9C%8D%E5%8A%A1/%E5%BE%AE%E6%9C%8D%E5%8A%A1/" class="post-category">
+                                微服务
+                            </a>
+                        
+                            <a href="/categories/dubbo/%E5%BE%AE%E6%9C%8D%E5%8A%A1/%E5%BE%AE%E6%9C%8D%E5%8A%A1/dubbo/" class="post-category">
+                                dubbo
+                            </a>
+                        
+                    </div>
+                    
+                </div>
+            </div>
+
+            <div class="post-info">
+                
+                <div class="post-date info-break-policy">
+                    <i class="far fa-calendar-minus fa-fw"></i>发布日期:&nbsp;&nbsp;
+                    2022-01-04
+                </div>
+                
+
+                
+
+                
+                <div class="info-break-policy">
+                    <i class="far fa-file-word fa-fw"></i>文章字数:&nbsp;&nbsp;
+                    4.6k
+                </div>
+                
+
+                
+                <div class="info-break-policy">
+                    <i class="far fa-clock fa-fw"></i>阅读时长:&nbsp;&nbsp;
+                    19 分
+                </div>
+                
+
+                
+                    <div id="busuanzi_container_page_pv" class="info-break-policy">
+                        <i class="far fa-eye fa-fw"></i>阅读次数:&nbsp;&nbsp;
+                        <span id="busuanzi_value_page_pv"></span>
+                    </div>
+				
+            </div>
+        </div>
+        <hr class="clearfix">
+
+        
+
+        
+
+        <div class="card-content article-card-content">
+            <div id="articleContent">
+                <h1 id="微服务治理之Apache-Dubbo-的基本认识"><a href="#微服务治理之Apache-Dubbo-的基本认识" class="headerlink" title="微服务治理之Apache Dubbo 的基本认识"></a>微服务治理之Apache Dubbo 的基本认识</h1><h2 id="为什么要使用dubbo"><a href="#为什么要使用dubbo" class="headerlink" title="为什么要使用dubbo"></a>为什么要使用dubbo</h2><h3 id="远程通信背景"><a href="#远程通信背景" class="headerlink" title="远程通信背景"></a>远程通信背景</h3><p>技术架构的发展从单体到分布式，是一种顺势而为的架构演进,也是一种被逼无奈的技术变革. 架构的复杂度能够体现公司的业务的复杂度,也能从侧面体现公司的产品的发展势头是向上的. </p>
+<p>和传统的单体架构相比,分布式多了一个远程服务之间的通信,不管是soa还是微服务,他们本质上都是对于业务服务的提炼和复用. 那么远程服务之间的调用才是实现分布式的关键因素. </p>
+<p>而在远程通信这个领域, 其实有很多的技术,比如JAVA 的RMI、webService、Hessian 、Dubbo、Thrift 等RPC 框架. 现在我们接触的比较多的应该就是RPC 框架Dubbo 以及应用协议Http. 其实每一个技术都是在某一个阶段产生它的价值,随着架构的变化以及需求的变化, 技术的解决方案也在变. </p>
+<p>我们知道RPC 的底层原理, 服务与服务之间的调用无非就是跨进程通信而已. 我们可以使用socket 来实现通信,也可以使用nio来实现高性能通信. 我们不用这些开源的RPC 框架, 也可以完成通信的过程. 但是为什么要用现成的框架呢? </p>
+<p>原因是: 如果我们自己去开发一个网络通信,需要考虑到:</p>
+<ol>
+<li>底层网络通信协议的处理</li>
+<li>序列化和反序列化的处理工作. </li>
+</ol>
+<p>但是这些工作本身应该是通用的, 应该是一个中间件服务. 为整个公司提供远程通信的服务. 而不应该由业务开发人员来自己实现, 所以才有了这样的rpc框架，使得我们调用远程方法的时候就想调用本地方法那么简单,不需要关心底层通信逻辑. </p>
+<h3 id="大规模化服务对于服务治理的要求"><a href="#大规模化服务对于服务治理的要求" class="headerlink" title="大规模化服务对于服务治理的要求"></a>大规模化服务对于服务治理的要求</h3><p>我认为到目前为止, 还只是满足了通信的基本需求, 但是当企业开始大规模的服务化以后, 远程通信带来的弊端就越来越明显了,比如说:</p>
+<ol>
+<li>服务链路变长, 如何实现对服务链路的跟踪和监控. </li>
+<li>服务的大规模集群使得服务之间需要依赖第三方注册中心来解决服务的发现和服务的感知问题. </li>
+<li>服务通信之间的异常, 需要有一种保护机制防止一个节点故障引发大规模的系统故障, 所以要有容错机制. </li>
+<li>服务大规模集群会使得客户端需要引负载均衡机制来实现转发. </li>
+</ol>
+<p>而这些对于服务治理的要求, 传统的PRC技术在这样的场景中显得有点力不从心, 因为很多的企业开始研发自己的PRC 框架, 比如阿里的HFS、Dubbo;京东的JSF框架、当当的dubbox 、新浪的motan、蚂蚁金服的sofa等. 有技术输出能力的公司,都会研发适合自己场景的rpc框架, 要么从0带1开发, 要么是基于现有的思路结合公司的业务进行改造 . 而没有技术输出能力的公司, 遇到服务治理的需求, 会优先选择哪些比较成熟的开源框架,而Dubbo 就是其中的一个. </p>
+<p>duboo 主要是一个分布式服务治理解决方案, 那么什么是服务治理呢? 服务治理主要是针对大规模服务化以后, 服务之间的路由、负载均衡、容错机制、服务降级这些问题的解决方案, 而Dubbo 实现的不仅仅是远程通信, 并且还解决了服务路由、负载、降级、容错等功能. </p>
+<h2 id="dubbo-的发展历史"><a href="#dubbo-的发展历史" class="headerlink" title="dubbo 的发展历史"></a>dubbo 的发展历史</h2><p>Dubbo 是阿里内部使用的一个分布式服务治理框架,2012年开源, 因为Dubbo 在公司内部经过了很多的验证相对来说比较成熟,所以在很短的时间内就被很多互联网公司使用, 再加上阿里出来的很多技术大牛进入各个创业公司担仁技术架构后,都以Dubbo 作为主推的RPC框架使得dubbo 很快成为了很多互联网公司的首要选择. 并且很多公司在应用dubbo时, 会基于自身业务特性进行优化和改进, 所以也衍生了很多的把本. 比如京东的JSF、比如新浪的Motan、比如当当的dubbox. </p>
+<p>在2014年10月份, dubbo 停止了维护, 在后来的2017年的9月份, 阿里宣布重启dubbo, 并且对于dubbo 做好了长期投入的准备,并且在这段时间内dubbo 进行了非常多的更新,目前的版本已经达到了2.7 . </p>
+<p>2018年1月8号, Dubbo 创始人之一梁飞在Dubbo 交流群里透漏了Dubbo 3.0 正在动工的消息, Dubbo 3.0 内核于Dubbo 2.0 完全不同, 但兼容Dubbo 2.0 。Dubbo 3.0 将支持可选Service Mesh. </p>
+<p>2018年2月份, Dubbo 捐给了Apache. 另外, 阿里巴巴对于Spring Cloud Alibaba 生态的完善, 以及Spring Cloud 团队对于 alibaba 整个服务治理生态的支持, 所以Dubbo 未来仍然是国内绝大部分公司的首要选择. </p>
+<h2 id="Dubbo-的基本使用"><a href="#Dubbo-的基本使用" class="headerlink" title="Dubbo 的基本使用."></a>Dubbo 的基本使用.</h2><p>我们基于dubbo 的最新版本2.7 来开始讲解, 首先还是基于一个demo 使用dubbo 完成基本的远程通信</p>
+<p>创建三个项目, 一个server, 一个client,最后一个对外提供的api 项目</p>
+<h3 id="接口项目"><a href="#接口项目" class="headerlink" title="接口项目"></a>接口项目</h3><p>我们在接口项目里面编写一个api类, 作为对外提供的接口</p>
+<pre class=" language-java"><code class="language-java"><span class="token keyword">package</span> com<span class="token punctuation">.</span>dubbo<span class="token punctuation">.</span>simple<span class="token punctuation">;</span>
+
+<span class="token comment" spellcheck="true">/**
+ * @author luyanan
+ * @since 2019/11/20
+ * &lt;p>用户api&lt;/p>
+ **/</span>
+<span class="token keyword">public</span> <span class="token keyword">interface</span> <span class="token class-name">UserApi</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+
+
+    String <span class="token function">info</span><span class="token punctuation">(</span>String id<span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+<span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+</code></pre>
+<h3 id="服务端项目"><a href="#服务端项目" class="headerlink" title="服务端项目"></a>服务端项目</h3><p>添加 dubbo、logback 和 上面我们编写的api 项目的jar 依赖</p>
+<h4 id="pom-jar-依赖"><a href="#pom-jar-依赖" class="headerlink" title="pom  jar 依赖"></a>pom  jar 依赖</h4><pre class=" language-xml"><code class="language-xml">  <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>dependency</span><span class="token punctuation">></span></span>
+            <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>groupId</span><span class="token punctuation">></span></span>com.dubbo.simple<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>groupId</span><span class="token punctuation">></span></span>
+            <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>artifactId</span><span class="token punctuation">></span></span>dubbo-simple-api<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>artifactId</span><span class="token punctuation">></span></span>
+            <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>version</span><span class="token punctuation">></span></span>1.0-SNAPSHOT<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>version</span><span class="token punctuation">></span></span>
+        <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>dependency</span><span class="token punctuation">></span></span>
+        <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>dependency</span><span class="token punctuation">></span></span>
+            <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>groupId</span><span class="token punctuation">></span></span>org.apache.dubbo<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>groupId</span><span class="token punctuation">></span></span>
+            <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>artifactId</span><span class="token punctuation">></span></span>dubbo<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>artifactId</span><span class="token punctuation">></span></span>
+            <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>version</span><span class="token punctuation">></span></span>2.7.2<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>version</span><span class="token punctuation">></span></span>
+        <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>dependency</span><span class="token punctuation">></span></span>
+        <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>dependency</span><span class="token punctuation">></span></span>
+            <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>groupId</span><span class="token punctuation">></span></span>org.slf4j<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>groupId</span><span class="token punctuation">></span></span>
+            <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>artifactId</span><span class="token punctuation">></span></span>slf4j-api<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>artifactId</span><span class="token punctuation">></span></span>
+            <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>version</span><span class="token punctuation">></span></span>1.7.29<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>version</span><span class="token punctuation">></span></span>
+        <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>dependency</span><span class="token punctuation">></span></span>
+
+        <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>dependency</span><span class="token punctuation">></span></span>
+            <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>groupId</span><span class="token punctuation">></span></span>ch.qos.logback<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>groupId</span><span class="token punctuation">></span></span>
+            <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>artifactId</span><span class="token punctuation">></span></span>logback-classic<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>artifactId</span><span class="token punctuation">></span></span>
+            <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>version</span><span class="token punctuation">></span></span>1.2.3<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>version</span><span class="token punctuation">></span></span>
+        <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>dependency</span><span class="token punctuation">></span></span>
+        <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>dependency</span><span class="token punctuation">></span></span>
+            <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>groupId</span><span class="token punctuation">></span></span>junit<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>groupId</span><span class="token punctuation">></span></span>
+            <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>artifactId</span><span class="token punctuation">></span></span>junit<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>artifactId</span><span class="token punctuation">></span></span>
+            <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>version</span><span class="token punctuation">></span></span>4.11<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>version</span><span class="token punctuation">></span></span>
+            <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>scope</span><span class="token punctuation">></span></span>test<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>scope</span><span class="token punctuation">></span></span>
+        <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>dependency</span><span class="token punctuation">></span></span>
+</code></pre>
+<p>接下来我们实现UserApi,并且配置dubbo 相关的东西</p>
+<h4 id="接口实现"><a href="#接口实现" class="headerlink" title="接口实现"></a>接口实现</h4><pre class=" language-java"><code class="language-java"><span class="token keyword">package</span> com<span class="token punctuation">.</span>dubbo<span class="token punctuation">.</span>simple<span class="token punctuation">;</span>
+
+<span class="token comment" spellcheck="true">/**
+ * @author luyanan
+ * @since 2019/11/20
+ * &lt;p>接口实现&lt;/p>
+ **/</span>
+<span class="token keyword">public</span> <span class="token keyword">class</span> <span class="token class-name">UserApiImpl</span> <span class="token keyword">implements</span> <span class="token class-name">UserApi</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+
+
+    <span class="token annotation punctuation">@Override</span>
+    <span class="token keyword">public</span> String <span class="token function">info</span><span class="token punctuation">(</span>String id<span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+        <span class="token keyword">return</span> <span class="token string">"张三:"</span> <span class="token operator">+</span> id<span class="token punctuation">;</span>
+    <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+<span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+</code></pre>
+<h4 id="创建配置文件发布服务"><a href="#创建配置文件发布服务" class="headerlink" title="创建配置文件发布服务"></a>创建配置文件发布服务</h4><p>在resulrces/META-INF/spring 下创建 application.xml  文件</p>
+<pre class=" language-xml"><code class="language-xml"><span class="token prolog">&lt;?xml version="1.0" encoding="UTF-8"?></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>beans</span> <span class="token attr-name">xmlns</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>http://www.springframework.org/schema/beans<span class="token punctuation">"</span></span>
+       <span class="token attr-name"><span class="token namespace">xmlns:</span>xsi</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>http://www.w3.org/2001/XMLSchema-instance<span class="token punctuation">"</span></span>
+       <span class="token attr-name"><span class="token namespace">xmlns:</span>dubbo</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>http://code.alibabatech.com/schema/dubbo<span class="token punctuation">"</span></span>
+
+       <span class="token attr-name"><span class="token namespace">xsi:</span>schemaLocation</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>http://www.springframework.org/schema/beans
+http://www.springframework.org/schema/beans/spring-beans.xsd
+http://code.alibabatech.com/schema/dubbo
+http://code.alibabatech.com/schema/dubbo/dubbo.xsd<span class="token punctuation">"</span></span><span class="token punctuation">></span></span>
+
+    <span class="token comment" spellcheck="true">&lt;!--  提供方应用信息,用于计算依赖关系--></span>
+    <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span><span class="token namespace">dubbo:</span>application</span> <span class="token attr-name">name</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>dubbo-simple-server<span class="token punctuation">"</span></span><span class="token punctuation">/></span></span>
+
+    <span class="token comment" spellcheck="true">&lt;!-- 使用multicast 广播注册中心暴露服务地址 --></span>
+    <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span><span class="token namespace">dubbo:</span>registry</span> <span class="token attr-name">address</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>N/A<span class="token punctuation">"</span></span><span class="token punctuation">/></span></span>
+
+    <span class="token comment" spellcheck="true">&lt;!-- 用dubbo 协议在20880 端口暴露服务 --></span>
+    <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span><span class="token namespace">dubbo:</span>protocol</span> <span class="token attr-name">name</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>dubbo<span class="token punctuation">"</span></span> <span class="token attr-name">port</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>20880<span class="token punctuation">"</span></span><span class="token punctuation">/></span></span>
+
+    <span class="token comment" spellcheck="true">&lt;!-- 声明需要暴露的服务接口 --></span>
+    <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span><span class="token namespace">dubbo:</span>service</span> <span class="token attr-name">interface</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>com.dubbo.simple.UserApi<span class="token punctuation">"</span></span> <span class="token attr-name">ref</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>userApi<span class="token punctuation">"</span></span><span class="token punctuation">/></span></span>
+
+    <span class="token comment" spellcheck="true">&lt;!-- 和本地bean 一样实现服务 --></span>
+    <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>bean</span> <span class="token attr-name">id</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>userApi<span class="token punctuation">"</span></span> <span class="token attr-name">class</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>com.dubbo.simple.UserApiImpl<span class="token punctuation">"</span></span><span class="token punctuation">/></span></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>beans</span><span class="token punctuation">></span></span>
+</code></pre>
+<h4 id="添加日志支持-logback-xml"><a href="#添加日志支持-logback-xml" class="headerlink" title="添加日志支持 logback.xml"></a>添加日志支持 logback.xml</h4><pre class=" language-xml"><code class="language-xml"><span class="token prolog">&lt;?xml version="1.0" encoding="UTF-8"?></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>configuration</span><span class="token punctuation">></span></span>
+    <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>appender</span> <span class="token attr-name">name</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>STDOUT<span class="token punctuation">"</span></span>
+              <span class="token attr-name">class</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>ch.qos.logback.core.ConsoleAppender<span class="token punctuation">"</span></span><span class="token punctuation">></span></span>
+        <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>layout</span> <span class="token attr-name">class</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>ch.qos.logback.classic.PatternLayout<span class="token punctuation">"</span></span><span class="token punctuation">></span></span>
+            <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>pattern</span><span class="token punctuation">></span></span>%date<span class="token entity" title="&#123;">&amp;#123;</span>ISO8601<span class="token entity" title="&#125;">&amp;#125;</span> %-5level
+                [%thread] %logger<span class="token entity" title="&#123;">&amp;#123;</span>32<span class="token entity" title="&#125;">&amp;#125;</span> - %message%n<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>pattern</span><span class="token punctuation">></span></span>
+        <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>layout</span><span class="token punctuation">></span></span>
+    <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>appender</span><span class="token punctuation">></span></span>
+    <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>root</span><span class="token punctuation">></span></span>
+        <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>level</span> <span class="token attr-name">value</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>DEBUG<span class="token punctuation">"</span></span><span class="token punctuation">/></span></span>
+        <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>appender-ref</span> <span class="token attr-name">ref</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>STDOUT<span class="token punctuation">"</span></span><span class="token punctuation">/></span></span>
+    <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>root</span><span class="token punctuation">></span></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>configuration</span><span class="token punctuation">></span></span>
+</code></pre>
+<h4 id="启动服务"><a href="#启动服务" class="headerlink" title="启动服务"></a>启动服务</h4><blockquote>
+<pre><code>Main.main(args);
+</code></pre>
+</blockquote>
+<h3 id="客户端服务"><a href="#客户端服务" class="headerlink" title="客户端服务"></a>客户端服务</h3><h4 id="添加配置文件"><a href="#添加配置文件" class="headerlink" title="添加配置文件"></a>添加配置文件</h4><p>在resources 下 创建 application.xml</p>
+<pre class=" language-xml"><code class="language-xml"><span class="token prolog">&lt;?xml version="1.0" encoding="UTF-8"?></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>beans</span> <span class="token attr-name">xmlns</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>http://www.springframework.org/schema/beans<span class="token punctuation">"</span></span>
+       <span class="token attr-name"><span class="token namespace">xmlns:</span>xsi</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>http://www.w3.org/2001/XMLSchema-instance<span class="token punctuation">"</span></span>
+       <span class="token attr-name"><span class="token namespace">xmlns:</span>dubbo</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>http://code.alibabatech.com/schema/dubbo<span class="token punctuation">"</span></span>
+
+       <span class="token attr-name"><span class="token namespace">xsi:</span>schemaLocation</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>http://www.springframework.org/schema/beans
+http://www.springframework.org/schema/beans/spring-beans.xsd
+http://code.alibabatech.com/schema/dubbo
+http://code.alibabatech.com/schema/dubbo/dubbo.xsd<span class="token punctuation">"</span></span><span class="token punctuation">></span></span>
+
+    <span class="token comment" spellcheck="true">&lt;!--  提供方应用信息,用于计算依赖关系--></span>
+    <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span><span class="token namespace">dubbo:</span>application</span> <span class="token attr-name">name</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>dubbo-simple-server<span class="token punctuation">"</span></span><span class="token punctuation">/></span></span>
+
+    <span class="token comment" spellcheck="true">&lt;!-- 使用multicast 广播注册中心暴露服务地址 --></span>
+    <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span><span class="token namespace">dubbo:</span>registry</span> <span class="token attr-name">address</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>N/A<span class="token punctuation">"</span></span><span class="token punctuation">/></span></span>
+
+
+    <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span><span class="token namespace">dubbo:</span>reference</span> <span class="token attr-name">interface</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>com.dubbo.simple.UserApi<span class="token punctuation">"</span></span> <span class="token attr-name">id</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>userApi<span class="token punctuation">"</span></span> <span class="token attr-name">url</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>dubbo://192.168.86.1:20880/com.dubbo.simple.UserApi<span class="token punctuation">"</span></span><span class="token punctuation">/></span></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>beans</span><span class="token punctuation">></span></span>
+</code></pre>
+<p>其中 , dubbo:reference 中的url 地址就是 userApi 接口暴露出来的地址，我们可以在server 端启动的时候从日志中找出. </p>
+<h4 id="启动client"><a href="#启动client" class="headerlink" title="启动client"></a>启动client</h4><pre class=" language-java"><code class="language-java"><span class="token keyword">public</span> <span class="token keyword">class</span> <span class="token class-name">App</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+    <span class="token keyword">public</span> <span class="token keyword">static</span> <span class="token keyword">void</span> <span class="token function">main</span><span class="token punctuation">(</span>String<span class="token punctuation">[</span><span class="token punctuation">]</span> args<span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+        ClassPathXmlApplicationContext applicationContext <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">ClassPathXmlApplicationContext</span><span class="token punctuation">(</span><span class="token keyword">new</span> <span class="token class-name">String</span><span class="token punctuation">[</span><span class="token punctuation">]</span><span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span><span class="token string">"application.xml"</span><span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        UserApi userApi <span class="token operator">=</span> applicationContext<span class="token punctuation">.</span><span class="token function">getBean</span><span class="token punctuation">(</span>UserApi<span class="token punctuation">.</span><span class="token keyword">class</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        System<span class="token punctuation">.</span>out<span class="token punctuation">.</span><span class="token function">println</span><span class="token punctuation">(</span>userApi<span class="token punctuation">.</span><span class="token function">info</span><span class="token punctuation">(</span><span class="token string">"111"</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+<span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+</code></pre>
+<p>运行之后, 我们就可以看到</p>
+<blockquote>
+<p>张三:111</p>
+</blockquote>
+<h2 id="关于DubboMain-启动的真相"><a href="#关于DubboMain-启动的真相" class="headerlink" title="关于DubboMain 启动的真相"></a>关于DubboMain 启动的真相</h2><p>我们刚刚使用  Main.main(args);  来启动dubbo 服务, 到底是如何实现的呢? </p>
+<p>正常情况下. 我们会认为服务的发布, 需要tomcat或者jetty 这类的容器支持, 但是只用dubbo 后, 我们并不需要这样重的容器去支持, 同时也会增加复杂性和浪费资源,Dubbo 提供了几种容器让我们去启动和发布服务. </p>
+<h3 id="容器类型："><a href="#容器类型：" class="headerlink" title="容器类型："></a>容器类型：</h3><ol>
+<li> Spring Container : 自动加载 META-INF/spring   目录下的所有spring 配置. </li>
+<li> logback Container: 自动装配 logback 日志</li>
+<li> Log4j Container: 自动配置log4j 的配置</li>
+</ol>
+<p>Dubbo 提供了一个Main.main 快速启动相应的容器, 默认情况下, 只会启动spring 容器. </p>
+<h3 id="原理分析"><a href="#原理分析" class="headerlink" title="原理分析"></a>原理分析</h3><p>默认情况下, spring 容器本质上就是加载spring ioc 容器, 然后启动一个netty 服务实现服务的发布, 下面是spring 容器启动的代码:</p>
+<pre class=" language-java"><code class="language-java">  <span class="token keyword">public</span> <span class="token keyword">void</span> <span class="token function">start</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+        String configPath <span class="token operator">=</span> ConfigUtils<span class="token punctuation">.</span><span class="token function">getProperty</span><span class="token punctuation">(</span><span class="token string">"dubbo.spring.config"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token keyword">if</span> <span class="token punctuation">(</span>StringUtils<span class="token punctuation">.</span><span class="token function">isEmpty</span><span class="token punctuation">(</span>configPath<span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+            configPath <span class="token operator">=</span> <span class="token string">"classpath*:META-INF/spring/*.xml"</span><span class="token punctuation">;</span>
+        <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+
+        context <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">ClassPathXmlApplicationContext</span><span class="token punctuation">(</span>configPath<span class="token punctuation">.</span><span class="token function">split</span><span class="token punctuation">(</span><span class="token string">"[,\\s]+"</span><span class="token punctuation">)</span><span class="token punctuation">,</span> <span class="token boolean">false</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        context<span class="token punctuation">.</span><span class="token function">refresh</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        context<span class="token punctuation">.</span><span class="token function">start</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+</code></pre>
+<h2 id="基于注册中心的Dubbo-服务"><a href="#基于注册中心的Dubbo-服务" class="headerlink" title="基于注册中心的Dubbo 服务"></a>基于注册中心的Dubbo 服务</h2><p>作为主流的服务治理组件, Dubbo 提供了很多丰富的功能, 那么最根本的就是要解决大规模集群之后的服务注册和发现的问题, 而dubbo 中对于注册中心这块是使用zookeeper 来支持的, 当前在目前最新的版本中, dubbo 能支持的注册中心有: consul、etcd、nacos、sofa、zookeeper、redis、multicast.</p>
+<h3 id="使用zookeeper-作为注册中心"><a href="#使用zookeeper-作为注册中心" class="headerlink" title="使用zookeeper 作为注册中心"></a>使用zookeeper 作为注册中心</h3><h4 id="pom修改"><a href="#pom修改" class="headerlink" title="pom修改"></a>pom修改</h4><p>在服务端和客户端代码里面添加zookeeper 的jar</p>
+<pre class=" language-xml"><code class="language-xml">        <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>dependency</span><span class="token punctuation">></span></span>
+            <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>groupId</span><span class="token punctuation">></span></span>org.apache.curator<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>groupId</span><span class="token punctuation">></span></span>
+            <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>artifactId</span><span class="token punctuation">></span></span>curator-recipes<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>artifactId</span><span class="token punctuation">></span></span>
+            <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>version</span><span class="token punctuation">></span></span>4.0.0<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>version</span><span class="token punctuation">></span></span>
+        <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>dependency</span><span class="token punctuation">></span></span>
+        <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>dependency</span><span class="token punctuation">></span></span>
+            <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>groupId</span><span class="token punctuation">></span></span>org.apache.curator<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>groupId</span><span class="token punctuation">></span></span>
+            <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>artifactId</span><span class="token punctuation">></span></span>curator-framework<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>artifactId</span><span class="token punctuation">></span></span>
+            <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>version</span><span class="token punctuation">></span></span>4.0.0<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>version</span><span class="token punctuation">></span></span>
+        <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>dependency</span><span class="token punctuation">></span></span>
+</code></pre>
+<h4 id="服务端修改"><a href="#服务端修改" class="headerlink" title="服务端修改"></a>服务端修改</h4><h5 id="修改application-xml-配置文件"><a href="#修改application-xml-配置文件" class="headerlink" title="修改application.xml 配置文件"></a>修改application.xml 配置文件</h5><blockquote>
+<pre><code>&lt;dubbo:registry address=&quot;zookeeper://192.168.86.128:2181&quot;/&gt;&lt;!--如果是集群, 则配置的方式是 address=”zookeeper://ip:host?backup=ip:host,ip:host”  --&gt;
+</code></pre>
+</blockquote>
+<h4 id="客户端修改"><a href="#客户端修改" class="headerlink" title="客户端修改"></a>客户端修改</h4><h5 id="修改application-xml-配置文件-1"><a href="#修改application-xml-配置文件-1" class="headerlink" title="修改application.xml 配置文件"></a>修改application.xml 配置文件</h5><pre class=" language-xml"><code class="language-xml">    <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span><span class="token namespace">dubbo:</span>registry</span> <span class="token attr-name">address</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>zookeeper://192.168.86.128:2181<span class="token punctuation">"</span></span><span class="token punctuation">/></span></span>
+    <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span><span class="token namespace">dubbo:</span>reference</span> <span class="token attr-name">interface</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>com.dubbo.simple.UserApi<span class="token punctuation">"</span></span> <span class="token attr-name">id</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>userApi<span class="token punctuation">"</span></span><span class="token punctuation">/></span></span>
+</code></pre>
+<h4 id="dubbo-集成-zookeeper-的实现原理"><a href="#dubbo-集成-zookeeper-的实现原理" class="headerlink" title="dubbo 集成 zookeeper 的实现原理"></a>dubbo 集成 zookeeper 的实现原理</h4><p><img src="http://files.luyanan.com//img/20191120114700.png"></p>
+<h4 id="dubbo-缓存配置中心"><a href="#dubbo-缓存配置中心" class="headerlink" title="dubbo 缓存配置中心"></a>dubbo 缓存配置中心</h4><p>在消费端的配置文件中指定如下路径</p>
+<blockquote>
+<pre><code>&lt;dubbo:registry address=&quot;zookeeper://192.168.86.128:2181&quot; file=&quot;d:/dubbo-server&quot;/&gt;
+</code></pre>
+</blockquote>
+<h3 id="多注册中心支持"><a href="#多注册中心支持" class="headerlink" title="多注册中心支持"></a>多注册中心支持</h3><p>Dubbo 中可以支持多注册中心, 有的时候， 客户端需要用调用的远程服务不在同一个注册中心, 那么客户端就需要配置多个注册中心来访问, 演示一个案例. </p>
+<h4 id="配置多个注册中心"><a href="#配置多个注册中心" class="headerlink" title="配置多个注册中心"></a>配置多个注册中心</h4><pre class=" language-java"><code class="language-java">    <span class="token operator">&lt;</span>dubbo<span class="token operator">:</span>registry id<span class="token operator">=</span><span class="token string">"reg1"</span> address<span class="token operator">=</span><span class="token string">"zookeeper://192.168.86.128:2181"</span><span class="token operator">/</span><span class="token operator">></span>
+    <span class="token operator">&lt;</span>dubbo<span class="token operator">:</span>registry id<span class="token operator">=</span><span class="token string">"reg2"</span> address<span class="token operator">=</span><span class="token string">"zookeeper://192.168.86.129:2181"</span><span class="token operator">/</span><span class="token operator">></span>
+</code></pre>
+<h4 id="将服务注册到不同的注册中心"><a href="#将服务注册到不同的注册中心" class="headerlink" title="将服务注册到不同的注册中心"></a>将服务注册到不同的注册中心</h4><p>通过registry 设置注册中心的id</p>
+<blockquote>
+<pre class=" language-xml"><code class="language-xml"><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span><span class="token namespace">dubbo:</span>service</span> <span class="token attr-name">interface</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>com.dubbo.simple.UserApi<span class="token punctuation">"</span></span> <span class="token attr-name">ref</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>userApi<span class="token punctuation">"</span></span> <span class="token attr-name">register</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>reg1<span class="token punctuation">"</span></span><span class="token punctuation">/></span></span>
+</code></pre>
+</blockquote>
+<p>消费端配置多个注册中心, 实现代码和服务端一样. </p>
+<h4 id="注册中心的其他支持"><a href="#注册中心的其他支持" class="headerlink" title="注册中心的其他支持"></a>注册中心的其他支持</h4><ol>
+<li>当设置 <code>&lt;dubbo:registry  check=&quot;false&quot;/&gt; </code> 时, 记录失败注册和订阅请求, 后台定时重试. </li>
+<li>可通过 <code>&lt;dubbo:registry  username=&quot;admin&quot; password=&quot;1234&quot;/&gt;</code> 设置zookeeper 登录信息</li>
+<li>可通过 <code>&lt;dubbo:registry group=&quot;dubbo&quot;/&gt;</code>  设置zookeeper 的根节点, 默认使用dubbo 作为dubbo 服务注册的namespace</li>
+</ol>
+<h2 id="Dubbo-仅仅是一个RPC框架"><a href="#Dubbo-仅仅是一个RPC框架" class="headerlink" title="Dubbo 仅仅是一个RPC框架"></a>Dubbo 仅仅是一个RPC框架</h2><p>到目前为止, 我么了解到Dubbo 的核心功能, 提供服务注册和服务发现, 以及基于Dubbo协议的远程通信, 我想, 大家以后不仅仅只认为Dubbo 是一个RPC 框架吧。 Dubbo 从另一个方面来看也可以认为是一个服务治理生态, 从目前已经讲过的内容上可以看到.</p>
+<ol>
+<li>Dubbo 可以支持市面上主流的注册中心</li>
+<li>Dubbo 提供了 Container 的支持, 默认提供了3种  Container ,我们还可以自行扩展. </li>
+<li>Dubbo 对于RPC 通信协议的支持, 不仅仅是原生的Dubbo协议, 它还围绕着rmi、hessian、http、webservice、thrift、rest.</li>
+</ol>
+<p>有了多协议的支持,使得其他rpc 框架的应用程序可以快速的切入到dubbo 生态中。同时, 对于多协议的支持, 是的不同应用场景的服务, 可以选择合适的协议来发布服务, 并不一定使用dubbo 提供的长连接方式. </p>
+<h3 id="集成-webservice-协议"><a href="#集成-webservice-协议" class="headerlink" title="集成 webservice 协议"></a>集成 webservice 协议</h3><p>webservice 是一个短连接 并且是基于http协议的方式来实现的rpc 框架</p>
+<h4 id="jar-依赖"><a href="#jar-依赖" class="headerlink" title="jar 依赖"></a>jar 依赖</h4><pre class=" language-xml"><code class="language-xml"><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>dependency</span><span class="token punctuation">></span></span>
+            <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>groupId</span><span class="token punctuation">></span></span>org.apache.cxf<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>groupId</span><span class="token punctuation">></span></span>
+            <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>artifactId</span><span class="token punctuation">></span></span>cxf-rt-frontend-simple<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>artifactId</span><span class="token punctuation">></span></span>
+            <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>version</span><span class="token punctuation">></span></span>3.3.2<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>version</span><span class="token punctuation">></span></span>
+        <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>dependency</span><span class="token punctuation">></span></span>
+        <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>dependency</span><span class="token punctuation">></span></span>
+            <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>groupId</span><span class="token punctuation">></span></span>org.apache.cxf<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>groupId</span><span class="token punctuation">></span></span>
+            <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>artifactId</span><span class="token punctuation">></span></span>cxf-rt-transports-http<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>artifactId</span><span class="token punctuation">></span></span>
+            <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>version</span><span class="token punctuation">></span></span>3.3.2<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>version</span><span class="token punctuation">></span></span>
+        <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>dependency</span><span class="token punctuation">></span></span>
+        <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>dependency</span><span class="token punctuation">></span></span>
+            <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>groupId</span><span class="token punctuation">></span></span>org.eclipse.jetty<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>groupId</span><span class="token punctuation">></span></span>
+            <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>artifactId</span><span class="token punctuation">></span></span>jetty-server<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>artifactId</span><span class="token punctuation">></span></span>
+            <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>version</span><span class="token punctuation">></span></span>9.4.19.v20190610<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>version</span><span class="token punctuation">></span></span>
+        <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>dependency</span><span class="token punctuation">></span></span>
+        <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>dependency</span><span class="token punctuation">></span></span>
+            <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>groupId</span><span class="token punctuation">></span></span>org.eclipse.jetty<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>groupId</span><span class="token punctuation">></span></span>
+            <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>artifactId</span><span class="token punctuation">></span></span>jetty-servlet<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>artifactId</span><span class="token punctuation">></span></span>
+            <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>version</span><span class="token punctuation">></span></span>9.4.19.v20190610<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>version</span><span class="token punctuation">></span></span>
+        <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>dependency</span><span class="token punctuation">></span></span>
+</code></pre>
+<h4 id="修改application-xml"><a href="#修改application-xml" class="headerlink" title="修改application.xml"></a>修改application.xml</h4><pre class=" language-xml"><code class="language-xml">    <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span><span class="token namespace">dubbo:</span>protocol</span> <span class="token attr-name">name</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>webservice<span class="token punctuation">"</span></span> <span class="token attr-name">port</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>8080<span class="token punctuation">"</span></span> <span class="token attr-name">server</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>jetty<span class="token punctuation">"</span></span><span class="token punctuation">/></span></span>
+    <span class="token comment" spellcheck="true">&lt;!-- 声明需要暴露的服务接口 --></span>
+    <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span><span class="token namespace">dubbo:</span>service</span> <span class="token attr-name">interface</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>com.dubbo.simple.UserApi<span class="token punctuation">"</span></span> <span class="token attr-name">ref</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>userApi<span class="token punctuation">"</span></span>  <span class="token attr-name">protocol</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>dubbo,webservice<span class="token punctuation">"</span></span><span class="token punctuation">/></span></span>
+</code></pre>
+<p>添加多协议支持, 一个服务可以发布多种协议的支持,也可以实现不同服务发布不同的协议 </p>
+<p>启动服务之后, 可以使用 <code>http://localhost:8080/com.dubbo.simple.UserApi?wsdl</code> 来获取到 webservice 的wsdl 描述文档</p>
+<h4 id="客户端使用webservice-请求服务"><a href="#客户端使用webservice-请求服务" class="headerlink" title="客户端使用webservice 请求服务"></a>客户端使用webservice 请求服务</h4><ol>
+<li>客户端的配置jar依赖</li>
+<li>配置多个协议支持, 实现方式和服务端一样. </li>
+</ol>
+<h3 id="Dubbo-对于REST-协议的支持"><a href="#Dubbo-对于REST-协议的支持" class="headerlink" title="Dubbo 对于REST 协议的支持"></a>Dubbo 对于REST 协议的支持</h3><p>Dubbo 中的REST(表述性资源转移)支持, 是基于 于 JAX-RS2.0(Java API for RESTful Web Services)  来实现的. </p>
+<p>REST 是一种架构风格, 简单来说就是对于api 接口的约束, 基于URL 定位资源, 使用http 动词(GET/POST/PUT/DELETE) 来描述操作. </p>
+<h4 id="JAX-RS协议说明"><a href="#JAX-RS协议说明" class="headerlink" title="JAX-RS协议说明"></a>JAX-RS协议说明</h4><p>REST 很早就提出来了, 在早期的开发人员为了实现REST, 会使用各种工具来实现, 比如Servlets 就经常用来开发RESTful 的程序,随着REST 被越来越多的开发人员采用, 所以 JCP(Java community process)  提出了 JAX-RS 规范, 并且提供了一种新的基于注解的方式来开发RESTful 服务. 有了这样的一个规范, 使得开发人员不需要通讯层的东西, 只需要关注资源以及数据对象. </p>
+<p> JAX-RS 规范的实现有：Apache CXF、Jersey(由 Sun 公司提供的 JAX-RS 的 参考实现)、RESTEasy( jboss 实现)等。  </p>
+<p>而Dubbo 里面实现的REST 就是基于JBoss 提供的  RESTEasy  框架来实现的, Spring MVC 中的RESTful 实现我们用的比较多, 它也是 JAX-RS 规范的一种实现. </p>
+<h4 id="jar-依赖-1"><a href="#jar-依赖-1" class="headerlink" title="jar 依赖"></a>jar 依赖</h4><pre class=" language-xml"><code class="language-xml"><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>dependency</span><span class="token punctuation">></span></span>
+ <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>groupId</span><span class="token punctuation">></span></span>org.jboss.resteasy<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>groupId</span><span class="token punctuation">></span></span>
+ <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>artifactId</span><span class="token punctuation">></span></span>resteasy-jaxrs<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>artifactId</span><span class="token punctuation">></span></span>
+ <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>version</span><span class="token punctuation">></span></span>3.8.0.Final<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>version</span><span class="token punctuation">></span></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>dependency</span><span class="token punctuation">></span></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>dependency</span><span class="token punctuation">></span></span>
+ <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>groupId</span><span class="token punctuation">></span></span>org.jboss.resteasy<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>groupId</span><span class="token punctuation">></span></span>
+ <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>artifactId</span><span class="token punctuation">></span></span>resteasy-client<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>artifactId</span><span class="token punctuation">></span></span>
+ <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>version</span><span class="token punctuation">></span></span>3.8.0.Final<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>version</span><span class="token punctuation">></span></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>dependency</span><span class="token punctuation">></span></span>
+</code></pre>
+<h4 id="添加新的协议支持"><a href="#添加新的协议支持" class="headerlink" title="添加新的协议支持"></a>添加新的协议支持</h4><blockquote>
+<p>&lt;dubbo:protocol name=”rest” port=”8080” server=”jetty”/&gt;</p>
+</blockquote>
+<h4 id="提供新的服务"><a href="#提供新的服务" class="headerlink" title="提供新的服务"></a>提供新的服务</h4><p>@Path(“user”):  指定访问UserApi 的url 的相对路径是 /user,即<a target="_blank" rel="noopener" href="http://localhost:8080/user">http://localhost:8080/user</a></p>
+<p>@Path(“info/{id}”) 指定访问info 方法的url 相对路径为/info,再结合上一个@Path 为 UserApi 指定的路径, 则调用UserApi.info() 的完整路径为 <a target="_blank" rel="noopener" href="http://localhost:8080/user/info">http://localhost:8080/user/info</a> </p>
+<p>@GET: 指定访问info 方法用HTTP  GET 方法</p>
+<pre class=" language-java"><code class="language-java"><span class="token annotation punctuation">@Path</span><span class="token punctuation">(</span><span class="token string">"user"</span><span class="token punctuation">)</span>
+<span class="token keyword">public</span> <span class="token keyword">interface</span> <span class="token class-name">UserApi</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+
+
+    <span class="token annotation punctuation">@GET</span>
+    <span class="token annotation punctuation">@Path</span><span class="token punctuation">(</span><span class="token string">"info/&amp;#123;id&amp;#125;"</span><span class="token punctuation">)</span>
+    String <span class="token function">info</span><span class="token punctuation">(</span><span class="token annotation punctuation">@PathParam</span><span class="token punctuation">(</span><span class="token string">"id"</span><span class="token punctuation">)</span> String id<span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+<span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+</code></pre>
+<h4 id="客户端配置"><a href="#客户端配置" class="headerlink" title="客户端配置"></a>客户端配置</h4><blockquote>
+<pre><code>&lt;dubbo:reference interface=&quot;com.dubbo.simple.UserApi&quot; id=&quot;userApi&quot; protocol=&quot;rest&quot;/&gt;
+</code></pre>
+</blockquote>
+<h4 id="在服务接口获取上下文的方式"><a href="#在服务接口获取上下文的方式" class="headerlink" title="在服务接口获取上下文的方式"></a>在服务接口获取上下文的方式</h4><p>既然是http 协议的REST 接口, 那么我们想要获取请求的上下文, 怎么做呢? </p>
+<ol>
+<li>第一种, </li>
+</ol>
+<blockquote>
+<p> HttpServletRequest request=(HttpServletRequest)RpcContext.getContext().getRequest(); </p>
+</blockquote>
+<ol start="2">
+<li><p>通过注解的方式</p>
+<pre class=" language-java"><code class="language-java"><span class="token annotation punctuation">@Path</span><span class="token punctuation">(</span><span class="token string">"user"</span><span class="token punctuation">)</span>
+<span class="token keyword">public</span> <span class="token keyword">interface</span> <span class="token class-name">UserApi</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+
+
+    <span class="token annotation punctuation">@GET</span>
+    <span class="token annotation punctuation">@Path</span><span class="token punctuation">(</span><span class="token string">"info/&amp;#123;id&amp;#125;"</span><span class="token punctuation">)</span>
+    String <span class="token function">info</span><span class="token punctuation">(</span><span class="token annotation punctuation">@PathParam</span><span class="token punctuation">(</span><span class="token string">"id"</span><span class="token punctuation">)</span> String id<span class="token punctuation">,</span> <span class="token annotation punctuation">@Context</span> HttpServletRequest servletRequest<span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+<span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+</code></pre>
+</li>
+</ol>
+<h2 id="Dubbo-监控平台的安装"><a href="#Dubbo-监控平台的安装" class="headerlink" title="Dubbo  监控平台的安装"></a>Dubbo  监控平台的安装</h2><p>Dubbo 的监控平台也做了更新, 不过目前的功能还没有完善, 在这个网站上 下载 Dubbo-Admin 的包. </p>
+<p><a target="_blank" rel="noopener" href="https://github.com/apache/dubbo-admin">https://github.com/apache/dubbo-admin</a></p>
+<ol>
+<li>修改  dubbo-admin-server/src/main/resources/application.properties   中的配置信息</li>
+<li> mvn clean package 进行构建 </li>
+<li> mvn –projects dubbo-admin-server spring-boot:run </li>
+<li> 访问 localhost:808 </li>
+</ol>
+<h2 id="Dubbo-的终端操作方法"><a href="#Dubbo-的终端操作方法" class="headerlink" title="Dubbo 的终端操作方法."></a>Dubbo 的终端操作方法.</h2><p>Dubbo 中提供了一种基于终端操作的方法来实现服务治理. 使用 telnet localhost 20880   连接到服务对应的端口. </p>
+<h3 id="常见命令"><a href="#常见命令" class="headerlink" title="常见命令"></a>常见命令</h3><h4 id="ls"><a href="#ls" class="headerlink" title="ls"></a>ls</h4><ul>
+<li> ls: 显示服务列表 </li>
+<li>ls -l: 显示服务详细信息列表 </li>
+<li>ls XxxService: 显示服务的方法列表 </li>
+<li>ls -l XxxService: 显示服务的方法详细信息列表 </li>
+</ul>
+<h4 id="ps"><a href="#ps" class="headerlink" title="ps"></a>ps</h4><ul>
+<li>ps: 显示服务端口列表 </li>
+<li>ps -l: 显示服务地址列表 </li>
+<li>ps 20880: 显示端口上的连接信息 </li>
+<li>ps -l 20880: 显示端口上的连接详细信息 </li>
+</ul>
+<h4 id="cd"><a href="#cd" class="headerlink" title="cd"></a>cd</h4><ul>
+<li> cd XxxService: 改变缺省服务，当设置了缺省服务，凡是需要输入服务名作 为参数的命令，都可以省略服务参数 </li>
+<li>cd /: 取消缺省服务 </li>
+</ul>
+<h4 id="pwd"><a href="#pwd" class="headerlink" title="pwd"></a>pwd</h4><ul>
+<li> pwd: 显示当前缺省服务 </li>
+</ul>
+<h4 id="count"><a href="#count" class="headerlink" title="count"></a>count</h4><ul>
+<li> count XxxService: 统计 1 次服务任意方法的调用情况 </li>
+<li>count XxxService 10: 统计 10 次服务任意方法的调用情况 </li>
+<li>count XxxService xxxMethod: 统计 1 次服务方法的调用情况 </li>
+<li>count XxxService xxxMethod 10: 统计 10 次服务方法的调用情况 </li>
+</ul>
+
+                
+            </div>
+            <hr/>
+
+            
+
+    <div class="reprint" id="reprint-statement">
+        
+            <div class="reprint__author">
+                <span class="reprint-meta" style="font-weight: bold;">
+                    <i class="fas fa-user">
+                        文章作者:
+                    </i>
+                </span>
+                <span class="reprint-info">
+                    <a href="/about" rel="external nofollow noreferrer">luyanan</a>
+                </span>
+            </div>
+            <div class="reprint__type">
+                <span class="reprint-meta" style="font-weight: bold;">
+                    <i class="fas fa-link">
+                        文章链接:
+                    </i>
+                </span>
+                <span class="reprint-info">
+                    <a href="https://rainsoil.github.io/2022/01/04/wei-fu-wu/dubbo/wei-fu-wu-zhi-li-zhi-apache-dubbo-de-ji-ben-ren-shi/">https://rainsoil.github.io/2022/01/04/wei-fu-wu/dubbo/wei-fu-wu-zhi-li-zhi-apache-dubbo-de-ji-ben-ren-shi/</a>
+                </span>
+            </div>
+            <div class="reprint__notice">
+                <span class="reprint-meta" style="font-weight: bold;">
+                    <i class="fas fa-copyright">
+                        版权声明:
+                    </i>
+                </span>
+                <span class="reprint-info">
+                    本博客所有文章除特別声明外，均采用
+                    <a href="https://creativecommons.org/licenses/by/4.0/deed.zh" rel="external nofollow noreferrer" target="_blank">CC BY 4.0</a>
+                    许可协议。转载请注明来源
+                    <a href="/about" target="_blank">luyanan</a>
+                    !
+                </span>
+            </div>
+        
+    </div>
+
+    <script async defer>
+      document.addEventListener("copy", function (e) {
+        let toastHTML = '<span>复制成功，请遵循本文的转载规则</span><button class="btn-flat toast-action" onclick="navToReprintStatement()" style="font-size: smaller">查看</a>';
+        M.toast({html: toastHTML})
+      });
+
+      function navToReprintStatement() {
+        $("html, body").animate({scrollTop: $("#reprint-statement").offset().top - 80}, 800);
+      }
+    </script>
+
+
+
+            <div class="tag_share" style="display: block;">
+                <div class="post-meta__tag-list" style="display: inline-block;">
+                    
+                        <div class="article-tag">
+                            <span class="chip bg-color">无标签</span>
+                        </div>
+                    
+                </div>
+                <div class="post_share" style="zoom: 80%; width: fit-content; display: inline-block; float: right; margin: -0.15rem 0;">
+                    <link rel="stylesheet" type="text/css" href="/libs/share/css/share.min.css">
+<div id="article-share">
+
+    
+    <div class="social-share" data-sites="twitter,facebook,google,qq,qzone,wechat,weibo,douban,linkedin" data-wechat-qrcode-helper="<p>微信扫一扫即可分享！</p>"></div>
+    <script src="/libs/share/js/social-share.min.js"></script>
+    
+
+    
+
+</div>
+
+                </div>
+            </div>
+            
+        </div>
+    </div>
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+<article id="prenext-posts" class="prev-next articles">
+    <div class="row article-row">
+        
+        <div class="article col s12 m6" data-aos="fade-up">
+            <div class="article-badge left-badge text-color">
+                <i class="fas fa-chevron-left"></i>&nbsp;上一篇</div>
+            <div class="card">
+                <a href="/2022/01/04/wei-fu-wu/kafka/fen-bu-shi-xiao-xi-tong-xin-zhi-kafka-de-shi-xian-yuan-li-2/">
+                    <div class="card-image">
+                        
+                        
+                        <img src="/medias/featureimages/10.jpg" class="responsive-img" alt="分布式消息通信之Kafka 的实现原理2">
+                        
+                        <span class="card-title">分布式消息通信之Kafka 的实现原理2</span>
+                    </div>
+                </a>
+                <div class="card-content article-content">
+                    <div class="summary block-with-text">
+                        
+                            
+                        
+                    </div>
+                    <div class="publish-info">
+                        <span class="publish-date">
+                            <i class="far fa-clock fa-fw icon-date"></i>2022-01-04
+                        </span>
+                        <span class="publish-author">
+                            
+                            <i class="fas fa-bookmark fa-fw icon-category"></i>
+                            
+                            <a href="/categories/kafka/" class="post-category">
+                                    kafka
+                                </a>
+                            
+                            <a href="/categories/kafka/%E5%BE%AE%E6%9C%8D%E5%8A%A1/" class="post-category">
+                                    微服务
+                                </a>
+                            
+                            <a href="/categories/kafka/%E5%BE%AE%E6%9C%8D%E5%8A%A1/%E5%BE%AE%E6%9C%8D%E5%8A%A1/" class="post-category">
+                                    微服务
+                                </a>
+                            
+                            <a href="/categories/kafka/%E5%BE%AE%E6%9C%8D%E5%8A%A1/%E5%BE%AE%E6%9C%8D%E5%8A%A1/kafka/" class="post-category">
+                                    kafka
+                                </a>
+                            
+                            
+                        </span>
+                    </div>
+                </div>
+                
+            </div>
+        </div>
+        
+        
+        <div class="article col s12 m6" data-aos="fade-up">
+            <div class="article-badge right-badge text-color">
+                下一篇&nbsp;<i class="fas fa-chevron-right"></i>
+            </div>
+            <div class="card">
+                <a href="/2022/01/04/wei-fu-wu/dubbo/dubbo-xing-neng-diao-you/">
+                    <div class="card-image">
+                        
+                        
+                        <img src="/medias/featureimages/15.jpg" class="responsive-img" alt="Dubbo性能调优">
+                        
+                        <span class="card-title">Dubbo性能调优</span>
+                    </div>
+                </a>
+                <div class="card-content article-content">
+                    <div class="summary block-with-text">
+                        
+                            
+                        
+                    </div>
+                    <div class="publish-info">
+                            <span class="publish-date">
+                                <i class="far fa-clock fa-fw icon-date"></i>2022-01-04
+                            </span>
+                        <span class="publish-author">
+                            
+                            <i class="fas fa-bookmark fa-fw icon-category"></i>
+                            
+                            <a href="/categories/dubbo/" class="post-category">
+                                    dubbo
+                                </a>
+                            
+                            <a href="/categories/dubbo/%E5%BE%AE%E6%9C%8D%E5%8A%A1/" class="post-category">
+                                    微服务
+                                </a>
+                            
+                            <a href="/categories/dubbo/%E5%BE%AE%E6%9C%8D%E5%8A%A1/%E5%BE%AE%E6%9C%8D%E5%8A%A1/" class="post-category">
+                                    微服务
+                                </a>
+                            
+                            <a href="/categories/dubbo/%E5%BE%AE%E6%9C%8D%E5%8A%A1/%E5%BE%AE%E6%9C%8D%E5%8A%A1/dubbo/" class="post-category">
+                                    dubbo
+                                </a>
+                            
+                            
+                        </span>
+                    </div>
+                </div>
+                
+            </div>
+        </div>
+        
+    </div>
+</article>
+
+</div>
+
+
+
+<!-- 代码块功能依赖 -->
+<script type="text/javascript" src="/libs/codeBlock/codeBlockFuction.js"></script>
+
+<!-- 代码语言 -->
+
+<script type="text/javascript" src="/libs/codeBlock/codeLang.js"></script>
+
+
+<!-- 代码块复制 -->
+
+<script type="text/javascript" src="/libs/codeBlock/codeCopy.js"></script>
+
+
+<!-- 代码块收缩 -->
+
+<script type="text/javascript" src="/libs/codeBlock/codeShrink.js"></script>
+
+
+    </div>
+    <div id="toc-aside" class="expanded col l3 hide-on-med-and-down">
+        <div class="toc-widget card" style="background-color: white;">
+            <div class="toc-title"><i class="far fa-list-alt"></i>&nbsp;&nbsp;目录</div>
+            <div id="toc-content"></div>
+        </div>
+    </div>
+</div>
+
+<!-- TOC 悬浮按钮. -->
+
+<div id="floating-toc-btn" class="hide-on-med-and-down">
+    <a class="btn-floating btn-large bg-color">
+        <i class="fas fa-list-ul"></i>
+    </a>
+</div>
+
+
+<script src="/libs/tocbot/tocbot.min.js"></script>
+<script>
+    $(function () {
+        tocbot.init({
+            tocSelector: '#toc-content',
+            contentSelector: '#articleContent',
+            headingsOffset: -($(window).height() * 0.4 - 45),
+            collapseDepth: Number('0'),
+            headingSelector: 'h2, h3, h4'
+        });
+
+        // modify the toc link href to support Chinese.
+        let i = 0;
+        let tocHeading = 'toc-heading-';
+        $('#toc-content a').each(function () {
+            $(this).attr('href', '#' + tocHeading + (++i));
+        });
+
+        // modify the heading title id to support Chinese.
+        i = 0;
+        $('#articleContent').children('h2, h3, h4').each(function () {
+            $(this).attr('id', tocHeading + (++i));
+        });
+
+        // Set scroll toc fixed.
+        let tocHeight = parseInt($(window).height() * 0.4 - 64);
+        let $tocWidget = $('.toc-widget');
+        $(window).scroll(function () {
+            let scroll = $(window).scrollTop();
+            /* add post toc fixed. */
+            if (scroll > tocHeight) {
+                $tocWidget.addClass('toc-fixed');
+            } else {
+                $tocWidget.removeClass('toc-fixed');
+            }
+        });
+
+        
+        /* 修复文章卡片 div 的宽度. */
+        let fixPostCardWidth = function (srcId, targetId) {
+            let srcDiv = $('#' + srcId);
+            if (srcDiv.length === 0) {
+                return;
+            }
+
+            let w = srcDiv.width();
+            if (w >= 450) {
+                w = w + 21;
+            } else if (w >= 350 && w < 450) {
+                w = w + 18;
+            } else if (w >= 300 && w < 350) {
+                w = w + 16;
+            } else {
+                w = w + 14;
+            }
+            $('#' + targetId).width(w);
+        };
+
+        // 切换TOC目录展开收缩的相关操作.
+        const expandedClass = 'expanded';
+        let $tocAside = $('#toc-aside');
+        let $mainContent = $('#main-content');
+        $('#floating-toc-btn .btn-floating').click(function () {
+            if ($tocAside.hasClass(expandedClass)) {
+                $tocAside.removeClass(expandedClass).hide();
+                $mainContent.removeClass('l9');
+            } else {
+                $tocAside.addClass(expandedClass).show();
+                $mainContent.addClass('l9');
+            }
+            fixPostCardWidth('artDetail', 'prenext-posts');
+        });
+        
+    });
+</script>
+
+    
+
+</main>
+
+
+
+
+    <footer class="page-footer bg-color">
+    
+        <link rel="stylesheet" href="/libs/aplayer/APlayer.min.css">
+<style>
+    .aplayer .aplayer-lrc p {
+        
+        display: none;
+        
+        font-size: 12px;
+        font-weight: 700;
+        line-height: 16px !important;
+    }
+
+    .aplayer .aplayer-lrc p.aplayer-lrc-current {
+        
+        display: none;
+        
+        font-size: 15px;
+        color: #42b983;
+    }
+
+    
+    .aplayer.aplayer-fixed.aplayer-narrow .aplayer-body {
+        left: -66px !important;
+    }
+
+    .aplayer.aplayer-fixed.aplayer-narrow .aplayer-body:hover {
+        left: 0px !important;
+    }
+
+    
+</style>
+<div class="">
+    
+    <div class="row">
+        <meting-js class="col l8 offset-l2 m10 offset-m1 s12"
+                   server="netease"
+                   type="playlist"
+                   id="503838841"
+                   fixed='true'
+                   autoplay='false'
+                   theme='#42b983'
+                   loop='all'
+                   order='random'
+                   preload='auto'
+                   volume='0.7'
+                   list-folded='true'
+        >
+        </meting-js>
+    </div>
+</div>
+
+<script src="/libs/aplayer/APlayer.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/meting@2/dist/Meting.min.js"></script>
+
+    
+
+    <div class="container row center-align"
+         style="margin-bottom: 0px !important;">
+        <div class="col s12 m8 l8 copy-right">
+            Copyright&nbsp;&copy;
+            
+                <span id="year">2019-2022</span>
+            
+            <a href="/about" target="_blank">luyanan</a>
+            |&nbsp;Powered by&nbsp;<a href="https://hexo.io/" target="_blank">Hexo</a>
+            |&nbsp;Theme&nbsp;<a href="https://github.com/blinkfox/hexo-theme-matery" target="_blank">Matery</a>
+            <br>
+            
+                &nbsp;<i class="fas fa-chart-area"></i>&nbsp;站点总字数:&nbsp;<span
+                        class="white-color">803.3k</span>
+            
+            
+            
+                
+            
+            
+                <span id="busuanzi_container_site_pv">
+                &nbsp;|&nbsp;<i class="far fa-eye"></i>&nbsp;总访问量:&nbsp;
+                    <span id="busuanzi_value_site_pv" class="white-color"></span>
+            </span>
+            
+            
+                <span id="busuanzi_container_site_uv">
+                &nbsp;|&nbsp;<i class="fas fa-users"></i>&nbsp;总访问人数:&nbsp;
+                    <span id="busuanzi_value_site_uv" class="white-color"></span>
+            </span>
+            
+            <br>
+
+            <!-- 运行天数提醒. -->
+            
+            <br>
+            
+        </div>
+        <div class="col s12 m4 l4 social-link social-statis">
+    <a href="https://github.com/rainsoil" class="tooltipped" target="_blank" data-tooltip="访问我的GitHub" data-position="top" data-delay="50">
+        <i class="fab fa-github"></i>
+    </a>
+
+
+
+    <a href="mailto:luyanan0718@163.com" class="tooltipped" target="_blank" data-tooltip="邮件联系我" data-position="top" data-delay="50">
+        <i class="fas fa-envelope-open"></i>
+    </a>
+
+
+
+
+
+
+
+    <a href="tencent://AddContact/?fromId=50&fromSubId=1&subcmd=all&uin=914596513" class="tooltipped" target="_blank" data-tooltip="QQ联系我: 914596513" data-position="top" data-delay="50">
+        <i class="fab fa-qq"></i>
+    </a>
+
+
+
+
+
+
+
+    <a href="/atom.xml" class="tooltipped" target="_blank" data-tooltip="RSS 订阅" data-position="top" data-delay="50">
+        <i class="fas fa-rss"></i>
+    </a>
+
+</div>
+    </div>
+</footer>
+
+<div class="progress-bar"></div>
+
+
+    <!-- 搜索遮罩框 -->
+<div id="searchModal" class="modal">
+    <div class="modal-content">
+        <div class="search-header">
+            <span class="title"><i class="fas fa-search"></i>&nbsp;&nbsp;搜索</span>
+            <input type="search" id="searchInput" name="s" placeholder="请输入搜索的关键字"
+                   class="search-input">
+        </div>
+        <div id="searchResult"></div>
+    </div>
+</div>
+
+<script type="text/javascript">
+$(function () {
+    var searchFunc = function (path, search_id, content_id) {
+        'use strict';
+        $.ajax({
+            url: path,
+            dataType: "xml",
+            success: function (xmlResponse) {
+                // get the contents from search data
+                var datas = $("entry", xmlResponse).map(function () {
+                    return {
+                        title: $("title", this).text(),
+                        content: $("content", this).text(),
+                        url: $("url", this).text()
+                    };
+                }).get();
+                var $input = document.getElementById(search_id);
+                var $resultContent = document.getElementById(content_id);
+                $input.addEventListener('input', function () {
+                    var str = '<ul class=\"search-result-list\">';
+                    var keywords = this.value.trim().toLowerCase().split(/[\s\-]+/);
+                    $resultContent.innerHTML = "";
+                    if (this.value.trim().length <= 0) {
+                        return;
+                    }
+                    // perform local searching
+                    datas.forEach(function (data) {
+                        var isMatch = true;
+                        var data_title = data.title.trim().toLowerCase();
+                        var data_content = data.content.trim().replace(/<[^>]+>/g, "").toLowerCase();
+                        var data_url = data.url;
+                        data_url = data_url.indexOf('/') === 0 ? data.url : '/' + data_url;
+                        var index_title = -1;
+                        var index_content = -1;
+                        var first_occur = -1;
+                        // only match artiles with not empty titles and contents
+                        if (data_title !== '' && data_content !== '') {
+                            keywords.forEach(function (keyword, i) {
+                                index_title = data_title.indexOf(keyword);
+                                index_content = data_content.indexOf(keyword);
+                                if (index_title < 0 && index_content < 0) {
+                                    isMatch = false;
+                                } else {
+                                    if (index_content < 0) {
+                                        index_content = 0;
+                                    }
+                                    if (i === 0) {
+                                        first_occur = index_content;
+                                    }
+                                }
+                            });
+                        }
+                        // show search results
+                        if (isMatch) {
+                            str += "<li><a href='" + data_url + "' class='search-result-title'>" + data_title + "</a>";
+                            var content = data.content.trim().replace(/<[^>]+>/g, "");
+                            if (first_occur >= 0) {
+                                // cut out 100 characters
+                                var start = first_occur - 20;
+                                var end = first_occur + 80;
+                                if (start < 0) {
+                                    start = 0;
+                                }
+                                if (start === 0) {
+                                    end = 100;
+                                }
+                                if (end > content.length) {
+                                    end = content.length;
+                                }
+                                var match_content = content.substr(start, end);
+                                // highlight all keywords
+                                keywords.forEach(function (keyword) {
+                                    var regS = new RegExp(keyword, "gi");
+                                    match_content = match_content.replace(regS, "<em class=\"search-keyword\">" + keyword + "</em>");
+                                });
+
+                                str += "<p class=\"search-result\">" + match_content + "...</p>"
+                            }
+                            str += "</li>";
+                        }
+                    });
+                    str += "</ul>";
+                    $resultContent.innerHTML = str;
+                });
+            }
+        });
+    };
+
+    searchFunc('/search.xml', 'searchInput', 'searchResult');
+});
+</script>
+
+    <!-- 回到顶部按钮 -->
+<div id="backTop" class="top-scroll">
+    <a class="btn-floating btn-large waves-effect waves-light" href="#!">
+        <i class="fas fa-arrow-up"></i>
+    </a>
+</div>
+
+
+    <script src="/libs/materialize/materialize.min.js"></script>
+    <script src="/libs/masonry/masonry.pkgd.min.js"></script>
+    <script src="/libs/aos/aos.js"></script>
+    <script src="/libs/scrollprogress/scrollProgress.min.js"></script>
+    <script src="/libs/lightGallery/js/lightgallery-all.min.js"></script>
+    <script src="/js/matery.js"></script>
+
+    
+
+    
+
+    <!-- 雪花特效 -->
+    
+
+    <!-- 鼠标星星特效 -->
+    
+
+    <!-- Baidu Analytics -->
+
+    <!-- Baidu Push -->
+
+<script>
+    (function () {
+        var bp = document.createElement('script');
+        var curProtocol = window.location.protocol.split(':')[0];
+        if (curProtocol === 'https') {
+            bp.src = 'https://zz.bdstatic.com/linksubmit/push.js';
+        } else {
+            bp.src = 'http://push.zhanzhang.baidu.com/push.js';
+        }
+        var s = document.getElementsByTagName("script")[0];
+        s.parentNode.insertBefore(bp, s);
+    })();
+</script>
+
+    
+    <script src="/libs/others/clicklove.js" async="async"></script>
+    
+    
+    <script async src="/libs/others/busuanzi.pure.mini.js"></script>
+    
+
+    
+
+    
+
+    <!--腾讯兔小巢-->
+    
+    
+    <script type="text/javascript" color="0,0,255"
+        pointColor="0,0,255" opacity='0.7'
+        zIndex="-1" count="99"
+        src="/libs/background/canvas-nest.js"></script>
+    
+
+    
+
+    
+
+    
+    <script src="/libs/instantpage/instantpage.js" type="module"></script>
+    
+
+</body>
+
+</html>

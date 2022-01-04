@@ -1,0 +1,1947 @@
+<!DOCTYPE HTML>
+<html lang="zh-CN">
+
+
+<head>
+    <meta charset="utf-8">
+    <meta name="keywords" content="任务调度之Eliastic-Job, railsoil">
+    <meta name="description" content="任务调度之Eliastic-Job.md1.1 任务调度高级需求Quartz 的不足:
+
+作业只能通过DB 抢占随机负载, 无法协调. 
+作业不能分片, 单个任务数据太多了跑不完,消耗线程,负载不均匀. 
+作业日志可视化监控,统计. 
+
+1">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="renderer" content="webkit|ie-stand|ie-comp">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="format-detection" content="telephone=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="referrer" content="no-referrer-when-downgrade">
+    <!-- Global site tag (gtag.js) - Google Analytics -->
+
+
+    <title>任务调度之Eliastic-Job | railsoil</title>
+    <link rel="icon" type="image/png" href="/favicon.png">
+
+    <link rel="stylesheet" type="text/css" href="/libs/awesome/css/all.min.css">
+    <link rel="stylesheet" type="text/css" href="/libs/materialize/materialize.min.css">
+    <link rel="stylesheet" type="text/css" href="/libs/aos/aos.css">
+    <link rel="stylesheet" type="text/css" href="/libs/animate/animate.min.css">
+    <link rel="stylesheet" type="text/css" href="/libs/lightGallery/css/lightgallery.min.css">
+    <link rel="stylesheet" type="text/css" href="/css/matery.css">
+    <link rel="stylesheet" type="text/css" href="/css/my.css">
+
+    <script src="/libs/jquery/jquery.min.js"></script>
+
+<meta name="generator" content="Hexo 5.4.0"><link rel="alternate" href="/atom.xml" title="railsoil" type="application/atom+xml">
+<link rel="stylesheet" href="/css/prism-tomorrow.css" type="text/css"></head>
+
+
+
+
+<body>
+    <header class="navbar-fixed">
+    <nav id="headNav" class="bg-color nav-transparent">
+        <div id="navContainer" class="nav-wrapper container">
+            <div class="brand-logo">
+                <a href="/" class="waves-effect waves-light">
+                    
+                    <img src="/medias/logo.png" class="logo-img" alt="LOGO">
+                    
+                    <span class="logo-span">railsoil</span>
+                </a>
+            </div>
+            
+
+<a href="#" data-target="mobile-nav" class="sidenav-trigger button-collapse"><i class="fas fa-bars"></i></a>
+<ul class="right nav-menu">
+  
+  <li class="hide-on-med-and-down nav-item">
+    
+    <a href="/" class="waves-effect waves-light">
+      
+      <i class="fas fa-home" style="zoom: 0.6;"></i>
+      
+      <span>首页</span>
+    </a>
+    
+  </li>
+  
+  <li class="hide-on-med-and-down nav-item">
+    
+    <a href="/tags" class="waves-effect waves-light">
+      
+      <i class="fas fa-tags" style="zoom: 0.6;"></i>
+      
+      <span>标签</span>
+    </a>
+    
+  </li>
+  
+  <li class="hide-on-med-and-down nav-item">
+    
+    <a href="/categories" class="waves-effect waves-light">
+      
+      <i class="fas fa-bookmark" style="zoom: 0.6;"></i>
+      
+      <span>分类</span>
+    </a>
+    
+  </li>
+  
+  <li class="hide-on-med-and-down nav-item">
+    
+    <a href="/archives" class="waves-effect waves-light">
+      
+      <i class="fas fa-archive" style="zoom: 0.6;"></i>
+      
+      <span>归档</span>
+    </a>
+    
+  </li>
+  
+  <li class="hide-on-med-and-down nav-item">
+    
+    <a href="/about" class="waves-effect waves-light">
+      
+      <i class="fas fa-user-circle" style="zoom: 0.6;"></i>
+      
+      <span>关于</span>
+    </a>
+    
+  </li>
+  
+  <li>
+    <a href="#searchModal" class="modal-trigger waves-effect waves-light">
+      <i id="searchIcon" class="fas fa-search" title="搜索" style="zoom: 0.85;"></i>
+    </a>
+  </li>
+</ul>
+
+
+<div id="mobile-nav" class="side-nav sidenav">
+
+    <div class="mobile-head bg-color">
+        
+        <img src="/medias/logo.png" class="logo-img circle responsive-img">
+        
+        <div class="logo-name">railsoil</div>
+        <div class="logo-desc">
+            
+            Never really desperate, only the lost of the soul.
+            
+        </div>
+    </div>
+
+    <ul class="menu-list mobile-menu-list">
+        
+        <li class="m-nav-item">
+	  
+		<a href="/" class="waves-effect waves-light">
+			
+			    <i class="fa-fw fas fa-home"></i>
+			
+			首页
+		</a>
+          
+        </li>
+        
+        <li class="m-nav-item">
+	  
+		<a href="/tags" class="waves-effect waves-light">
+			
+			    <i class="fa-fw fas fa-tags"></i>
+			
+			标签
+		</a>
+          
+        </li>
+        
+        <li class="m-nav-item">
+	  
+		<a href="/categories" class="waves-effect waves-light">
+			
+			    <i class="fa-fw fas fa-bookmark"></i>
+			
+			分类
+		</a>
+          
+        </li>
+        
+        <li class="m-nav-item">
+	  
+		<a href="/archives" class="waves-effect waves-light">
+			
+			    <i class="fa-fw fas fa-archive"></i>
+			
+			归档
+		</a>
+          
+        </li>
+        
+        <li class="m-nav-item">
+	  
+		<a href="/about" class="waves-effect waves-light">
+			
+			    <i class="fa-fw fas fa-user-circle"></i>
+			
+			关于
+		</a>
+          
+        </li>
+        
+        
+    </ul>
+</div>
+
+
+        </div>
+
+        
+    </nav>
+
+</header>
+
+    
+
+
+
+<div class="bg-cover pd-header post-cover" style="background-image: url('/medias/featureimages/4.jpg')">
+    <div class="container" style="right: 0px;left: 0px;">
+        <div class="row">
+            <div class="col s12 m12 l12">
+                <div class="brand">
+                    <h1 class="description center-align post-title">任务调度之Eliastic-Job</h1>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+
+<main class="post-container content">
+
+    
+    <link rel="stylesheet" href="/libs/tocbot/tocbot.css">
+<style>
+    #articleContent h1::before,
+    #articleContent h2::before,
+    #articleContent h3::before,
+    #articleContent h4::before,
+    #articleContent h5::before,
+    #articleContent h6::before {
+        display: block;
+        content: " ";
+        height: 100px;
+        margin-top: -100px;
+        visibility: hidden;
+    }
+
+    #articleContent :focus {
+        outline: none;
+    }
+
+    .toc-fixed {
+        position: fixed;
+        top: 64px;
+    }
+
+    .toc-widget {
+        width: 345px;
+        padding-left: 20px;
+    }
+
+    .toc-widget .toc-title {
+        padding: 35px 0 15px 17px;
+        font-size: 1.5rem;
+        font-weight: bold;
+        line-height: 1.5rem;
+    }
+
+    .toc-widget ol {
+        padding: 0;
+        list-style: none;
+    }
+
+    #toc-content {
+        padding-bottom: 30px;
+        overflow: auto;
+    }
+
+    #toc-content ol {
+        padding-left: 10px;
+    }
+
+    #toc-content ol li {
+        padding-left: 10px;
+    }
+
+    #toc-content .toc-link:hover {
+        color: #42b983;
+        font-weight: 700;
+        text-decoration: underline;
+    }
+
+    #toc-content .toc-link::before {
+        background-color: transparent;
+        max-height: 25px;
+
+        position: absolute;
+        right: 23.5vw;
+        display: block;
+    }
+
+    #toc-content .is-active-link {
+        color: #42b983;
+    }
+
+    #floating-toc-btn {
+        position: fixed;
+        right: 15px;
+        bottom: 76px;
+        padding-top: 15px;
+        margin-bottom: 0;
+        z-index: 998;
+    }
+
+    #floating-toc-btn .btn-floating {
+        width: 48px;
+        height: 48px;
+    }
+
+    #floating-toc-btn .btn-floating i {
+        line-height: 48px;
+        font-size: 1.4rem;
+    }
+</style>
+<div class="row">
+    <div id="main-content" class="col s12 m12 l9">
+        <!-- 文章内容详情 -->
+<div id="artDetail">
+    <div class="card">
+        <div class="card-content article-info">
+            <div class="row tag-cate">
+                <div class="col s7">
+                    
+                          <div class="article-tag">
+                            <span class="chip bg-color">无标签</span>
+                          </div>
+                    
+                </div>
+                <div class="col s5 right-align">
+                    
+                    <div class="post-cate">
+                        <i class="fas fa-bookmark fa-fw icon-category"></i>
+                        
+                            <a href="/categories/%E4%BB%BB%E5%8A%A1%E8%B0%83%E5%BA%A6/" class="post-category">
+                                任务调度
+                            </a>
+                        
+                            <a href="/categories/%E4%BB%BB%E5%8A%A1%E8%B0%83%E5%BA%A6/%E4%BB%BB%E5%8A%A1%E8%B0%83%E5%BA%A6/" class="post-category">
+                                任务调度
+                            </a>
+                        
+                    </div>
+                    
+                </div>
+            </div>
+
+            <div class="post-info">
+                
+                <div class="post-date info-break-policy">
+                    <i class="far fa-calendar-minus fa-fw"></i>发布日期:&nbsp;&nbsp;
+                    2022-01-04
+                </div>
+                
+
+                
+
+                
+                <div class="info-break-policy">
+                    <i class="far fa-file-word fa-fw"></i>文章字数:&nbsp;&nbsp;
+                    8k
+                </div>
+                
+
+                
+                <div class="info-break-policy">
+                    <i class="far fa-clock fa-fw"></i>阅读时长:&nbsp;&nbsp;
+                    35 分
+                </div>
+                
+
+                
+                    <div id="busuanzi_container_page_pv" class="info-break-policy">
+                        <i class="far fa-eye fa-fw"></i>阅读次数:&nbsp;&nbsp;
+                        <span id="busuanzi_value_page_pv"></span>
+                    </div>
+				
+            </div>
+        </div>
+        <hr class="clearfix">
+
+        
+
+        
+
+        <div class="card-content article-card-content">
+            <div id="articleContent">
+                <h1 id="任务调度之Eliastic-Job-md"><a href="#任务调度之Eliastic-Job-md" class="headerlink" title="任务调度之Eliastic-Job.md"></a>任务调度之Eliastic-Job.md</h1><h2 id="1-1-任务调度高级需求"><a href="#1-1-任务调度高级需求" class="headerlink" title="1.1 任务调度高级需求"></a>1.1 任务调度高级需求</h2><p><code>Quartz</code> 的不足:</p>
+<ol>
+<li>作业只能通过DB 抢占随机负载, 无法协调. </li>
+<li>作业不能分片, 单个任务数据太多了跑不完,消耗线程,负载不均匀. </li>
+<li>作业日志可视化监控,统计. </li>
+</ol>
+<h3 id="1-2-发展历史"><a href="#1-2-发展历史" class="headerlink" title="1.2 发展历史"></a>1.2 发展历史</h3><p><code>Elastic-Job</code> 是怎么来的?</p>
+<p>在当当的<code>ddframe</code> 框架中, 需要一个任务调度系统(作业系统)</p>
+<p><img src="C:/Users/luyanan/AppData/Roaming/Typora/typora-user-images/image-20200411134048082.png" alt="image-20200411134048082"></p>
+<p>实现的话有两种思路: 一种是修改开源产品, 一种是基于开源产品搭建(封装), 当当选择了后者,最开始这个调度系统叫做<code>dd-job</code>.它是一个无中心化的分布式任务调度框架。 因为数据库缺少分布式协调功能(必须选主), 替换为<code>Zookeeper</code>后, 增加了弹性扩容和数据分片的功能. </p>
+<p><code>Elastic-Job</code> 是<code>ddframe</code> 中的<code>dd-job</code> 作业模块分离出来的作业框架, 基于<code>Quartz</code>和<code>Curator</code>开发,在2015年开源. </p>
+<p>轻量级,无中心化的解决方案.</p>
+<p>为什么哦是无中心化呢? 因为没有统一的调度中心, 集群的每个节点都是对等的, 节点之间通过注册中心进行分布式协调. <code>Elastic-Job</code>存在主节点的概念, 但是主节点没有调度的功能,而是用于处理一些集中式的任务, 如分片、清理运行时信息等. </p>
+<p>思考: 如果ZK挂了怎么办？ </p>
+<p>每个任务都有自己独立的线程池. </p>
+<p>从官网开始:</p>
+<p><a target="_blank" rel="noopener" href="http://elasticjob.io/docs/elastic-job-lite/00-overview/">http://elasticjob.io/docs/elastic-job-lite/00-overview/</a></p>
+<p><a target="_blank" rel="noopener" href="https://github.com/elasticjob">https://github.com/elasticjob</a></p>
+<p><code>Elastic-Job</code> 最开始只有一个<code>elastic-job-core</code> 的项目, 在2.X版本之后分为<code>Elastic-job-Lite</code>和<code>Elastic-job-Cloud</code> 两个子项目. 其中<code>Elastic-job-Lite</code> 定位为轻量级无中心化的解决方案,使用<code>jar</code> 包的形式来提供分布式任务的协调服务. 而<code>Elastic-job-Cloud</code> 使用<code>Mesos+Docker</code> 的解决方案, 额外提供资源管理、应用分发以及进程隔离服务(跟<code>Lite</code>的区别只是部署方式不同,他们使用相同的API, 只要开发一次)</p>
+<h3 id="1-3-功能特性"><a href="#1-3-功能特性" class="headerlink" title="1.3 功能特性"></a>1.3 功能特性</h3><ul>
+<li> 分布式调度协调:使用ZK 实现注册中心</li>
+<li>错误执行作用重触发(<code>Misfire</code>)</li>
+<li>支持并行调度(任务分片)</li>
+<li>作业分片一致性,保证同一个分片在分布式环境中仅有一个执行实例</li>
+<li>弹性扩容缩容: 将任务拆分成N个任务后, 各个服务区分别执行各自分配到的任务项, 一旦有新的服务器加入集群, 或现有服务器下线, <code>Elastic-job</code>将在保留本地任务不变的情况下, 下次任务开始前触发任务重分片. </li>
+<li>失效转移(<code>failover</code>): 弹性扩容缩容在下次作业运行前重新分片, 但本次作用执行的过程中, 下线的服务器所分配的作业将不会重新分配. 失效转移功能可以在本地作用运行中用空闲服务器抓取孤儿作业分片执行. 同样, 失效转移功能也会牺牲部分性能. </li>
+<li>支持作业生命周期操作(<code>listener</code>)</li>
+<li>丰富的作业类型(<code>Simple</code>、<code>DataFlow</code>、<code>Script</code>)</li>
+<li>Spring整合以及命名空间提供</li>
+<li>运维平台</li>
+</ul>
+<h3 id="1-4-项目架构"><a href="#1-4-项目架构" class="headerlink" title="1.4 项目架构"></a>1.4 项目架构</h3><p>应用在各自的节点上执行任务, 通过ZK 注册中心协调,节点注册、节点选举、任务分片、监听都在<code>Elastic-Job</code> 的代码中完成. </p>
+<p><img src="http://files.luyanan.com//img/20200411142623.png" alt="image-20200411142622344"></p>
+<h2 id="2-Java-开发"><a href="#2-Java-开发" class="headerlink" title="2. Java 开发"></a>2. Java 开发</h2><h3 id="2-1-pom-依赖"><a href="#2-1-pom-依赖" class="headerlink" title="2.1 pom 依赖"></a>2.1 <code>pom</code> 依赖</h3><pre class=" language-xml"><code class="language-xml"> <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>dependency</span><span class="token punctuation">></span></span>
+            <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>groupId</span><span class="token punctuation">></span></span>com.dangdang<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>groupId</span><span class="token punctuation">></span></span>
+            <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>artifactId</span><span class="token punctuation">></span></span>elastic-job-lite-core<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>artifactId</span><span class="token punctuation">></span></span>
+            <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>version</span><span class="token punctuation">></span></span>2.1.5<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>version</span><span class="token punctuation">></span></span>
+        <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>dependency</span><span class="token punctuation">></span></span>
+</code></pre>
+<h3 id="2-2-任务类型"><a href="#2-2-任务类型" class="headerlink" title="2.2 任务类型"></a>2.2 任务类型</h3><p>任务类型有三种:</p>
+<h4 id="2-2-1-SimpleJob"><a href="#2-2-1-SimpleJob" class="headerlink" title="2.2.1 SimpleJob"></a>2.2.1 <code>SimpleJob</code></h4><p><code>SimpleJob</code>: 简单实现,非经过任何封装的类型,需要实现<code>SimpleJob</code>接口</p>
+<pre class=" language-java"><code class="language-java"><span class="token keyword">public</span> <span class="token keyword">class</span> <span class="token class-name">MySimpleJob</span> <span class="token keyword">implements</span> <span class="token class-name">SimpleJob</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+
+
+    <span class="token annotation punctuation">@Override</span>
+    <span class="token keyword">public</span> <span class="token keyword">void</span> <span class="token function">execute</span><span class="token punctuation">(</span>ShardingContext shardingContext<span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+        System<span class="token punctuation">.</span>out<span class="token punctuation">.</span><span class="token function">println</span><span class="token punctuation">(</span>String<span class="token punctuation">.</span><span class="token function">format</span><span class="token punctuation">(</span><span class="token string">"分片项 ShardingItem: %s | 运行时间: %s | 线程ID: %s | 分片参数: %s "</span><span class="token punctuation">,</span>
+                shardingContext<span class="token punctuation">.</span><span class="token function">getShardingItem</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">,</span> <span class="token keyword">new</span> <span class="token class-name">SimpleDateFormat</span><span class="token punctuation">(</span><span class="token string">"HH:mm:ss"</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">format</span><span class="token punctuation">(</span><span class="token keyword">new</span> <span class="token class-name">Date</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">,</span>
+                Thread<span class="token punctuation">.</span><span class="token function">currentThread</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">getId</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">,</span> shardingContext<span class="token punctuation">.</span><span class="token function">getShardingParameter</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+<span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+</code></pre>
+<p>测试类</p>
+<pre class=" language-java"><code class="language-java"><span class="token comment" spellcheck="true">/**
+ * @author luyanan
+ * @since 2020/4/11
+ * &lt;p>测试类&lt;/p>
+ **/</span>
+<span class="token keyword">public</span> <span class="token keyword">class</span> <span class="token class-name">SimpleJobTest</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+
+    <span class="token keyword">public</span> <span class="token keyword">static</span> <span class="token keyword">void</span> <span class="token function">main</span><span class="token punctuation">(</span>String<span class="token punctuation">[</span><span class="token punctuation">]</span> args<span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+        <span class="token comment" spellcheck="true">// zk注册中心</span>
+        ZookeeperRegistryCenter registryCenter <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">ZookeeperRegistryCenter</span><span class="token punctuation">(</span><span class="token keyword">new</span> <span class="token class-name">ZookeeperConfiguration</span><span class="token punctuation">(</span><span class="token string">"192.168.31.22:2181"</span><span class="token punctuation">,</span> <span class="token string">"ejob-standalone"</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        registryCenter<span class="token punctuation">.</span><span class="token function">init</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+
+        <span class="token comment" spellcheck="true">// 数据源，使用DBCP</span>
+<span class="token comment" spellcheck="true">/*        BasicDataSource dataSource = new BasicDataSource();
+        dataSource.setDriverClassName("com.mysql.jdbc.Driver");
+        dataSource.setUrl("jdbc:mysql://localhost:3306/elastic_job_log");
+        dataSource.setUsername("root");
+        dataSource.setPassword("123456");
+        JobEventConfiguration jobEventConfig = new JobEventRdbConfiguration(dataSource);*/</span>
+
+        <span class="token comment" spellcheck="true">// 定义作业核心配置</span>
+        JobCoreConfiguration coreConfiguration <span class="token operator">=</span> JobCoreConfiguration<span class="token punctuation">.</span><span class="token function">newBuilder</span><span class="token punctuation">(</span>MySimpleJob<span class="token punctuation">.</span><span class="token keyword">class</span><span class="token punctuation">.</span><span class="token function">getSimpleName</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">,</span>
+                <span class="token string">"0/2 * * * * ?"</span><span class="token punctuation">,</span> <span class="token number">4</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">shardingItemParameters</span><span class="token punctuation">(</span><span class="token string">"0=RDP, 1=CORE, 2=SIMS, 3=ECIF"</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">build</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token comment" spellcheck="true">// 定义Simple 类型配置</span>
+        SimpleJobConfiguration simpleJobConfiguration <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">SimpleJobConfiguration</span><span class="token punctuation">(</span>coreConfiguration<span class="token punctuation">,</span> MySimpleJob<span class="token punctuation">.</span><span class="token keyword">class</span><span class="token punctuation">.</span><span class="token function">getCanonicalName</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+        <span class="token comment" spellcheck="true">// 作业分片策略</span>
+        <span class="token comment" spellcheck="true">// 基于平均分配算法的分片策略</span>
+        String jobShardingStrategyClass <span class="token operator">=</span> AverageAllocationJobShardingStrategy<span class="token punctuation">.</span><span class="token keyword">class</span><span class="token punctuation">.</span><span class="token function">getCanonicalName</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token comment" spellcheck="true">// 定义Lite 作业根配置</span>
+        <span class="token comment" spellcheck="true">// LiteJobConfiguration simpleJobRootConfig = LiteJobConfiguration.newBuilder(simpleJobConfig).jobShardingStrategyClass(jobShardingStrategyClass).build();</span>
+        LiteJobConfiguration simpleJobRootConfig <span class="token operator">=</span> LiteJobConfiguration<span class="token punctuation">.</span><span class="token function">newBuilder</span><span class="token punctuation">(</span>simpleJobConfiguration<span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">build</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+        <span class="token comment" spellcheck="true">// 构建Job</span>
+        <span class="token keyword">new</span> <span class="token class-name">JobScheduler</span><span class="token punctuation">(</span>registryCenter<span class="token punctuation">,</span> simpleJobRootConfig<span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">init</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token comment" spellcheck="true">// new JobScheduler(regCenter, simpleJobRootConfig, jobEventConfig).init();</span>
+    <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+
+<span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+</code></pre>
+<p>结果:</p>
+<pre class=" language-text"><code class="language-text">分片项 ShardingItem: 2 | 运行时间: 16:00:44 | 线程ID: 27 | 分片参数: SIMS 
+分片项 ShardingItem: 3 | 运行时间: 16:00:44 | 线程ID: 28 | 分片参数: ECIF 
+分片项 ShardingItem: 0 | 运行时间: 16:00:44 | 线程ID: 25 | 分片参数: RDP 
+分片项 ShardingItem: 1 | 运行时间: 16:00:44 | 线程ID: 26 | 分片参数: CORE 
+分片项 ShardingItem: 0 | 运行时间: 16:00:46 | 线程ID: 29 | 分片参数: RDP 
+分片项 ShardingItem: 1 | 运行时间: 16:00:46 | 线程ID: 30 | 分片参数: CORE 
+分片项 ShardingItem: 2 | 运行时间: 16:00:46 | 线程ID: 31 | 分片参数: SIMS 
+分片项 ShardingItem: 3 | 运行时间: 16:00:46 | 线程ID: 32 | 分片参数: ECIF 
+分片项 ShardingItem: 0 | 运行时间: 16:00:48 | 线程ID: 28 | 分片参数: RDP 
+分片项 ShardingItem: 1 | 运行时间: 16:00:48 | 线程ID: 27 | 分片参数: CORE 
+分片项 ShardingItem: 2 | 运行时间: 16:00:48 | 线程ID: 28 | 分片参数: SIMS 
+分片项 ShardingItem: 3 | 运行时间: 16:00:48 | 线程ID: 25 | 分片参数: ECIF 
+分片项 ShardingItem: 0 | 运行时间: 16:00:50 | 线程ID: 29 | 分片参数: RDP 
+分片项 ShardingItem: 1 | 运行时间: 16:00:50 | 线程ID: 30 | 分片参数: CORE 
+分片项 ShardingItem: 2 | 运行时间: 16:00:50 | 线程ID: 31 | 分片参数: SIMS 
+分片项 ShardingItem: 3 | 运行时间: 16:00:50 | 线程ID: 32 | 分片参数: ECIF 
+分片项 ShardingItem: 0 | 运行时间: 16:00:52 | 线程ID: 27 | 分片参数: RDP 
+分片项 ShardingItem: 1 | 运行时间: 16:00:52 | 线程ID: 26 | 分片参数: CORE 
+分片项 ShardingItem: 3 | 运行时间: 16:00:52 | 线程ID: 28 | 分片参数: ECIF 
+分片项 ShardingItem: 2 | 运行时间: 16:00:52 | 线程ID: 27 | 分片参数: SIMS 
+</code></pre>
+<h4 id="2-2-2-DataFlowJob"><a href="#2-2-2-DataFlowJob" class="headerlink" title="2.2.2 DataFlowJob"></a>2.2.2 <code>DataFlowJob</code></h4><p><code>DataFlowJob</code>: <code>DataFlow</code> 类型用于处理数据流, 必须实现<code>fetchData()</code>和 <code>processData()</code> 的方法, 一个用来获取数据, 一个用来处理获取到的数据. </p>
+<pre class=" language-java"><code class="language-java"><span class="token keyword">package</span> com<span class="token punctuation">.</span>job<span class="token punctuation">.</span>elasticjob<span class="token punctuation">.</span>dataflow<span class="token punctuation">;</span>
+
+<span class="token keyword">import</span> com<span class="token punctuation">.</span>dangdang<span class="token punctuation">.</span>ddframe<span class="token punctuation">.</span>job<span class="token punctuation">.</span>api<span class="token punctuation">.</span>ShardingContext<span class="token punctuation">;</span>
+<span class="token keyword">import</span> com<span class="token punctuation">.</span>dangdang<span class="token punctuation">.</span>ddframe<span class="token punctuation">.</span>job<span class="token punctuation">.</span>api<span class="token punctuation">.</span>dataflow<span class="token punctuation">.</span>DataflowJob<span class="token punctuation">;</span>
+
+<span class="token keyword">import</span> java<span class="token punctuation">.</span>util<span class="token punctuation">.</span>Arrays<span class="token punctuation">;</span>
+<span class="token keyword">import</span> java<span class="token punctuation">.</span>util<span class="token punctuation">.</span>List<span class="token punctuation">;</span>
+
+<span class="token comment" spellcheck="true">/**
+ * @author luyanan
+ * @since 2020/4/11
+ * &lt;p>数据流&lt;/p>
+ **/</span>
+<span class="token keyword">public</span> <span class="token keyword">class</span> <span class="token class-name">MyDataFlowJob</span> <span class="token keyword">implements</span> <span class="token class-name">DataflowJob</span><span class="token operator">&lt;</span>String<span class="token operator">></span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+
+
+    <span class="token annotation punctuation">@Override</span>
+    <span class="token keyword">public</span> List<span class="token operator">&lt;</span>String<span class="token operator">></span> <span class="token function">fetchData</span><span class="token punctuation">(</span>ShardingContext shardingContext<span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+        System<span class="token punctuation">.</span>out<span class="token punctuation">.</span><span class="token function">println</span><span class="token punctuation">(</span><span class="token string">"开始获取数据"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token keyword">return</span> Arrays<span class="token punctuation">.</span><span class="token function">asList</span><span class="token punctuation">(</span><span class="token string">"张三"</span><span class="token punctuation">,</span> <span class="token string">"李四"</span><span class="token punctuation">,</span> <span class="token string">"王五"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+
+    <span class="token annotation punctuation">@Override</span>
+    <span class="token keyword">public</span> <span class="token keyword">void</span> <span class="token function">processData</span><span class="token punctuation">(</span>ShardingContext shardingContext<span class="token punctuation">,</span> List<span class="token operator">&lt;</span>String<span class="token operator">></span> list<span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+        <span class="token comment" spellcheck="true">// 需要移除数据, 不然会一直循环</span>
+        <span class="token keyword">for</span> <span class="token punctuation">(</span>String s <span class="token operator">:</span> list<span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+            System<span class="token punctuation">.</span>out<span class="token punctuation">.</span><span class="token function">println</span><span class="token punctuation">(</span><span class="token string">"开始处理任务:"</span> <span class="token operator">+</span> s<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+    <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+<span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+</code></pre>
+<p>测试类</p>
+<pre class=" language-java"><code class="language-java"><span class="token keyword">public</span> <span class="token keyword">class</span> <span class="token class-name">DataFlowJobTest</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+
+    <span class="token keyword">public</span> <span class="token keyword">static</span> <span class="token keyword">void</span> <span class="token function">main</span><span class="token punctuation">(</span>String<span class="token punctuation">[</span><span class="token punctuation">]</span> args<span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+        <span class="token comment" spellcheck="true">// zk注册中心</span>
+        ZookeeperRegistryCenter registryCenter <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">ZookeeperRegistryCenter</span><span class="token punctuation">(</span><span class="token keyword">new</span> <span class="token class-name">ZookeeperConfiguration</span><span class="token punctuation">(</span><span class="token string">"192.168.31.22:2181"</span><span class="token punctuation">,</span> <span class="token string">"ejob-standalone-dataflow"</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        registryCenter<span class="token punctuation">.</span><span class="token function">init</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+        <span class="token comment" spellcheck="true">// 定义作业核心配置</span>
+        JobCoreConfiguration coreConfiguration <span class="token operator">=</span> JobCoreConfiguration<span class="token punctuation">.</span><span class="token function">newBuilder</span><span class="token punctuation">(</span>MyDataFlowJob<span class="token punctuation">.</span><span class="token keyword">class</span><span class="token punctuation">.</span><span class="token function">getSimpleName</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">,</span>
+                <span class="token string">"0/2 * * * * ?"</span><span class="token punctuation">,</span> <span class="token number">4</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">build</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token comment" spellcheck="true">// 定义Simple 类型配置</span>
+        DataflowJobConfiguration dataflowJobConfiguration <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">DataflowJobConfiguration</span><span class="token punctuation">(</span>coreConfiguration<span class="token punctuation">,</span>
+                MyDataFlowJob<span class="token punctuation">.</span><span class="token keyword">class</span><span class="token punctuation">.</span><span class="token function">getCanonicalName</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">,</span> <span class="token boolean">true</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+        <span class="token comment" spellcheck="true">// 作业分片策略</span>
+        <span class="token comment" spellcheck="true">// 基于平均分配算法的分片策略</span>
+        String jobShardingStrategyClass <span class="token operator">=</span> AverageAllocationJobShardingStrategy<span class="token punctuation">.</span><span class="token keyword">class</span><span class="token punctuation">.</span><span class="token function">getCanonicalName</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token comment" spellcheck="true">// 定义Lite 作业根配置</span>
+        <span class="token comment" spellcheck="true">// LiteJobConfiguration simpleJobRootConfig = LiteJobConfiguration.newBuilder(simpleJobConfig).jobShardingStrategyClass(jobShardingStrategyClass).build();</span>
+        LiteJobConfiguration simpleJobRootConfig <span class="token operator">=</span> LiteJobConfiguration<span class="token punctuation">.</span><span class="token function">newBuilder</span><span class="token punctuation">(</span>dataflowJobConfiguration<span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">build</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+        <span class="token comment" spellcheck="true">// 构建Job</span>
+        <span class="token keyword">new</span> <span class="token class-name">JobScheduler</span><span class="token punctuation">(</span>registryCenter<span class="token punctuation">,</span> simpleJobRootConfig<span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">init</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token comment" spellcheck="true">// new JobScheduler(regCenter, simpleJobRootConfig, jobEventConfig).init();</span>
+
+    <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+
+<span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+</code></pre>
+<p>结果:</p>
+<pre class=" language-tex"><code class="language-tex">开始获取数据
+开始处理任务:张三
+开始处理任务:李四
+开始处理任务:王五
+</code></pre>
+<h4 id="2-2-3-ScriptJob"><a href="#2-2-3-ScriptJob" class="headerlink" title="2.2.3 ScriptJob"></a>2.2.3 <code>ScriptJob</code></h4><p><code>ScriptJob</code>:<code>Script</code> 类型作业为脚本类型作业, 支持<code>Shell</code>、<code>Python</code>、<code>Perl</code> 等所有类型脚本, 只需要指定脚本的内容或者位置. </p>
+<pre class=" language-java"><code class="language-java">    <span class="token keyword">public</span> <span class="token keyword">static</span> <span class="token keyword">void</span> <span class="token function">main</span><span class="token punctuation">(</span>String<span class="token punctuation">[</span><span class="token punctuation">]</span> args<span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+        <span class="token comment" spellcheck="true">// zk注册中心</span>
+        ZookeeperRegistryCenter registryCenter <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">ZookeeperRegistryCenter</span><span class="token punctuation">(</span>
+                <span class="token keyword">new</span> <span class="token class-name">ZookeeperConfiguration</span><span class="token punctuation">(</span><span class="token string">"192.168.31.22:2181"</span><span class="token punctuation">,</span> <span class="token string">"ejob-standalone-script"</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        registryCenter<span class="token punctuation">.</span><span class="token function">init</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token comment" spellcheck="true">//定义作业核心配置</span>
+        JobCoreConfiguration jobCoreConfiguration <span class="token operator">=</span> JobCoreConfiguration
+                <span class="token punctuation">.</span><span class="token function">newBuilder</span><span class="token punctuation">(</span><span class="token string">"scriteJob"</span><span class="token punctuation">,</span> <span class="token string">"0/4 * * * * ?"</span><span class="token punctuation">,</span> <span class="token number">2</span><span class="token punctuation">)</span>
+                <span class="token punctuation">.</span><span class="token function">build</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token comment" spellcheck="true">//定义script类型配置</span>
+        ScriptJobConfiguration scriptJobConfiguration <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">ScriptJobConfiguration</span><span class="token punctuation">(</span>jobCoreConfiguration<span class="token punctuation">,</span> <span class="token string">"D:/1.bat"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token comment" spellcheck="true">// 作业分片策略</span>
+        <span class="token comment" spellcheck="true">// 基于平均分配算法的分片策略</span>
+        String jobShardingStrategyClass <span class="token operator">=</span> AverageAllocationJobShardingStrategy<span class="token punctuation">.</span><span class="token keyword">class</span><span class="token punctuation">.</span><span class="token function">getCanonicalName</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+        <span class="token comment" spellcheck="true">// 定义Lite作业根配置</span>
+        <span class="token comment" spellcheck="true">// LiteJobConfiguration scriptJobRootConfig = LiteJobConfiguration.newBuilder(scriptJobConfig).jobShardingStrategyClass(jobShardingStrategyClass).build();</span>
+        LiteJobConfiguration scriptJobRootConfig <span class="token operator">=</span> LiteJobConfiguration<span class="token punctuation">.</span><span class="token function">newBuilder</span><span class="token punctuation">(</span>scriptJobConfiguration<span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">build</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+        <span class="token comment" spellcheck="true">// 构建Job</span>
+        <span class="token keyword">new</span> <span class="token class-name">JobScheduler</span><span class="token punctuation">(</span>registryCenter<span class="token punctuation">,</span> scriptJobRootConfig<span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">init</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token comment" spellcheck="true">// new JobScheduler(regCenter, scriptJobRootConfig, jobEventConfig).init();</span>
+
+    <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+</code></pre>
+<h3 id="2-3-Elastic-Job-配置"><a href="#2-3-Elastic-Job-配置" class="headerlink" title="2.3 Elastic-Job 配置"></a>2.3 <code>Elastic-Job</code> 配置</h3><h4 id="2-3-1-配置步骤"><a href="#2-3-1-配置步骤" class="headerlink" title="2.3.1 配置步骤"></a>2.3.1 配置步骤</h4><p>配置手册: <a target="_blank" rel="noopener" href="http://elasticjob.io/docs/elastic-job-lite/02-guide/config-manual/">http://elasticjob.io/docs/elastic-job-lite/02-guide/config-manual/</a></p>
+<ol>
+<li><p><code>ZK</code> 注册中心配置</p>
+</li>
+<li><p>作业级别(从底层往下层: <code>core</code>-<code>Type</code>-<code>Lite</code>)</p>
+<table>
+<thead>
+<tr>
+<th>配置级别</th>
+<th>配置类</th>
+<th>配置内容</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>core</code></td>
+<td><code>JobCoreConfiguration</code></td>
+<td>用于提供作业核心配置信息，如：作业名称、CRON 表达式、分片总数等。</td>
+</tr>
+<tr>
+<td><code>type</code></td>
+<td><code>JobTypeConfiguration</code></td>
+<td>有 3 个子类分别对应 <code>SIMPLE</code>, <code>DATAFLOW</code> 和 <code>SCRIPT</code> 类型作业，提供 3 种作 业需要的不同配置，如：<code>DATAFLOW</code> 类型是否流式处理或 <code>SCRIPT</code> 类型的命 令行等。<code>Simple</code> 和 <code>DataFlow</code> 需要指定任务类的路径</td>
+</tr>
+<tr>
+<td><code>Root</code></td>
+<td><code>JobRootConfiguration</code></td>
+<td>有 2 个子类分别对应 Lite 和 Cloud 部署类型，提供不同部署类型所需的配 置，如：Lite 类型的是否需要覆盖本地配置或 Cloud 占用 CPU 或 Memory 数量等。<br />可以定义分片策略：<a target="_blank" rel="noopener" href="http://elasticjob.io/docs/elastic-job-lite/02-guide/job-sharding-strategy/">http://elasticjob.io/docs/elastic-job-lite/02-guide/job-sharding-strategy/</a></td>
+</tr>
+</tbody></table>
+</li>
+</ol>
+<pre class=" language-java"><code class="language-java"> <span class="token keyword">public</span> <span class="token keyword">static</span> <span class="token keyword">void</span> <span class="token function">main</span><span class="token punctuation">(</span>String<span class="token punctuation">[</span><span class="token punctuation">]</span> args<span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+        <span class="token comment" spellcheck="true">// zk注册中心</span>
+        ZookeeperRegistryCenter registryCenter <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">ZookeeperRegistryCenter</span><span class="token punctuation">(</span><span class="token keyword">new</span> <span class="token class-name">ZookeeperConfiguration</span><span class="token punctuation">(</span><span class="token string">"192.168.31.22:2181"</span><span class="token punctuation">,</span> <span class="token string">"ejob-standalone"</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        registryCenter<span class="token punctuation">.</span><span class="token function">init</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+
+        <span class="token comment" spellcheck="true">// 数据源，使用DBCP</span>
+<span class="token comment" spellcheck="true">/*        BasicDataSource dataSource = new BasicDataSource();
+        dataSource.setDriverClassName("com.mysql.jdbc.Driver");
+        dataSource.setUrl("jdbc:mysql://localhost:3306/elastic_job_log");
+        dataSource.setUsername("root");
+        dataSource.setPassword("123456");
+        JobEventConfiguration jobEventConfig = new JobEventRdbConfiguration(dataSource);*/</span>
+
+        <span class="token comment" spellcheck="true">// 定义作业核心配置</span>
+        JobCoreConfiguration coreConfiguration <span class="token operator">=</span> JobCoreConfiguration<span class="token punctuation">.</span><span class="token function">newBuilder</span><span class="token punctuation">(</span>MySimpleJob<span class="token punctuation">.</span><span class="token keyword">class</span><span class="token punctuation">.</span><span class="token function">getSimpleName</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">,</span>
+                <span class="token string">"0/2 * * * * ?"</span><span class="token punctuation">,</span> <span class="token number">4</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">shardingItemParameters</span><span class="token punctuation">(</span><span class="token string">"0=RDP, 1=CORE, 2=SIMS, 3=ECIF"</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">build</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token comment" spellcheck="true">// 定义Simple 类型配置</span>
+        SimpleJobConfiguration simpleJobConfiguration <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">SimpleJobConfiguration</span><span class="token punctuation">(</span>coreConfiguration<span class="token punctuation">,</span> MySimpleJob<span class="token punctuation">.</span><span class="token keyword">class</span><span class="token punctuation">.</span><span class="token function">getCanonicalName</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+        <span class="token comment" spellcheck="true">// 作业分片策略</span>
+        <span class="token comment" spellcheck="true">// 基于平均分配算法的分片策略</span>
+        String jobShardingStrategyClass <span class="token operator">=</span> AverageAllocationJobShardingStrategy<span class="token punctuation">.</span><span class="token keyword">class</span><span class="token punctuation">.</span><span class="token function">getCanonicalName</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token comment" spellcheck="true">// 定义Lite 作业根配置</span>
+        <span class="token comment" spellcheck="true">// LiteJobConfiguration simpleJobRootConfig = LiteJobConfiguration.newBuilder(simpleJobConfig).jobShardingStrategyClass(jobShardingStrategyClass).build();</span>
+        LiteJobConfiguration simpleJobRootConfig <span class="token operator">=</span> LiteJobConfiguration<span class="token punctuation">.</span><span class="token function">newBuilder</span><span class="token punctuation">(</span>simpleJobConfiguration<span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">build</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+        <span class="token comment" spellcheck="true">// 构建Job</span>
+        <span class="token keyword">new</span> <span class="token class-name">JobScheduler</span><span class="token punctuation">(</span>registryCenter<span class="token punctuation">,</span> simpleJobRootConfig<span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">init</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token comment" spellcheck="true">// new JobScheduler(regCenter, simpleJobRootConfig, jobEventConfig).init();</span>
+    <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+</code></pre>
+<p>作业配置分为三级, 分别是<code>JobCoreConfiguration</code>、<code>JobTypeConfiguration</code>和<code>LiteJobConfiguration</code>.<code>LiteJobConfiguration</code> 使用<code>JobTypeConfiguration</code>,<code>JobTypeConfiguration</code> 使用<code>JobCoreConfiguration</code>, 层层嵌套</p>
+<p><img src="http://files.luyanan.com//img/20200411161903.png" alt="image-20200411161902396"></p>
+<p><code>JobTypeConfiguration</code> 根据不同的实现类型分为<code>SimpleJobConfiguration</code> ， <code>DataflowJobConfiguration</code> 和 <code>ScriptJobConfiguration</code>。</p>
+<p><code>Elastic-Job</code> 使用zk 做分布式协调,所有的配置都会写入到ZK中. </p>
+<h4 id="2-3-2-ZK注册中心数据结构"><a href="#2-3-2-ZK注册中心数据结构" class="headerlink" title="2.3.2 ZK注册中心数据结构"></a>2.3.2 ZK注册中心数据结构</h4><p>一个任务, 一个二级节点</p>
+<p>这里面有些节点是临时节点,只有任务运行的是才能看到. </p>
+<blockquote>
+<p>注意：修改了任务重新运行任务不生效, 是因为zk的信息不会更新,除非把<code>overwrite</code>修改成``true`</p>
+</blockquote>
+<h5 id="config节点"><a href="#config节点" class="headerlink" title="config节点"></a>config节点</h5><p>JSON 格式存储</p>
+<p>存储任务的配置信息,包括执行类,<code>cron</code> 表达式, 分片算法类、分片数量、分片参数等. </p>
+<pre class=" language-json"><code class="language-json">&amp;#<span class="token number">123</span><span class="token punctuation">;</span>
+    <span class="token property">"cron"</span><span class="token operator">:</span> <span class="token string">"0/2 * * * * ?"</span><span class="token punctuation">,</span>
+    <span class="token property">"description"</span><span class="token operator">:</span> <span class="token string">""</span><span class="token punctuation">,</span>
+    <span class="token property">"disabled"</span><span class="token operator">:</span> <span class="token boolean">false</span><span class="token punctuation">,</span>
+    <span class="token property">"failover"</span><span class="token operator">:</span> <span class="token boolean">false</span><span class="token punctuation">,</span>
+    <span class="token property">"jobClass"</span><span class="token operator">:</span> <span class="token string">"job.MySimpleJob"</span><span class="token punctuation">,</span>
+    <span class="token property">"jobName"</span><span class="token operator">:</span> <span class="token string">"MySimpleJob"</span><span class="token punctuation">,</span>
+    <span class="token property">"jobParameter"</span><span class="token operator">:</span> <span class="token string">""</span><span class="token punctuation">,</span>
+    <span class="token property">"jobProperties"</span><span class="token operator">:</span> &amp;#<span class="token number">123</span><span class="token punctuation">;</span>
+        <span class="token property">"executor_service_handler"</span><span class="token operator">:</span> <span class="token string">"com.dangdang.ddframe.job.executor.handler.impl.DefaultExecutorServiceHandler"</span><span class="token punctuation">,</span>
+        <span class="token property">"job_exception_handler"</span><span class="token operator">:</span> <span class="token string">"com.dangdang.ddframe.job.executor.handler.impl.DefaultJobExceptionHandler"</span>
+    &amp;#<span class="token number">125</span><span class="token punctuation">;</span><span class="token punctuation">,</span>
+    <span class="token property">"jobShardingStrategyClass"</span><span class="token operator">:</span> <span class="token string">""</span><span class="token punctuation">,</span>
+    <span class="token property">"jobType"</span><span class="token operator">:</span> <span class="token string">"SIMPLE"</span><span class="token punctuation">,</span>
+    <span class="token property">"maxTimeDiffSeconds"</span><span class="token operator">:</span> -<span class="token number">1</span><span class="token punctuation">,</span>
+    <span class="token property">"misfire"</span><span class="token operator">:</span> <span class="token boolean">true</span><span class="token punctuation">,</span>
+    <span class="token property">"monitorExecution"</span><span class="token operator">:</span> <span class="token boolean">true</span><span class="token punctuation">,</span>
+    <span class="token property">"monitorPort"</span><span class="token operator">:</span> -<span class="token number">1</span><span class="token punctuation">,</span>
+    <span class="token property">"overwrite"</span><span class="token operator">:</span> <span class="token boolean">false</span><span class="token punctuation">,</span>
+    <span class="token property">"reconcileIntervalMinutes"</span><span class="token operator">:</span> <span class="token number">10</span><span class="token punctuation">,</span>
+    <span class="token property">"shardingItemParameters"</span><span class="token operator">:</span> <span class="token string">""</span><span class="token punctuation">,</span>
+    <span class="token property">"shardingTotalCount"</span><span class="token operator">:</span> <span class="token number">1</span>
+&amp;#<span class="token number">125</span><span class="token punctuation">;</span>
+</code></pre>
+<p><code>config</code>节点的数据是通过<code>ConfigService</code> 持久化到<code>zookeeper</code>中去的, 默认情况下, 如果你修改了<code>job</code>的配置, 比如<code>cron</code> 表达式、分片数量等是不会更新到<code>zookeeper</code>上去的, 除非你在<code>Lite</code>级别的配置把参数<code>overwrite</code> 修改成<code>true</code></p>
+<pre class=" language-java"><code class="language-java">LiteJobConfiguration simpleJobRootConfig <span class="token operator">=</span> LiteJobConfiguration<span class="token punctuation">.</span><span class="token function">newBuilder</span><span class="token punctuation">(</span>simpleJobConfig<span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">overwrite</span><span class="token punctuation">(</span><span class="token boolean">true</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">build</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+</code></pre>
+<h5 id="instances-节点"><a href="#instances-节点" class="headerlink" title="instances 节点"></a><code>instances</code> 节点</h5><p>同一个<code>Job</code>下的<code>elasticJob</code> 的部署实例, 一台机器上可以运行多个<code>Job</code>实例, 也就是<code>Jar</code>包,<code>instances</code> 的命令是<code>Ip+@-@+PID</code>. 只有在运行的时候能看到. </p>
+<p><img src="http://files.luyanan.com//img/20200411215604.png" alt="image-20200411215538575"></p>
+<h5 id="Leader节点"><a href="#Leader节点" class="headerlink" title="Leader节点"></a><code>Leader</code>节点</h5><p><img src="http://files.luyanan.com//img/20200411215705.png" alt="image-20200411215703352"></p>
+<p>任务实例的主节点信息,通过<code>zookeeper</code> 的主节点选举,选出来的主节点信息, 在<code>elastic -job</code> 中, 任务的执行可以分布在不同的实例(节点)中, 但是任务分片等核心控制 ,需要由主节点完成, 因为, 任务执行前, 需要选举出主节点. </p>
+<p>下面有三个子节点: </p>
+<ul>
+<li><code>election</code>: 主节点选举</li>
+<li><code>sharding</code>: 分片</li>
+<li><code>failover</code>:失效转移</li>
+</ul>
+<p><code>election</code>:下面的<code>instance</code>节点显示了当前主节点的实例ID：<code>JobInstanceId</code></p>
+<p><code>sharding</code>:节点下面有一个临时节点, <code>necessary</code>,是否需要重新分片的标记. 如果分片数总数变化, 或者任务实例节点上下线或启动/禁用,以及主节点选举, 都会触发设置重分片标记, 主节点会进行分片计算. </p>
+<h5 id="Servers节点"><a href="#Servers节点" class="headerlink" title="Servers节点"></a><code>Servers</code>节点</h5><p><img src="http://files.luyanan.com//img/20200411220851.png" alt="image-20200411220850130"></p>
+<p>任务实例的信息, 主要是IP地址, 任务实例的IP地址, 跟<code>instances</code>不同, 如果多个任务实例在同一台机器上运行则会只出现一个IP子节点, 可在IP地址节点写入<code>DISABLED</code> 表示该任务实例禁用. </p>
+<h6 id="sharding-节点"><a href="#sharding-节点" class="headerlink" title="sharding 节点"></a><code>sharding</code> 节点</h6><p><img src="http://files.luyanan.com//img/20200411221250.png" alt="image-20200411221249072"></p>
+<p>任务的分片信息, 子节点是分片项序号, 从0开始. 分片个数是在任务配置中设置的, 分片项序号的子节点存储详细信息, 每个分片项下的子节点用于控制和记录分片运行状态 , 最主要的子节点就是<code>instance</code>.</p>
+<table>
+<thead>
+<tr>
+<th>子节点名</th>
+<th>是否临时节点</th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>instance</code></td>
+<td>否</td>
+<td>执行该分片项的作业运行实例主键</td>
+</tr>
+<tr>
+<td><code>running</code></td>
+<td>是</td>
+<td>分片项正在运行的状态<br />仅配置<code>monitorExecution</code> 时有效</td>
+</tr>
+<tr>
+<td><code>failover</code></td>
+<td>是</td>
+<td>如果该分片项被失效转移分配给其他作业服务器, 则该节点值记录执行此分派你的作业服务器IP</td>
+</tr>
+<tr>
+<td><code>misfire</code></td>
+<td>否</td>
+<td>是否开启错误任务重新执行</td>
+</tr>
+<tr>
+<td><code>disabled</code></td>
+<td>否</td>
+<td>是否禁用此分片项</td>
+</tr>
+</tbody></table>
+<h2 id="3-运维平台"><a href="#3-运维平台" class="headerlink" title="3. 运维平台"></a>3. 运维平台</h2><h3 id="3-1-下载解压运行"><a href="#3-1-下载解压运行" class="headerlink" title="3.1 下载解压运行"></a>3.1 下载解压运行</h3><p>git 下载源码 <a target="_blank" rel="noopener" href="https://github.com/elasticjob/elastic-job-lite">https://github.com/elasticjob/elastic-job-lite</a></p>
+<p>对<code>elastic-job-lite-console</code>打包得到安装包. </p>
+<p>解压缩<code>elastic-job-lite-console-$&#123;version&#125;.tar.gz</code> 并执行<code>bin\start.sh（Windows 运行.bat）</code>. 打开浏览器访问<code>http://localhost:8899/</code> 即可访问控制台. </p>
+<p>8899为默认端口号, 可通过启动脚本输入<code>-p</code> 自定义端口号.</p>
+<p>默认管理员用户名和密码是<code>root/root</code>.右上角可以切换语言. </p>
+<h3 id="3-2-添加ZK注册中心"><a href="#3-2-添加ZK注册中心" class="headerlink" title="3.2 添加ZK注册中心"></a>3.2 添加ZK注册中心</h3><p>第一步,添加注册中心, 输入ZK地址和命名空间, 并连接</p>
+<p>运维平台和<code>elastic-job</code> 并无关系,是通过读取作业注册中心数据展现作业状态,或更新注册中心数据修改全局配置.</p>
+<p>控制台只能控制作业本身是否运行,但不能控制作业进程的启动, 因为控制台和作业本身是完全分离的,控制台并不能控制作业服务器. </p>
+<p>可以对作业机型操作. </p>
+<p><img src="http://files.luyanan.com//img/20200412101813.png" alt="image-20200412101811263"></p>
+<p>修改作业</p>
+<p><img src="http://files.luyanan.com//img/20200412101834.png" alt="image-20200412101833142"></p>
+<h3 id="3-3-事件追踪"><a href="#3-3-事件追踪" class="headerlink" title="3.3 事件追踪"></a>3.3 事件追踪</h3><p><a target="_blank" rel="noopener" href="http://elasticjob.io/docs/elastic-job-lite/02-guide/event-trace/">http://elasticjob.io/docs/elastic-job-lite/02-guide/event-trace/</a></p>
+<p><code>Elastic-Job</code> 提供了事件追踪功能, 可以通过事件订阅的方式处理调度过程的重要事件, 用于查询、统计和监控. </p>
+<p><code>Elastic-Job-Lite</code> 在配置中提供了<code>JobEventConfiguration</code>, 目前支持数据库方式配置. </p>
+<pre class=" language-java"><code class="language-java"> BasicDataSource dataSource <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">BasicDataSource</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        dataSource<span class="token punctuation">.</span><span class="token function">setDriverClassName</span><span class="token punctuation">(</span><span class="token string">"com.mysql.jdbc.Driver"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        dataSource<span class="token punctuation">.</span><span class="token function">setUrl</span><span class="token punctuation">(</span><span class="token string">"jdbc:mysql://localhost:3306/elastic_job_log"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        dataSource<span class="token punctuation">.</span><span class="token function">setUsername</span><span class="token punctuation">(</span><span class="token string">"root"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        dataSource<span class="token punctuation">.</span><span class="token function">setPassword</span><span class="token punctuation">(</span><span class="token string">"123456"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        JobEventConfiguration jobEventConfig <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">JobEventRdbConfiguration</span><span class="token punctuation">(</span>dataSource<span class="token punctuation">)</span><span class="token punctuation">;</span>
+</code></pre>
+<p>事件追踪的<code>event_trace_rdb_url</code> 属性对应库自动创建<code>JOB_EXECUTION_LOG</code> 和<code>JOB_STATUS_TRACE_LOG</code> 两张表以及若干索引</p>
+<p><img src="http://files.luyanan.com//img/20200412202333.png" alt="image-20200412202323391"></p>
+<p>需要在运维平台中添加数据源信息,并且连接:</p>
+<p><img src="http://files.luyanan.com//img/20200412202505.png" alt="image-20200412202504071"></p>
+<p>在作业中查询:</p>
+<p><img src="http://files.luyanan.com//img/20200412202530.png" alt="image-20200412202529730"></p>
+<h2 id="4-Spring-集成与分片详解"><a href="#4-Spring-集成与分片详解" class="headerlink" title="4.Spring 集成与分片详解"></a>4.Spring 集成与分片详解</h2><h3 id="4-1-pom依赖"><a href="#4-1-pom依赖" class="headerlink" title="4.1 pom依赖"></a>4.1 pom依赖</h3><pre class=" language-xml"><code class="language-xml"> <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>elastic-job.version</span><span class="token punctuation">></span></span>2.1.5<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>elastic-job.version</span><span class="token punctuation">></span></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>dependency</span><span class="token punctuation">></span></span>
+            <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>groupId</span><span class="token punctuation">></span></span>com.dangdang<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>groupId</span><span class="token punctuation">></span></span>
+            <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>artifactId</span><span class="token punctuation">></span></span>elastic-job-lite-core<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>artifactId</span><span class="token punctuation">></span></span>
+            <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>version</span><span class="token punctuation">></span></span>$<span class="token entity" title="&#123;">&amp;#123;</span>elastic-job.version<span class="token entity" title="&#125;">&amp;#125;</span><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>version</span><span class="token punctuation">></span></span>
+        <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>dependency</span><span class="token punctuation">></span></span>
+        <span class="token comment" spellcheck="true">&lt;!-- elastic-job-lite-spring --></span>
+        <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>dependency</span><span class="token punctuation">></span></span>
+            <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>groupId</span><span class="token punctuation">></span></span>com.dangdang<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>groupId</span><span class="token punctuation">></span></span>
+            <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>artifactId</span><span class="token punctuation">></span></span>elastic-job-lite-spring<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>artifactId</span><span class="token punctuation">></span></span>
+            <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>version</span><span class="token punctuation">></span></span>$<span class="token entity" title="&#123;">&amp;#123;</span>elastic-job.version<span class="token entity" title="&#125;">&amp;#125;</span><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>version</span><span class="token punctuation">></span></span>
+        <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>dependency</span><span class="token punctuation">></span></span>
+</code></pre>
+<h3 id="4-2-application-properties-定义配置类和任务类中要用到的参数"><a href="#4-2-application-properties-定义配置类和任务类中要用到的参数" class="headerlink" title="4.2 application.properties 定义配置类和任务类中要用到的参数"></a>4.2 <code>application.properties</code> 定义配置类和任务类中要用到的参数</h3><pre class=" language-properties"><code class="language-properties"><span class="token attr-name">server.port</span><span class="token punctuation">=</span><span class="token attr-value">$&amp;#123;random.int[10000,19999]&amp;#125;</span>
+<span class="token attr-name">regCenter.serverList</span> <span class="token punctuation">=</span> <span class="token attr-value">localhost:2181</span>
+<span class="token attr-name">regCenter.namespace</span> <span class="token punctuation">=</span> <span class="token attr-value">ejob-springboot</span>
+
+<span class="token attr-name">elasticJob.cron</span> <span class="token punctuation">=</span> <span class="token attr-value">0/3 * * * * ?</span>
+<span class="token attr-name">elasticJob.shardingTotalCount</span> <span class="token punctuation">=</span> <span class="token attr-value">4</span>
+<span class="token attr-name">elasticJob.shardingItemParameters</span> <span class="token punctuation">=</span> <span class="token attr-value">0=aaa,1=bbb, 2=mic, 3=ccc</span>
+<span class="token attr-name">elasticJob.jobParameter</span> <span class="token punctuation">=</span> <span class="token attr-value">2673</span>
+</code></pre>
+<h3 id="4-3-创建任务"><a href="#4-3-创建任务" class="headerlink" title="4.3  创建任务"></a>4.3  创建任务</h3><p>创建任务类,加上<code>@Component</code> 注解</p>
+<pre class=" language-java"><code class="language-java"><span class="token annotation punctuation">@Component</span>
+<span class="token keyword">public</span> <span class="token keyword">class</span> <span class="token class-name">MySimpleJob</span> <span class="token keyword">implements</span> <span class="token class-name">SimpleJob</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+
+
+    <span class="token annotation punctuation">@Override</span>
+    <span class="token keyword">public</span> <span class="token keyword">void</span> <span class="token function">execute</span><span class="token punctuation">(</span>ShardingContext shardingContext<span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+        System<span class="token punctuation">.</span>out<span class="token punctuation">.</span><span class="token function">println</span><span class="token punctuation">(</span>String<span class="token punctuation">.</span><span class="token function">format</span><span class="token punctuation">(</span><span class="token string">"------【简单任务】Thread ID: %s, %s,任务总片数: %s, "</span> <span class="token operator">+</span>
+                        <span class="token string">"当前分片项: %s.当前参数: %s,"</span> <span class="token operator">+</span>
+                        <span class="token string">"当前任务名称: %s.当前任务参数 %s"</span><span class="token punctuation">,</span>
+                Thread<span class="token punctuation">.</span><span class="token function">currentThread</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">getId</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">,</span>
+                <span class="token keyword">new</span> <span class="token class-name">SimpleDateFormat</span><span class="token punctuation">(</span><span class="token string">"HH:mm:ss"</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">format</span><span class="token punctuation">(</span><span class="token keyword">new</span> <span class="token class-name">Date</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">,</span>
+                shardingContext<span class="token punctuation">.</span><span class="token function">getShardingTotalCount</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">,</span>
+                shardingContext<span class="token punctuation">.</span><span class="token function">getShardingItem</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">,</span>
+                shardingContext<span class="token punctuation">.</span><span class="token function">getShardingParameter</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">,</span>
+                shardingContext<span class="token punctuation">.</span><span class="token function">getJobName</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">,</span>
+                shardingContext<span class="token punctuation">.</span><span class="token function">getJobParameter</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+
+        <span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+<span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+</code></pre>
+<h3 id="4-4-注册中心配置"><a href="#4-4-注册中心配置" class="headerlink" title="4.4  注册中心配置"></a>4.4  注册中心配置</h3><p><code>Bean</code>的<code>initMethod</code>  属性用来指定<code>Bean</code> 初始化完成之后要执行的方法, 用来替代继承<code>InitializingBean</code>  接口, 以便在容器启动的时候创建注册中心. </p>
+<pre class=" language-java"><code class="language-java"><span class="token annotation punctuation">@Configuration</span>
+<span class="token keyword">public</span> <span class="token keyword">class</span> <span class="token class-name">ElasticRegistryCenterConfig</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+
+    <span class="token annotation punctuation">@Bean</span><span class="token punctuation">(</span>initMethod <span class="token operator">=</span> <span class="token string">"init"</span><span class="token punctuation">)</span>
+    <span class="token keyword">public</span> ZookeeperRegistryCenter <span class="token function">zookeeperRegistryCenter</span><span class="token punctuation">(</span>
+            <span class="token annotation punctuation">@Value</span><span class="token punctuation">(</span><span class="token string">"$&amp;#123;regCenter.serverList&amp;#125;"</span><span class="token punctuation">)</span> String serverList<span class="token punctuation">,</span>
+            <span class="token annotation punctuation">@Value</span><span class="token punctuation">(</span><span class="token string">"$&amp;#123;regCenter.namespace&amp;#125;"</span><span class="token punctuation">)</span> String namespace<span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+
+        <span class="token keyword">return</span> <span class="token keyword">new</span> <span class="token class-name">ZookeeperRegistryCenter</span><span class="token punctuation">(</span>
+                <span class="token keyword">new</span> <span class="token class-name">ZookeeperConfiguration</span><span class="token punctuation">(</span>serverList<span class="token punctuation">,</span> namespace<span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+
+<span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+</code></pre>
+<h3 id="4-5-作业三级配置"><a href="#4-5-作业三级配置" class="headerlink" title="4.5  作业三级配置"></a>4.5  作业三级配置</h3><p><code>Core</code> - <code>Type</code> -<code>Lite</code></p>
+<pre class=" language-java"><code class="language-java"><span class="token annotation punctuation">@Configuration</span>
+<span class="token keyword">public</span> <span class="token keyword">class</span> <span class="token class-name">ElasticJobConfig</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+    <span class="token annotation punctuation">@Autowired</span>
+    <span class="token keyword">private</span> ZookeeperRegistryCenter regCenter<span class="token punctuation">;</span>
+
+    <span class="token comment" spellcheck="true">// 定义调度器</span>
+    <span class="token annotation punctuation">@Bean</span><span class="token punctuation">(</span>initMethod <span class="token operator">=</span> <span class="token string">"init"</span><span class="token punctuation">)</span>
+    <span class="token keyword">public</span> JobScheduler <span class="token function">simpleJobScheduler</span><span class="token punctuation">(</span><span class="token keyword">final</span> MySimpleJob simpleJob<span class="token punctuation">,</span>
+                                           <span class="token annotation punctuation">@Value</span><span class="token punctuation">(</span><span class="token string">"$&amp;#123;elasticJob.cron&amp;#125;"</span><span class="token punctuation">)</span> <span class="token keyword">final</span> String cron<span class="token punctuation">,</span>
+                                           <span class="token annotation punctuation">@Value</span><span class="token punctuation">(</span><span class="token string">"$&amp;#123;elasticJob.shardingTotalCount&amp;#125;"</span><span class="token punctuation">)</span> <span class="token keyword">final</span> <span class="token keyword">int</span> shardingTotalCount<span class="token punctuation">,</span>
+                                           <span class="token annotation punctuation">@Value</span><span class="token punctuation">(</span><span class="token string">"$&amp;#123;elasticJob.shardingItemParameters&amp;#125;"</span><span class="token punctuation">)</span> <span class="token keyword">final</span> String shardingItemParameters<span class="token punctuation">,</span>
+                                           <span class="token annotation punctuation">@Value</span><span class="token punctuation">(</span><span class="token string">"$&amp;#123;elasticJob.jobParameter&amp;#125;"</span><span class="token punctuation">)</span> <span class="token keyword">final</span> String jobParameter<span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+        <span class="token keyword">return</span> <span class="token keyword">new</span> <span class="token class-name">SpringJobScheduler</span><span class="token punctuation">(</span>simpleJob<span class="token punctuation">,</span> regCenter<span class="token punctuation">,</span>
+                <span class="token function">getLiteJobConfiguration</span><span class="token punctuation">(</span>simpleJob<span class="token punctuation">.</span><span class="token function">getClass</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">,</span> cron<span class="token punctuation">,</span> shardingTotalCount<span class="token punctuation">,</span> shardingItemParameters<span class="token punctuation">,</span> jobParameter<span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+
+    <span class="token comment" spellcheck="true">// 配置任务详细信息</span>
+    <span class="token keyword">private</span> LiteJobConfiguration <span class="token function">getLiteJobConfiguration</span><span class="token punctuation">(</span><span class="token keyword">final</span> Class<span class="token operator">&lt;</span><span class="token operator">?</span> <span class="token keyword">extends</span> <span class="token class-name">SimpleJob</span><span class="token operator">></span> jobClass<span class="token punctuation">,</span>
+                                                         <span class="token keyword">final</span> String cron<span class="token punctuation">,</span>
+                                                         <span class="token keyword">final</span> <span class="token keyword">int</span> shardingTotalCount<span class="token punctuation">,</span>
+                                                         <span class="token keyword">final</span> String shardingItemParameters<span class="token punctuation">,</span>
+                                                         <span class="token keyword">final</span> String jobParameter<span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+        <span class="token keyword">return</span> LiteJobConfiguration<span class="token punctuation">.</span><span class="token function">newBuilder</span><span class="token punctuation">(</span><span class="token keyword">new</span> <span class="token class-name">SimpleJobConfiguration</span><span class="token punctuation">(</span>
+                JobCoreConfiguration<span class="token punctuation">.</span><span class="token function">newBuilder</span><span class="token punctuation">(</span>jobClass<span class="token punctuation">.</span><span class="token function">getName</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">,</span> cron<span class="token punctuation">,</span> shardingTotalCount<span class="token punctuation">)</span>
+                        <span class="token punctuation">.</span><span class="token function">shardingItemParameters</span><span class="token punctuation">(</span>shardingItemParameters<span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">jobParameter</span><span class="token punctuation">(</span>jobParameter<span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">build</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+                <span class="token punctuation">,</span> jobClass<span class="token punctuation">.</span><span class="token function">getCanonicalName</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+        <span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">overwrite</span><span class="token punctuation">(</span><span class="token boolean">true</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">build</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+
+    <span class="token annotation punctuation">@Bean</span><span class="token punctuation">(</span>initMethod <span class="token operator">=</span> <span class="token string">"init"</span><span class="token punctuation">)</span>
+    <span class="token keyword">public</span> JobScheduler <span class="token function">dataFlowJobScheduler</span><span class="token punctuation">(</span><span class="token keyword">final</span> MyDataFlowJob dataFlowJob<span class="token punctuation">,</span>
+                                             <span class="token annotation punctuation">@Value</span><span class="token punctuation">(</span><span class="token string">"$&amp;#123;elasticJob.dataflow.cron&amp;#125;"</span><span class="token punctuation">)</span> <span class="token keyword">final</span> String cron<span class="token punctuation">,</span>
+                                             <span class="token annotation punctuation">@Value</span><span class="token punctuation">(</span><span class="token string">"$&amp;#123;elasticJob.dataflow.shardingTotalCount&amp;#125;"</span><span class="token punctuation">)</span> <span class="token keyword">final</span> <span class="token keyword">int</span> shardingTotalCount<span class="token punctuation">,</span>
+                                             <span class="token annotation punctuation">@Value</span><span class="token punctuation">(</span><span class="token string">"$&amp;#123;elasticJob.dataflow.shardingItemParameters&amp;#125;"</span><span class="token punctuation">)</span> <span class="token keyword">final</span> String shardingItemParameters<span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+        <span class="token keyword">return</span> <span class="token keyword">new</span> <span class="token class-name">SpringJobScheduler</span><span class="token punctuation">(</span>dataFlowJob<span class="token punctuation">,</span> regCenter<span class="token punctuation">,</span> <span class="token function">getDataFlowJobConfiguration</span><span class="token punctuation">(</span>dataFlowJob<span class="token punctuation">.</span><span class="token function">getClass</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">,</span> cron<span class="token punctuation">,</span> shardingTotalCount<span class="token punctuation">,</span> shardingItemParameters<span class="token punctuation">,</span> <span class="token boolean">true</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+
+    <span class="token keyword">private</span> LiteJobConfiguration <span class="token function">getDataFlowJobConfiguration</span><span class="token punctuation">(</span><span class="token keyword">final</span> Class<span class="token operator">&lt;</span><span class="token operator">?</span> <span class="token keyword">extends</span> <span class="token class-name">DataflowJob</span><span class="token operator">></span> jobClass<span class="token punctuation">,</span> <span class="token comment" spellcheck="true">//任务类</span>
+                                                             <span class="token keyword">final</span> String cron<span class="token punctuation">,</span>    <span class="token comment" spellcheck="true">// 运行周期配置</span>
+                                                             <span class="token keyword">final</span> <span class="token keyword">int</span> shardingTotalCount<span class="token punctuation">,</span>  <span class="token comment" spellcheck="true">//分片个数</span>
+                                                             <span class="token keyword">final</span> String shardingItemParameters<span class="token punctuation">,</span>
+                                                             <span class="token keyword">final</span> Boolean streamingProcess   <span class="token comment" spellcheck="true">//是否是流式作业</span>
+    <span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>  <span class="token comment" spellcheck="true">// 分片参数</span>
+        <span class="token keyword">return</span> LiteJobConfiguration<span class="token punctuation">.</span><span class="token function">newBuilder</span><span class="token punctuation">(</span><span class="token keyword">new</span> <span class="token class-name">DataflowJobConfiguration</span><span class="token punctuation">(</span>
+                JobCoreConfiguration<span class="token punctuation">.</span><span class="token function">newBuilder</span><span class="token punctuation">(</span>jobClass<span class="token punctuation">.</span><span class="token function">getName</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">,</span> cron<span class="token punctuation">,</span> shardingTotalCount<span class="token punctuation">)</span>
+                        <span class="token punctuation">.</span><span class="token function">shardingItemParameters</span><span class="token punctuation">(</span>shardingItemParameters<span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">build</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+                <span class="token comment" spellcheck="true">// true为流式作业,除非fetchData返回数据为null或者size为0,否则会一直执行</span>
+                <span class="token comment" spellcheck="true">// false非流式,只会按配置时间执行一次</span>
+                <span class="token punctuation">,</span> jobClass<span class="token punctuation">.</span><span class="token function">getCanonicalName</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">,</span> streamingProcess<span class="token punctuation">)</span>
+        <span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">overwrite</span><span class="token punctuation">(</span><span class="token boolean">true</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">build</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+
+    <span class="token annotation punctuation">@Bean</span><span class="token punctuation">(</span>initMethod <span class="token operator">=</span> <span class="token string">"init"</span><span class="token punctuation">)</span>
+    <span class="token keyword">public</span> JobScheduler <span class="token function">scriptJobScheduler</span><span class="token punctuation">(</span><span class="token annotation punctuation">@Value</span><span class="token punctuation">(</span><span class="token string">"$&amp;#123;elasticJob.script.cron&amp;#125;"</span><span class="token punctuation">)</span> <span class="token keyword">final</span> String cron<span class="token punctuation">,</span>
+                                           <span class="token annotation punctuation">@Value</span><span class="token punctuation">(</span><span class="token string">"$&amp;#123;elasticJob.script.shardingTotalCount&amp;#125;"</span><span class="token punctuation">)</span> <span class="token keyword">final</span> <span class="token keyword">int</span> shardingTotalCount<span class="token punctuation">,</span>
+                                           <span class="token annotation punctuation">@Value</span><span class="token punctuation">(</span><span class="token string">"$&amp;#123;elasticJob.script.shardingItemParameters&amp;#125;"</span><span class="token punctuation">)</span> <span class="token keyword">final</span> String shardingItemParameters<span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+        <span class="token keyword">return</span> <span class="token keyword">new</span> <span class="token class-name">SpringJobScheduler</span><span class="token punctuation">(</span>null<span class="token punctuation">,</span> regCenter<span class="token punctuation">,</span>
+                <span class="token function">getScriptJobConfiguration</span><span class="token punctuation">(</span><span class="token string">"script_job"</span><span class="token punctuation">,</span> cron<span class="token punctuation">,</span> shardingTotalCount<span class="token punctuation">,</span> shardingItemParameters<span class="token punctuation">,</span>
+                        <span class="token string">"D:/1.bat"</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+
+    <span class="token keyword">private</span> LiteJobConfiguration <span class="token function">getScriptJobConfiguration</span><span class="token punctuation">(</span><span class="token keyword">final</span> String jobName<span class="token punctuation">,</span> <span class="token comment" spellcheck="true">//任务名字</span>
+                                                           <span class="token keyword">final</span> String cron<span class="token punctuation">,</span>    <span class="token comment" spellcheck="true">// 运行周期配置</span>
+                                                           <span class="token keyword">final</span> <span class="token keyword">int</span> shardingTotalCount<span class="token punctuation">,</span>  <span class="token comment" spellcheck="true">//分片个数</span>
+                                                           <span class="token keyword">final</span> String shardingItemParameters<span class="token punctuation">,</span>
+                                                           <span class="token keyword">final</span> String scriptCommandLine   <span class="token comment" spellcheck="true">//是脚本路径或者命令</span>
+    <span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>  <span class="token comment" spellcheck="true">// 分片参数</span>
+        <span class="token keyword">return</span> LiteJobConfiguration<span class="token punctuation">.</span><span class="token function">newBuilder</span><span class="token punctuation">(</span><span class="token keyword">new</span> <span class="token class-name">ScriptJobConfiguration</span><span class="token punctuation">(</span>
+                JobCoreConfiguration<span class="token punctuation">.</span><span class="token function">newBuilder</span><span class="token punctuation">(</span>jobName<span class="token punctuation">,</span> cron<span class="token punctuation">,</span> shardingTotalCount<span class="token punctuation">)</span>
+                        <span class="token punctuation">.</span><span class="token function">shardingItemParameters</span><span class="token punctuation">(</span>shardingItemParameters<span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">build</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+                <span class="token comment" spellcheck="true">// 此处配置文件路径或者执行命令</span>
+                <span class="token punctuation">,</span> scriptCommandLine<span class="token punctuation">)</span>
+        <span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">overwrite</span><span class="token punctuation">(</span><span class="token boolean">true</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">build</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+
+    <span class="token comment" spellcheck="true">// 动态添加任务</span>
+<span class="token comment" spellcheck="true">/*    public void addSimpleJobScheduler(final Class&lt;? extends SimpleJob> jobClass,
+                                       final String cron,
+                                       final int shardingTotalCount,
+                                       final String shardingItemParameters)&amp;#123;
+        JobCoreConfiguration coreConfig = JobCoreConfiguration
+                .newBuilder(jobClass.getName(), cron, shardingTotalCount)
+                .shardingItemParameters(shardingItemParameters)
+                .jobParameter("name")
+                .build();
+        SimpleJobConfiguration simpleJobConfig = new SimpleJobConfiguration(coreConfig, jobClass.getCanonicalName());
+        JobScheduler jobScheduler = new JobScheduler(regCenter, LiteJobConfiguration.newBuilder(simpleJobConfig).build());
+        jobScheduler.init();
+    &amp;#125;*/</span>
+
+<span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+</code></pre>
+<h3 id="4-6-分片策略"><a href="#4-6-分片策略" class="headerlink" title="4.6  分片策略"></a>4.6  分片策略</h3><h4 id="4-6-1-分片项和分片参数"><a href="#4-6-1-分片项和分片参数" class="headerlink" title="4.6.1 分片项和分片参数"></a>4.6.1 分片项和分片参数</h4><p>任务分片, 是为了实现把一个任务拆分成多个子任务, 在不同的<code>ejob</code>实例上运行, 假如说100W 条数据, 在配置文件中指定分为10个子任务(分片项),这10个子任务再按照一定的规则分配到5个实际运行的服务器上执行, 除了直接用分片项<code>ShardingItem</code>  获取分片任务之外, 还可以用<code>item</code>对应的<code>parameter</code> 获取任务. </p>
+<pre class=" language-java"><code class="language-java">JobCoreConfiguration coreConfig <span class="token operator">=</span> JobCoreConfiguration<span class="token punctuation">.</span><span class="token function">newBuilder</span><span class="token punctuation">(</span><span class="token string">"MySimpleJob"</span><span class="token punctuation">,</span> <span class="token string">"0/2 * * * * ?"</span><span class="token punctuation">,</span> <span class="token number">4</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">shardingItemParameters</span><span class="token punctuation">(</span><span class="token string">"0=RDP, 1=CORE, 2=SIMS, 3=ECIF"</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">build</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+</code></pre>
+<p><code>springboot</code> 工程, 在<code>application.properties</code> 中定义. </p>
+<p>定义几个分片项, 一个任务就会有几个线程去运行他. </p>
+<p>注意: 分片个数和分片参数要一一对应,通常把分片项设置的比<code>Elastic-Job</code> 服务器个数要大一些, 比如3台服务器,分成9片, 这样如果有服务器宕机,分片还可以相对均匀. </p>
+<h4 id="4-6-2-分片验证"><a href="#4-6-2-分片验证" class="headerlink" title="4.6.2 分片验证"></a>4.6.2 分片验证</h4><p>为避免运行的任务太多,看不清楚运行结果, 可以注释在<code>Elastic-Job</code> 中注释<code>DatFlowJob</code>和<code>ScriptJob</code>,<code>SimpleJob</code>的分片项改为2. </p>
+<p>然后运行主启动类</p>
+<p>多实例运行(单机)</p>
+<ol>
+<li>多运行一个点, 任务不会重跑(两个节点各获得一个分片项)</li>
+<li>关闭一个节点, 任务不会漏跑</li>
+</ol>
+<h4 id="4-7-3-分片策略"><a href="#4-7-3-分片策略" class="headerlink" title="4.7.3 分片策略"></a>4.7.3 分片策略</h4><p><a target="_blank" rel="noopener" href="http://elasticjob.io/docs/elastic-job-lite/02-guide/job-sharding-strategy/">http://elasticjob.io/docs/elastic-job-lite/02-guide/job-sharding-strategy/</a></p>
+<p>分片项如何分配到服务器? 这个跟分片策略有关. </p>
+<table>
+<thead>
+<tr>
+<th>策略类</th>
+<th>描述</th>
+<th>具体规则</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>AverageAllocationJobShardingStrategy</code></td>
+<td>基于平均分配算法的分片策略, 也是默认的分片策略</td>
+<td>如果分片不能整除, 则不能整除的多余分片将依次追加到序号小的服务器, 如:<br />1. 如果有3台服务器,分成9片, 则每台服务器分到的分片是<code>1=[0,1,2], 2=[3,4,5], 3=[6,7,8]</code><br />2. 如果有三台服务器, 分成8片, 则每台服务器分到的分片是: <code>1=[0,1,6], 2=[2,3,7], 3=[4,5]</code><br />3.如果有三台服务器,分成10片, 则每台服务器分到的分片是: <code>1=[0,1,2,9], 2=[3,4,5], 3=[6,7,8]</code></td>
+</tr>
+<tr>
+<td><code>OdevitySortByNameJobShardingStrategy</code></td>
+<td>根据作业名的哈希值奇偶数决定IP 升将序算法的分片策略</td>
+<td>1. 作业名是哈希值为奇数则IP升序<br />2. 作业名的哈希值为偶数则Ip降序<br />用于不同的作业平均分配负载至不同的服务器</td>
+</tr>
+<tr>
+<td><code>RotateServerByNameJobShardingStrategy</code></td>
+<td>根据作业名的哈希值对服务器列表进行轮转的分片策略</td>
+<td></td>
+</tr>
+<tr>
+<td>自定义分片策略</td>
+<td></td>
+<td>实现<code>JobShardingStrategy</code> 接口并实现<code>sharding</code> 方法, 接口方法参数为作业服务器IP列表和分片策略选项,分片策略选项包括作业名称、分片总数以及分片序列号和个性化参数对照表, 可以根据需求定制化自己的分片策略.</td>
+</tr>
+</tbody></table>
+<p><code>AverageAllocationJobShardingStrategy</code>的缺点是: 一旦分片数小于作业服务器数,作业将永远分配至IP 地址靠前的服务器, 导致IP地址靠后的服务器空闲. 而<code>OdevitySortByNameJobShardingStrategy</code>  则可以根据作业名称重新分配服务器负载. 如: </p>
+<p>如果有 3 台服务器，分成 2 片，作业名称的哈希值为奇数，则每台服务器分到的分片是：1=[0], 2=[1], 3=[]<br>       如果有 3 台服务器，分成 2 片，作业名称的哈希值为偶数，则每台服务器分到的分片是：3=[0], 2=[1], 1=[]</p>
+<p>在<code>Lite</code> 配置中指定分片策略:</p>
+<pre class=" language-java"><code class="language-java">String jobShardingStrategyClass <span class="token operator">=</span> AverageAllocationJobShardingStrategy<span class="token punctuation">.</span><span class="token keyword">class</span><span class="token punctuation">.</span><span class="token function">getCanonicalName</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+LiteJobConfiguration simpleJobRootConfig <span class="token operator">=</span> LiteJobConfiguration<span class="token punctuation">.</span><span class="token function">newBuilder</span><span class="token punctuation">(</span>simpleJobConfig<span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">jobShardingStrategyClass</span><span class="token punctuation">(</span>jobShardingStrategyClass<span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">build</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+</code></pre>
+<h4 id="4-6-4-分片方案"><a href="#4-6-4-分片方案" class="headerlink" title="4.6.4 分片方案"></a>4.6.4 分片方案</h4><p>获取到分片项<code>shardingItem</code> 之后, 怎么对数据进行分片呢? </p>
+<ol>
+<li><p>对业务主键进行取模, 获取余数等于分片项的数据</p>
+<p> 举例: 获取到的<code>shardingItem</code> 是0,1</p>
+<p>在SQL 中加入过滤条件: <code>where mod(id, 4) in (1, 2)</code></p>
+<p>这种方式的缺点: 会导致索引失效,查询数据时会全表扫描 . </p>
+<p>解决方案: 在查询条件中在增加一个索引条件进行过滤.</p>
+</li>
+<li><p>在表中增加一个字段, 根据分片数生成一个<code>mod</code>的值. 取模的基数要大于机器数,否则在增加机器后, 会导致机器空闲. 假如取模基数是2,而服务器有5台, 那么有三台服务器是永远空闲的.而取模基数是10, 生成10个<code>shardingItem</code>，可以分配到5台服务器. 当然,取模基数也可以调整. </p>
+</li>
+<li><p>如果从业务层面,可以用<code>ShardingParamter</code> 进行分片. </p>
+<p> 假如<code>0=RDP, 1=CORE, 2=SIMS, 3=ECIF</code></p>
+<p><code>List = SELECT * FROM user WHERE status = 0 AND SYSTEM_ID = &#39;RDP&#39; limit 0, 100。</code></p>
+</li>
+</ol>
+<p>在SpringBoot中<code>Elastic-Job</code> 要配置的东西太多了,有没有更加简单的添加任务的方法呢? 比如在类上添加一个注解, 这个时候我们就要用到<code>starter</code></p>
+<h3 id="4-7-Elastic-Job-starter"><a href="#4-7-Elastic-Job-starter" class="headerlink" title="4.7 Elastic-Job starter"></a>4.7 <code>Elastic-Job</code> <code>starter</code></h3><p>git上有一个现成的实现</p>
+<p><a target="_blank" rel="noopener" href="https://github.com/TFdream/elasticjob-spring-boot-starter">https://github.com/TFdream/elasticjob-spring-boot-starter</a></p>
+<h2 id="5-Elastic-Job的原理"><a href="#5-Elastic-Job的原理" class="headerlink" title="5. Elastic-Job的原理"></a>5. <code>Elastic-Job</code>的原理</h2><h3 id="5-1-启动"><a href="#5-1-启动" class="headerlink" title="5.1 启动"></a>5.1 启动</h3><p>我们从</p>
+<pre class=" language-java"><code class="language-java"> <span class="token keyword">new</span> <span class="token class-name">JobScheduler</span><span class="token punctuation">(</span>registryCenter<span class="token punctuation">,</span> simpleJobRootConfig<span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">init</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+</code></pre>
+<p>开始分析,首先看<code>init()</code> 方法</p>
+<pre class=" language-java"><code class="language-java">  <span class="token comment" spellcheck="true">/**
+     * 初始化作业.
+     */</span>
+    <span class="token keyword">public</span> <span class="token keyword">void</span> <span class="token function">init</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+      
+        LiteJobConfiguration liteJobConfigFromRegCenter <span class="token operator">=</span> schedulerFacade<span class="token punctuation">.</span><span class="token function">updateJobConfiguration</span><span class="token punctuation">(</span>liteJobConfig<span class="token punctuation">)</span><span class="token punctuation">;</span>
+      <span class="token comment" spellcheck="true">// 设置分片数</span>
+      JobRegistry<span class="token punctuation">.</span><span class="token function">getInstance</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">setCurrentShardingTotalCount</span><span class="token punctuation">(</span>liteJobConfigFromRegCenter<span class="token punctuation">.</span><span class="token function">getJobName</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">,</span> liteJobConfigFromRegCenter<span class="token punctuation">.</span><span class="token function">getTypeConfig</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">getCoreConfig</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">getShardingTotalCount</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+      <span class="token comment" spellcheck="true">// 构建任务, 创建调度器</span>
+        JobScheduleController jobScheduleController <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">JobScheduleController</span><span class="token punctuation">(</span>
+                <span class="token function">createScheduler</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">,</span> <span class="token function">createJobDetail</span><span class="token punctuation">(</span>liteJobConfigFromRegCenter<span class="token punctuation">.</span><span class="token function">getTypeConfig</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">getJobClass</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">,</span> liteJobConfigFromRegCenter<span class="token punctuation">.</span><span class="token function">getJobName</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token comment" spellcheck="true">// 去ZK上注册任务</span>
+        JobRegistry<span class="token punctuation">.</span><span class="token function">getInstance</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">registerJob</span><span class="token punctuation">(</span>liteJobConfigFromRegCenter<span class="token punctuation">.</span><span class="token function">getJobName</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">,</span> jobScheduleController<span class="token punctuation">,</span> regCenter<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token comment" spellcheck="true">// 添加任务信息,并进行节点选举</span>
+        schedulerFacade<span class="token punctuation">.</span><span class="token function">registerStartUpInfo</span><span class="token punctuation">(</span><span class="token operator">!</span>liteJobConfigFromRegCenter<span class="token punctuation">.</span><span class="token function">isDisabled</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+       <span class="token comment" spellcheck="true">// 启动调度器</span>
+       jobScheduleController<span class="token punctuation">.</span><span class="token function">scheduleJob</span><span class="token punctuation">(</span>liteJobConfigFromRegCenter<span class="token punctuation">.</span><span class="token function">getTypeConfig</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">getCoreConfig</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">getCron</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+</code></pre>
+<p>接下来看<code>com.dangdang.ddframe.job.lite.internal.schedule.SchedulerFacade#registerStartUpInfo</code>方法</p>
+<pre class=" language-java"><code class="language-java">    <span class="token comment" spellcheck="true">/**
+     * 注册作业启动信息.
+     * 
+     * @param enabled 作业是否启用
+     */</span>
+    <span class="token keyword">public</span> <span class="token keyword">void</span> <span class="token function">registerStartUpInfo</span><span class="token punctuation">(</span><span class="token keyword">final</span> <span class="token keyword">boolean</span> enabled<span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+       <span class="token comment" spellcheck="true">// 启动所有的监听器</span>
+        listenerManager<span class="token punctuation">.</span><span class="token function">startAllListeners</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token comment" spellcheck="true">// 节点选举</span>
+        leaderService<span class="token punctuation">.</span><span class="token function">electLeader</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token comment" spellcheck="true">// 服务信息持久化(写入ZK)</span>
+        serverService<span class="token punctuation">.</span><span class="token function">persistOnline</span><span class="token punctuation">(</span>enabled<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token comment" spellcheck="true">// 实例信息持久化(写到ZK)</span>
+        instanceService<span class="token punctuation">.</span><span class="token function">persistOnline</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token comment" spellcheck="true">// 重新分片</span>
+        shardingService<span class="token punctuation">.</span><span class="token function">setReshardingFlag</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token comment" spellcheck="true">// 监控信息监听器</span>
+        monitorService<span class="token punctuation">.</span><span class="token function">listen</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token comment" spellcheck="true">// 自诊断恢复, 使本地节点与ZK数据一致</span>
+        <span class="token keyword">if</span> <span class="token punctuation">(</span><span class="token operator">!</span>reconcileService<span class="token punctuation">.</span><span class="token function">isRunning</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+            reconcileService<span class="token punctuation">.</span><span class="token function">startAsync</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+    <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+</code></pre>
+<p>监听器用于监听ZK节点信息变化</p>
+<p>启动的时候进行主节点选举</p>
+<pre class=" language-java"><code class="language-java">   <span class="token comment" spellcheck="true">/**
+     * 选举主节点.
+     */</span>
+    <span class="token keyword">public</span> <span class="token keyword">void</span> <span class="token function">electLeader</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+        log<span class="token punctuation">.</span><span class="token function">debug</span><span class="token punctuation">(</span><span class="token string">"Elect a new leader now."</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        jobNodeStorage<span class="token punctuation">.</span><span class="token function">executeInLeader</span><span class="token punctuation">(</span>LeaderNode<span class="token punctuation">.</span>LATCH<span class="token punctuation">,</span> <span class="token keyword">new</span> <span class="token class-name">LeaderElectionExecutionCallback</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        log<span class="token punctuation">.</span><span class="token function">debug</span><span class="token punctuation">(</span><span class="token string">"Leader election completed."</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+</code></pre>
+<p><code>Latch</code>是 一个分布式锁,选举成功后在<code>instance</code> 写入服务器信息</p>
+<p><img src="http://files.luyanan.com//img/20200412224843.png" alt="image-20200412224842087"></p>
+<p>服务信息持久化(写到ZK Servers 节点)</p>
+<p><code>serverService.persistOnline(enabled)</code></p>
+<p>以下是单机运行多个实例:</p>
+<p><img src="http://files.luyanan.com//img/20200412224950.png" alt="image-20200412224948880"></p>
+<p>运行了两个实例</p>
+<p><img src="http://files.luyanan.com//img/20200412225005.png" alt="image-20200412225005046"></p>
+<h3 id="5-2-任务执行和分片原理"><a href="#5-2-任务执行和分片原理" class="headerlink" title="5.2 任务执行和分片原理"></a>5.2 任务执行和分片原理</h3><p>关注两个问题</p>
+<ol>
+<li><code>LiteJob</code>   是怎么被执行的?</li>
+<li>分片项是怎么分配给不同的服务实例的?</li>
+</ol>
+<p>在创建<code>Job</code>的时候(<code>createJobDetail</code>), 创建的是一个实现了<code>quartz</code>的<code>job</code>接口的<code>LiteJob</code>类, <code>LiteJob</code>类也实现了<code>Quartz</code>的<code>Job</code> 接口 . </p>
+<p>在<code>LiteJOb</code>的<code>execute</code>方法中获取对应类型的执行器, 调用<code>execute()</code></p>
+<pre class=" language-java"><code class="language-java">   <span class="token keyword">public</span> <span class="token keyword">static</span> AbstractElasticJobExecutor <span class="token function">getJobExecutor</span><span class="token punctuation">(</span>ElasticJob elasticJob<span class="token punctuation">,</span> JobFacade jobFacade<span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+        <span class="token keyword">if</span> <span class="token punctuation">(</span>null <span class="token operator">==</span> elasticJob<span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+            <span class="token keyword">return</span> <span class="token keyword">new</span> <span class="token class-name">ScriptJobExecutor</span><span class="token punctuation">(</span>jobFacade<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span> <span class="token keyword">else</span> <span class="token keyword">if</span> <span class="token punctuation">(</span>elasticJob <span class="token keyword">instanceof</span> <span class="token class-name">SimpleJob</span><span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+            <span class="token keyword">return</span> <span class="token keyword">new</span> <span class="token class-name">SimpleJobExecutor</span><span class="token punctuation">(</span><span class="token punctuation">(</span>SimpleJob<span class="token punctuation">)</span>elasticJob<span class="token punctuation">,</span> jobFacade<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span> <span class="token keyword">else</span> <span class="token keyword">if</span> <span class="token punctuation">(</span>elasticJob <span class="token keyword">instanceof</span> <span class="token class-name">DataflowJob</span><span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+            <span class="token keyword">return</span> <span class="token keyword">new</span> <span class="token class-name">DataflowJobExecutor</span><span class="token punctuation">(</span><span class="token punctuation">(</span>DataflowJob<span class="token punctuation">)</span>elasticJob<span class="token punctuation">,</span> jobFacade<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span> <span class="token keyword">else</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+            <span class="token keyword">throw</span> <span class="token keyword">new</span> <span class="token class-name">JobConfigurationException</span><span class="token punctuation">(</span><span class="token string">"Cannot support job type '%s'"</span><span class="token punctuation">,</span> <span class="token keyword">new</span> <span class="token class-name">Object</span><span class="token punctuation">[</span><span class="token punctuation">]</span><span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>elasticJob<span class="token punctuation">.</span><span class="token function">getClass</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">getCanonicalName</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+    <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+</code></pre>
+<p><code>Elastic-Job</code> 提供管理任务执行器的抽象类<code>AbstractElasticJobExecutor</code>, 核心动作在<code>execute()</code> 方法中执行. </p>
+<pre class=" language-java"><code class="language-java"><span class="token keyword">public</span> <span class="token keyword">final</span> <span class="token keyword">void</span> <span class="token function">execute</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+</code></pre>
+<p>调用了另一个<code>execute()</code> 方法, 122行</p>
+<pre class=" language-java"><code class="language-java"> <span class="token function">execute</span><span class="token punctuation">(</span>shardingContexts<span class="token punctuation">,</span> JobExecutionEvent<span class="token punctuation">.</span>ExecutionSource<span class="token punctuation">.</span>NORMAL_TRIGGER<span class="token punctuation">)</span><span class="token punctuation">;</span>
+</code></pre>
+<pre class=" language-java"><code class="language-java">    <span class="token keyword">private</span> <span class="token keyword">void</span> <span class="token function">execute</span><span class="token punctuation">(</span><span class="token keyword">final</span> ShardingContexts shardingContexts<span class="token punctuation">,</span> <span class="token keyword">final</span> JobExecutionEvent<span class="token punctuation">.</span>ExecutionSource executionSource<span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+        <span class="token keyword">if</span> <span class="token punctuation">(</span>shardingContexts<span class="token punctuation">.</span><span class="token function">getShardingItemParameters</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">isEmpty</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+            <span class="token keyword">if</span> <span class="token punctuation">(</span>shardingContexts<span class="token punctuation">.</span><span class="token function">isAllowSendJobEvent</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+                jobFacade<span class="token punctuation">.</span><span class="token function">postJobStatusTraceEvent</span><span class="token punctuation">(</span>shardingContexts<span class="token punctuation">.</span><span class="token function">getTaskId</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">,</span> State<span class="token punctuation">.</span>TASK_FINISHED<span class="token punctuation">,</span> String<span class="token punctuation">.</span><span class="token function">format</span><span class="token punctuation">(</span><span class="token string">"Sharding item for job '%s' is empty."</span><span class="token punctuation">,</span> jobName<span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+            <span class="token keyword">return</span><span class="token punctuation">;</span>
+        <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+        jobFacade<span class="token punctuation">.</span><span class="token function">registerJobBegin</span><span class="token punctuation">(</span>shardingContexts<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        String taskId <span class="token operator">=</span> shardingContexts<span class="token punctuation">.</span><span class="token function">getTaskId</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token keyword">if</span> <span class="token punctuation">(</span>shardingContexts<span class="token punctuation">.</span><span class="token function">isAllowSendJobEvent</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+            jobFacade<span class="token punctuation">.</span><span class="token function">postJobStatusTraceEvent</span><span class="token punctuation">(</span>taskId<span class="token punctuation">,</span> State<span class="token punctuation">.</span>TASK_RUNNING<span class="token punctuation">,</span> <span class="token string">""</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+        <span class="token keyword">try</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+            <span class="token function">process</span><span class="token punctuation">(</span>shardingContexts<span class="token punctuation">,</span> executionSource<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span> <span class="token keyword">finally</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+            <span class="token comment" spellcheck="true">// TODO 考虑增加作业失败的状态，并且考虑如何处理作业失败的整体回路</span>
+            jobFacade<span class="token punctuation">.</span><span class="token function">registerJobCompleted</span><span class="token punctuation">(</span>shardingContexts<span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <span class="token keyword">if</span> <span class="token punctuation">(</span>itemErrorMessages<span class="token punctuation">.</span><span class="token function">isEmpty</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+                <span class="token keyword">if</span> <span class="token punctuation">(</span>shardingContexts<span class="token punctuation">.</span><span class="token function">isAllowSendJobEvent</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+                    jobFacade<span class="token punctuation">.</span><span class="token function">postJobStatusTraceEvent</span><span class="token punctuation">(</span>taskId<span class="token punctuation">,</span> State<span class="token punctuation">.</span>TASK_FINISHED<span class="token punctuation">,</span> <span class="token string">""</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+                <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+            <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span> <span class="token keyword">else</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+                <span class="token keyword">if</span> <span class="token punctuation">(</span>shardingContexts<span class="token punctuation">.</span><span class="token function">isAllowSendJobEvent</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+                    jobFacade<span class="token punctuation">.</span><span class="token function">postJobStatusTraceEvent</span><span class="token punctuation">(</span>taskId<span class="token punctuation">,</span> State<span class="token punctuation">.</span>TASK_ERROR<span class="token punctuation">,</span> itemErrorMessages<span class="token punctuation">.</span><span class="token function">toString</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+                <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+            <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+        <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+    <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+</code></pre>
+<p>在这个<code>execute</code>方法中又调用了<code>com.dangdang.ddframe.job.executor.AbstractElasticJobExecutor#process(com.dangdang.ddframe.job.executor.ShardingContexts, com.dangdang.ddframe.job.event.type.JobExecutionEvent.ExecutionSource)</code>方法</p>
+<pre class=" language-java"><code class="language-java">
+    <span class="token keyword">private</span> <span class="token keyword">void</span> <span class="token function">process</span><span class="token punctuation">(</span><span class="token keyword">final</span> ShardingContexts shardingContexts<span class="token punctuation">,</span> <span class="token keyword">final</span> JobExecutionEvent<span class="token punctuation">.</span>ExecutionSource executionSource<span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+        Collection<span class="token operator">&lt;</span>Integer<span class="token operator">></span> items <span class="token operator">=</span> shardingContexts<span class="token punctuation">.</span><span class="token function">getShardingItemParameters</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">keySet</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token comment" spellcheck="true">// 当只有一个分片的时候, 直接执行</span>
+        <span class="token keyword">if</span> <span class="token punctuation">(</span><span class="token number">1</span> <span class="token operator">==</span> items<span class="token punctuation">.</span><span class="token function">size</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+            <span class="token keyword">int</span> item <span class="token operator">=</span> shardingContexts<span class="token punctuation">.</span><span class="token function">getShardingItemParameters</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">keySet</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">iterator</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">next</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+            JobExecutionEvent jobExecutionEvent <span class="token operator">=</span>  <span class="token keyword">new</span> <span class="token class-name">JobExecutionEvent</span><span class="token punctuation">(</span>shardingContexts<span class="token punctuation">.</span><span class="token function">getTaskId</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">,</span> jobName<span class="token punctuation">,</span> executionSource<span class="token punctuation">,</span> item<span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <span class="token function">process</span><span class="token punctuation">(</span>shardingContexts<span class="token punctuation">,</span> item<span class="token punctuation">,</span> jobExecutionEvent<span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <span class="token keyword">return</span><span class="token punctuation">;</span>
+        <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+        <span class="token keyword">final</span> CountDownLatch latch <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">CountDownLatch</span><span class="token punctuation">(</span>items<span class="token punctuation">.</span><span class="token function">size</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token comment" spellcheck="true">// 本节点遍历执行相应的分片信息</span>
+        <span class="token keyword">for</span> <span class="token punctuation">(</span><span class="token keyword">final</span> <span class="token keyword">int</span> each <span class="token operator">:</span> items<span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+            <span class="token keyword">final</span> JobExecutionEvent jobExecutionEvent <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">JobExecutionEvent</span><span class="token punctuation">(</span>shardingContexts<span class="token punctuation">.</span><span class="token function">getTaskId</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">,</span> jobName<span class="token punctuation">,</span> executionSource<span class="token punctuation">,</span> each<span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <span class="token keyword">if</span> <span class="token punctuation">(</span>executorService<span class="token punctuation">.</span><span class="token function">isShutdown</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+                <span class="token keyword">return</span><span class="token punctuation">;</span>
+            <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+            executorService<span class="token punctuation">.</span><span class="token function">submit</span><span class="token punctuation">(</span><span class="token keyword">new</span> <span class="token class-name">Runnable</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+                
+                <span class="token annotation punctuation">@Override</span>
+                <span class="token keyword">public</span> <span class="token keyword">void</span> <span class="token function">run</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+                    <span class="token keyword">try</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+                        <span class="token function">process</span><span class="token punctuation">(</span>shardingContexts<span class="token punctuation">,</span> each<span class="token punctuation">,</span> jobExecutionEvent<span class="token punctuation">)</span><span class="token punctuation">;</span>
+                    <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span> <span class="token keyword">finally</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+                        latch<span class="token punctuation">.</span><span class="token function">countDown</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+                    <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+                <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+            <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+        <span class="token keyword">try</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+            <span class="token comment" spellcheck="true">// 等待所有的分片项任务执行完毕</span>
+            latch<span class="token punctuation">.</span><span class="token function">await</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span> <span class="token keyword">catch</span> <span class="token punctuation">(</span><span class="token class-name">final</span> InterruptedException ex<span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+            Thread<span class="token punctuation">.</span><span class="token function">currentThread</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">interrupt</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+    <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+    
+</code></pre>
+<p>里面又调用了一个<code>com.dangdang.ddframe.job.executor.AbstractElasticJobExecutor#process(com.dangdang.ddframe.job.executor.ShardingContexts, int, com.dangdang.ddframe.job.event.type.JobExecutionEvent)</code> 方法</p>
+<pre class=" language-java"><code class="language-java"><span class="token keyword">private</span> <span class="token keyword">void</span> <span class="token function">process</span><span class="token punctuation">(</span><span class="token keyword">final</span> ShardingContexts shardingContexts<span class="token punctuation">,</span> <span class="token keyword">final</span> <span class="token keyword">int</span> item<span class="token punctuation">,</span> <span class="token keyword">final</span> JobExecutionEvent startEvent<span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+        <span class="token keyword">if</span> <span class="token punctuation">(</span>shardingContexts<span class="token punctuation">.</span><span class="token function">isAllowSendJobEvent</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+            jobFacade<span class="token punctuation">.</span><span class="token function">postJobExecutionEvent</span><span class="token punctuation">(</span>startEvent<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+        log<span class="token punctuation">.</span><span class="token function">trace</span><span class="token punctuation">(</span><span class="token string">"Job '&amp;#123;&amp;#125;' executing, item is: '&amp;#123;&amp;#125;'."</span><span class="token punctuation">,</span> jobName<span class="token punctuation">,</span> item<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        JobExecutionEvent completeEvent<span class="token punctuation">;</span>
+        <span class="token keyword">try</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+            <span class="token function">process</span><span class="token punctuation">(</span><span class="token keyword">new</span> <span class="token class-name">ShardingContext</span><span class="token punctuation">(</span>shardingContexts<span class="token punctuation">,</span> item<span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+            completeEvent <span class="token operator">=</span> startEvent<span class="token punctuation">.</span><span class="token function">executionSuccess</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+            log<span class="token punctuation">.</span><span class="token function">trace</span><span class="token punctuation">(</span><span class="token string">"Job '&amp;#123;&amp;#125;' executed, item is: '&amp;#123;&amp;#125;'."</span><span class="token punctuation">,</span> jobName<span class="token punctuation">,</span> item<span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <span class="token keyword">if</span> <span class="token punctuation">(</span>shardingContexts<span class="token punctuation">.</span><span class="token function">isAllowSendJobEvent</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+                jobFacade<span class="token punctuation">.</span><span class="token function">postJobExecutionEvent</span><span class="token punctuation">(</span>completeEvent<span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+            <span class="token comment" spellcheck="true">// CHECKSTYLE:OFF</span>
+        <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span> <span class="token keyword">catch</span> <span class="token punctuation">(</span><span class="token class-name">final</span> Throwable cause<span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+            <span class="token comment" spellcheck="true">// CHECKSTYLE:ON</span>
+            completeEvent <span class="token operator">=</span> startEvent<span class="token punctuation">.</span><span class="token function">executionFailure</span><span class="token punctuation">(</span>cause<span class="token punctuation">)</span><span class="token punctuation">;</span>
+            jobFacade<span class="token punctuation">.</span><span class="token function">postJobExecutionEvent</span><span class="token punctuation">(</span>completeEvent<span class="token punctuation">)</span><span class="token punctuation">;</span>
+            itemErrorMessages<span class="token punctuation">.</span><span class="token function">put</span><span class="token punctuation">(</span>item<span class="token punctuation">,</span> ExceptionUtil<span class="token punctuation">.</span><span class="token function">transform</span><span class="token punctuation">(</span>cause<span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+            jobExceptionHandler<span class="token punctuation">.</span><span class="token function">handleException</span><span class="token punctuation">(</span>jobName<span class="token punctuation">,</span> cause<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+    <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+    
+</code></pre>
+<p>然后调用了一个抽象的<code>com.dangdang.ddframe.job.executor.AbstractElasticJobExecutor#process(com.dangdang.ddframe.job.api.ShardingContext)</code> 方法</p>
+<pre class=" language-java"><code class="language-java"> <span class="token keyword">protected</span> <span class="token keyword">abstract</span> <span class="token keyword">void</span> <span class="token function">process</span><span class="token punctuation">(</span>ShardingContext shardingContext<span class="token punctuation">)</span><span class="token punctuation">;</span>
+</code></pre>
+<p>交给具体的实现类（<code>SimpleJobExecutor</code>、<code>DataflowJobExecutor</code>、 <code>ScriptJobExecutor</code>） 去处理</p>
+<p>最终调用到任务类</p>
+<pre class=" language-java"><code class="language-java">   <span class="token annotation punctuation">@Override</span>
+    <span class="token keyword">protected</span> <span class="token keyword">void</span> <span class="token function">process</span><span class="token punctuation">(</span><span class="token keyword">final</span> ShardingContext shardingContext<span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+        simpleJob<span class="token punctuation">.</span><span class="token function">execute</span><span class="token punctuation">(</span>shardingContext<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+</code></pre>
+<pre class=" language-java"><code class="language-java"><span class="token keyword">public</span> <span class="token keyword">class</span> <span class="token class-name">MySimpleJob</span> <span class="token keyword">implements</span> <span class="token class-name">SimpleJob</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+
+
+    <span class="token annotation punctuation">@Override</span>
+    <span class="token keyword">public</span> <span class="token keyword">void</span> <span class="token function">execute</span><span class="token punctuation">(</span>ShardingContext shardingContext<span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+        System<span class="token punctuation">.</span>out<span class="token punctuation">.</span><span class="token function">println</span><span class="token punctuation">(</span>String<span class="token punctuation">.</span><span class="token function">format</span><span class="token punctuation">(</span><span class="token string">"分片项 ShardingItem: %s | 运行时间: %s | 线程ID: %s | 分片参数: %s "</span><span class="token punctuation">,</span>
+                shardingContext<span class="token punctuation">.</span><span class="token function">getShardingItem</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">,</span> <span class="token keyword">new</span> <span class="token class-name">SimpleDateFormat</span><span class="token punctuation">(</span><span class="token string">"HH:mm:ss"</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">format</span><span class="token punctuation">(</span><span class="token keyword">new</span> <span class="token class-name">Date</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">,</span>
+                Thread<span class="token punctuation">.</span><span class="token function">currentThread</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">getId</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">,</span> shardingContext<span class="token punctuation">.</span><span class="token function">getShardingParameter</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+<span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+</code></pre>
+<h3 id="5-3-失效转移"><a href="#5-3-失效转移" class="headerlink" title="5.3  失效转移"></a>5.3  失效转移</h3><p>所谓的失效转移,就是在执行任务的过程中发生了异常,这个分片任务可以在其他节点再次执行,</p>
+<pre class=" language-java"><code class="language-java"> <span class="token comment" spellcheck="true">// 定义作业核心配置</span>
+        JobCoreConfiguration coreConfiguration <span class="token operator">=</span> JobCoreConfiguration<span class="token punctuation">.</span><span class="token function">newBuilder</span><span class="token punctuation">(</span>MySimpleJob<span class="token punctuation">.</span><span class="token keyword">class</span><span class="token punctuation">.</span><span class="token function">getSimpleName</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">,</span>
+                <span class="token string">"0/2 * * * * ?"</span><span class="token punctuation">,</span> <span class="token number">4</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">shardingItemParameters</span><span class="token punctuation">(</span><span class="token string">"0=RDP, 1=CORE, 2=SIMS, 3=ECIF"</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">failover</span><span class="token punctuation">(</span><span class="token boolean">true</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">build</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+</code></pre>
+<p><code>FailoverListenerManager</code> 监听的是zl的<code>instance</code>节点删除事件,如果任务配置了<code>fairover</code>等于<code>true</code>,其中某个<code>instance</code> 与zk 失去联系或者被删除,并且失效的节点又不是本身, 就会触发是失效转移逻辑. </p>
+<p><code>Job</code>的失效转移监听来源于<code>FailoverListenerManager</code>的内部类,<code>JobCrashedJobListener</code> 的 <code>dataChanged</code> 方法</p>
+<p>当节点任务失效后会调用<code>JobCrashedJobListener</code> 监听器,此监听器会根据实例id 获取所有的分片, 然后调用<code>FailoverService</code> 的 <code>setCrashedFailoverFlag</code> 方法, 将每个分片id 写到<code>到/jobName/leader/failover/items</code>, 假如原来的实例负责1、2分片项, 那<code>items</code> 节点就会写入1、2, 代表这两个分片项需要失效转移. </p>
+<pre class=" language-java"><code class="language-java"> <span class="token annotation punctuation">@Override</span>
+        <span class="token keyword">protected</span> <span class="token keyword">void</span> <span class="token function">dataChanged</span><span class="token punctuation">(</span><span class="token keyword">final</span> String path<span class="token punctuation">,</span> <span class="token keyword">final</span> Type eventType<span class="token punctuation">,</span> <span class="token keyword">final</span> String data<span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+            <span class="token keyword">if</span> <span class="token punctuation">(</span><span class="token function">isFailoverEnabled</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">&amp;&amp;</span> Type<span class="token punctuation">.</span>NODE_REMOVED <span class="token operator">==</span> eventType <span class="token operator">&amp;&amp;</span> instanceNode<span class="token punctuation">.</span><span class="token function">isInstancePath</span><span class="token punctuation">(</span>path<span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+                String jobInstanceId <span class="token operator">=</span> path<span class="token punctuation">.</span><span class="token function">substring</span><span class="token punctuation">(</span>instanceNode<span class="token punctuation">.</span><span class="token function">getInstanceFullPath</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">length</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">+</span> <span class="token number">1</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+                <span class="token keyword">if</span> <span class="token punctuation">(</span>jobInstanceId<span class="token punctuation">.</span><span class="token function">equals</span><span class="token punctuation">(</span>JobRegistry<span class="token punctuation">.</span><span class="token function">getInstance</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">getJobInstance</span><span class="token punctuation">(</span>jobName<span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">getJobInstanceId</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+                    <span class="token keyword">return</span><span class="token punctuation">;</span>
+                <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+                List<span class="token operator">&lt;</span>Integer<span class="token operator">></span> failoverItems <span class="token operator">=</span> failoverService<span class="token punctuation">.</span><span class="token function">getFailoverItems</span><span class="token punctuation">(</span>jobInstanceId<span class="token punctuation">)</span><span class="token punctuation">;</span>
+                <span class="token keyword">if</span> <span class="token punctuation">(</span><span class="token operator">!</span>failoverItems<span class="token punctuation">.</span><span class="token function">isEmpty</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+                    <span class="token keyword">for</span> <span class="token punctuation">(</span><span class="token keyword">int</span> each <span class="token operator">:</span> failoverItems<span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+                        <span class="token comment" spellcheck="true">// 设置失效的分片项标记</span>
+                        failoverService<span class="token punctuation">.</span><span class="token function">setCrashedFailoverFlag</span><span class="token punctuation">(</span>each<span class="token punctuation">)</span><span class="token punctuation">;</span>
+                        failoverService<span class="token punctuation">.</span><span class="token function">failoverIfNecessary</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+                    <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+                <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span> <span class="token keyword">else</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+                    <span class="token keyword">for</span> <span class="token punctuation">(</span><span class="token keyword">int</span> each <span class="token operator">:</span> shardingService<span class="token punctuation">.</span><span class="token function">getShardingItems</span><span class="token punctuation">(</span>jobInstanceId<span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+                        failoverService<span class="token punctuation">.</span><span class="token function">setCrashedFailoverFlag</span><span class="token punctuation">(</span>each<span class="token punctuation">)</span><span class="token punctuation">;</span>
+                        failoverService<span class="token punctuation">.</span><span class="token function">failoverIfNecessary</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+                    <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+                <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+            <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+        <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+</code></pre>
+<p>然后接下来调用<code>FailoverService</code> 的 <code>failoverIfNessary</code>方法, 首先判断是否需要失效转移,如果可以需要则只需要作业失败转移. </p>
+<pre class=" language-java"><code class="language-java">    <span class="token comment" spellcheck="true">/**
+     * 如果需要失效转移, 则执行作业失效转移.
+     */</span>
+    <span class="token keyword">public</span> <span class="token keyword">void</span> <span class="token function">failoverIfNecessary</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+        <span class="token keyword">if</span> <span class="token punctuation">(</span><span class="token function">needFailover</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+            jobNodeStorage<span class="token punctuation">.</span><span class="token function">executeInLeader</span><span class="token punctuation">(</span>FailoverNode<span class="token punctuation">.</span>LATCH<span class="token punctuation">,</span> <span class="token keyword">new</span> <span class="token class-name">FailoverLeaderExecutionCallback</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+    <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+</code></pre>
+<p>条件一： <code>$&#123;JOB_NAME&#125;/leader/failover/items/$&#123;ITEM_ID&#125;</code> 有失效转移的作业分片</p>
+<p>条件二: 当前作业不再运行中</p>
+<pre class=" language-java"><code class="language-java"> <span class="token keyword">private</span> <span class="token keyword">boolean</span> <span class="token function">needFailover</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+        <span class="token keyword">return</span> jobNodeStorage<span class="token punctuation">.</span><span class="token function">isJobNodeExisted</span><span class="token punctuation">(</span>FailoverNode<span class="token punctuation">.</span>ITEMS_ROOT<span class="token punctuation">)</span> <span class="token operator">&amp;&amp;</span> <span class="token operator">!</span>jobNodeStorage<span class="token punctuation">.</span><span class="token function">getJobNodeChildrenKeys</span><span class="token punctuation">(</span>FailoverNode<span class="token punctuation">.</span>ITEMS_ROOT<span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">isEmpty</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+                <span class="token operator">&amp;&amp;</span> <span class="token operator">!</span>JobRegistry<span class="token punctuation">.</span><span class="token function">getInstance</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">isJobRunning</span><span class="token punctuation">(</span>jobName<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+</code></pre>
+<p>在主节点执行操作</p>
+<pre class=" language-java"><code class="language-java"> <span class="token comment" spellcheck="true">/**
+     * 在主节点执行操作.
+     * 
+     * @param latchNode 分布式锁使用的作业节点名称
+     * @param callback 执行操作的回调
+     */</span>
+    <span class="token keyword">public</span> <span class="token keyword">void</span> <span class="token function">executeInLeader</span><span class="token punctuation">(</span><span class="token keyword">final</span> String latchNode<span class="token punctuation">,</span> <span class="token keyword">final</span> LeaderExecutionCallback callback<span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+        <span class="token keyword">try</span> <span class="token punctuation">(</span>LeaderLatch latch <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">LeaderLatch</span><span class="token punctuation">(</span><span class="token function">getClient</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">,</span> jobNodePath<span class="token punctuation">.</span><span class="token function">getFullPath</span><span class="token punctuation">(</span>latchNode<span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+            latch<span class="token punctuation">.</span><span class="token function">start</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+            latch<span class="token punctuation">.</span><span class="token function">await</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+            callback<span class="token punctuation">.</span><span class="token function">execute</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token comment" spellcheck="true">//CHECKSTYLE:OFF</span>
+        <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span> <span class="token keyword">catch</span> <span class="token punctuation">(</span><span class="token class-name">final</span> Exception ex<span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+        <span class="token comment" spellcheck="true">//CHECKSTYLE:ON</span>
+            <span class="token function">handleException</span><span class="token punctuation">(</span>ex<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+    <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+</code></pre>
+<ol>
+<li>再次判断是否需要失效转移</li>
+<li>从注册中心获取一个<code>$&#123;JOB_NAME&#125;/leader/failover/items/$&#123;ITEM_ID&#125;</code> 作业分片项</li>
+<li>在注册中心节点<code>$&#123;JOB_NAME&#125;/sharding/$&#123;ITEM_ID&#125;/failover</code> 注册作业分片项为当前作业节点</li>
+<li>然后移除任务转移分片项</li>
+<li>最后调用执行, 提交任务</li>
+</ol>
+<pre class=" language-java"><code class="language-java">    <span class="token keyword">class</span> <span class="token class-name">FailoverLeaderExecutionCallback</span> <span class="token keyword">implements</span> <span class="token class-name">LeaderExecutionCallback</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+        
+        <span class="token annotation punctuation">@Override</span>
+        <span class="token keyword">public</span> <span class="token keyword">void</span> <span class="token function">execute</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+            <span class="token comment" spellcheck="true">// 判断是否需要失效转悠</span>
+            <span class="token keyword">if</span> <span class="token punctuation">(</span>JobRegistry<span class="token punctuation">.</span><span class="token function">getInstance</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">isShutdown</span><span class="token punctuation">(</span>jobName<span class="token punctuation">)</span> <span class="token operator">||</span> <span class="token operator">!</span><span class="token function">needFailover</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+                <span class="token keyword">return</span><span class="token punctuation">;</span>
+            <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+            <span class="token comment" spellcheck="true">// 从$&amp;#123;JOB_NAME&amp;#125;/leader/failover/items/$&amp;#123;ITEM_ID&amp;#125;获得一个分片项</span>
+            <span class="token keyword">int</span> crashedItem <span class="token operator">=</span> Integer<span class="token punctuation">.</span><span class="token function">parseInt</span><span class="token punctuation">(</span>jobNodeStorage<span class="token punctuation">.</span><span class="token function">getJobNodeChildrenKeys</span><span class="token punctuation">(</span>FailoverNode<span class="token punctuation">.</span>ITEMS_ROOT<span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">get</span><span class="token punctuation">(</span><span class="token number">0</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+            log<span class="token punctuation">.</span><span class="token function">debug</span><span class="token punctuation">(</span><span class="token string">"Failover job '&amp;#123;&amp;#125;' begin, crashed item '&amp;#123;&amp;#125;'"</span><span class="token punctuation">,</span> jobName<span class="token punctuation">,</span> crashedItem<span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <span class="token comment" spellcheck="true">// 在注册中心节点`$&amp;#123;JOB_NAME&amp;#125;/sharding/$&amp;#123;ITEM_ID&amp;#125;/failover`注册作业分片项为当前作业节点</span>
+            jobNodeStorage<span class="token punctuation">.</span><span class="token function">fillEphemeralJobNode</span><span class="token punctuation">(</span>FailoverNode<span class="token punctuation">.</span><span class="token function">getExecutionFailoverNode</span><span class="token punctuation">(</span>crashedItem<span class="token punctuation">)</span><span class="token punctuation">,</span> JobRegistry<span class="token punctuation">.</span><span class="token function">getInstance</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">getJobInstance</span><span class="token punctuation">(</span>jobName<span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">getJobInstanceId</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <span class="token comment" spellcheck="true">// 移除任务转移分片项</span>
+            jobNodeStorage<span class="token punctuation">.</span><span class="token function">removeJobNodeIfExisted</span><span class="token punctuation">(</span>FailoverNode<span class="token punctuation">.</span><span class="token function">getItemsNode</span><span class="token punctuation">(</span>crashedItem<span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <span class="token comment" spellcheck="true">// TODO 不应使用triggerJob, 而是使用executor统一调度</span>
+            JobScheduleController jobScheduleController <span class="token operator">=</span> JobRegistry<span class="token punctuation">.</span><span class="token function">getInstance</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">getJobScheduleController</span><span class="token punctuation">(</span>jobName<span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <span class="token keyword">if</span> <span class="token punctuation">(</span>null <span class="token operator">!=</span> jobScheduleController<span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+                <span class="token comment" spellcheck="true">//  提交任务</span>
+                jobScheduleController<span class="token punctuation">.</span><span class="token function">triggerJob</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+        <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+    <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+</code></pre>
+<p>这里仅仅是触发作业，而不是立即执行. </p>
+
+                
+            </div>
+            <hr/>
+
+            
+
+    <div class="reprint" id="reprint-statement">
+        
+            <div class="reprint__author">
+                <span class="reprint-meta" style="font-weight: bold;">
+                    <i class="fas fa-user">
+                        文章作者:
+                    </i>
+                </span>
+                <span class="reprint-info">
+                    <a href="/about" rel="external nofollow noreferrer">luyanan</a>
+                </span>
+            </div>
+            <div class="reprint__type">
+                <span class="reprint-meta" style="font-weight: bold;">
+                    <i class="fas fa-link">
+                        文章链接:
+                    </i>
+                </span>
+                <span class="reprint-info">
+                    <a href="https://rainsoil.github.io/2022/01/04/ren-wu-diao-du/ren-wu-diao-du-zhi-eliastic-job/">https://rainsoil.github.io/2022/01/04/ren-wu-diao-du/ren-wu-diao-du-zhi-eliastic-job/</a>
+                </span>
+            </div>
+            <div class="reprint__notice">
+                <span class="reprint-meta" style="font-weight: bold;">
+                    <i class="fas fa-copyright">
+                        版权声明:
+                    </i>
+                </span>
+                <span class="reprint-info">
+                    本博客所有文章除特別声明外，均采用
+                    <a href="https://creativecommons.org/licenses/by/4.0/deed.zh" rel="external nofollow noreferrer" target="_blank">CC BY 4.0</a>
+                    许可协议。转载请注明来源
+                    <a href="/about" target="_blank">luyanan</a>
+                    !
+                </span>
+            </div>
+        
+    </div>
+
+    <script async defer>
+      document.addEventListener("copy", function (e) {
+        let toastHTML = '<span>复制成功，请遵循本文的转载规则</span><button class="btn-flat toast-action" onclick="navToReprintStatement()" style="font-size: smaller">查看</a>';
+        M.toast({html: toastHTML})
+      });
+
+      function navToReprintStatement() {
+        $("html, body").animate({scrollTop: $("#reprint-statement").offset().top - 80}, 800);
+      }
+    </script>
+
+
+
+            <div class="tag_share" style="display: block;">
+                <div class="post-meta__tag-list" style="display: inline-block;">
+                    
+                        <div class="article-tag">
+                            <span class="chip bg-color">无标签</span>
+                        </div>
+                    
+                </div>
+                <div class="post_share" style="zoom: 80%; width: fit-content; display: inline-block; float: right; margin: -0.15rem 0;">
+                    <link rel="stylesheet" type="text/css" href="/libs/share/css/share.min.css">
+<div id="article-share">
+
+    
+    <div class="social-share" data-sites="twitter,facebook,google,qq,qzone,wechat,weibo,douban,linkedin" data-wechat-qrcode-helper="<p>微信扫一扫即可分享！</p>"></div>
+    <script src="/libs/share/js/social-share.min.js"></script>
+    
+
+    
+
+</div>
+
+                </div>
+            </div>
+            
+        </div>
+    </div>
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+<article id="prenext-posts" class="prev-next articles">
+    <div class="row article-row">
+        
+        <div class="article col s12 m6" data-aos="fade-up">
+            <div class="article-badge left-badge text-color">
+                <i class="fas fa-chevron-left"></i>&nbsp;上一篇</div>
+            <div class="card">
+                <a href="/2022/01/04/an-zhuang/docker-compose-de-ji-ben-ming-ling/">
+                    <div class="card-image">
+                        
+                        
+                        <img src="/medias/featureimages/0.jpg" class="responsive-img" alt="Docker-Compose的基本命令">
+                        
+                        <span class="card-title">Docker-Compose的基本命令</span>
+                    </div>
+                </a>
+                <div class="card-content article-content">
+                    <div class="summary block-with-text">
+                        
+                            
+                        
+                    </div>
+                    <div class="publish-info">
+                        <span class="publish-date">
+                            <i class="far fa-clock fa-fw icon-date"></i>2022-01-04
+                        </span>
+                        <span class="publish-author">
+                            
+                            <i class="fas fa-bookmark fa-fw icon-category"></i>
+                            
+                            <a href="/categories/%E5%AE%89%E8%A3%85/" class="post-category">
+                                    安装
+                                </a>
+                            
+                            <a href="/categories/%E5%AE%89%E8%A3%85/%E5%AE%89%E8%A3%85/" class="post-category">
+                                    安装
+                                </a>
+                            
+                            
+                        </span>
+                    </div>
+                </div>
+                
+            </div>
+        </div>
+        
+        
+        <div class="article col s12 m6" data-aos="fade-up">
+            <div class="article-badge right-badge text-color">
+                下一篇&nbsp;<i class="fas fa-chevron-right"></i>
+            </div>
+            <div class="card">
+                <a href="/2022/01/04/fen-bu-shi/2.fen-bu-shi-jia-gou-ji-chu/ji-yu-socket-shou-xie-yi-ge-rpc-kuang-jia/">
+                    <div class="card-image">
+                        
+                        
+                        <img src="/medias/featureimages/2.jpg" class="responsive-img" alt="基于Socket手写一个RPC框架">
+                        
+                        <span class="card-title">基于Socket手写一个RPC框架</span>
+                    </div>
+                </a>
+                <div class="card-content article-content">
+                    <div class="summary block-with-text">
+                        
+                            
+                        
+                    </div>
+                    <div class="publish-info">
+                            <span class="publish-date">
+                                <i class="far fa-clock fa-fw icon-date"></i>2022-01-04
+                            </span>
+                        <span class="publish-author">
+                            
+                            <i class="fas fa-bookmark fa-fw icon-category"></i>
+                            
+                            <a href="/categories/2-%E5%88%86%E5%B8%83%E5%BC%8F%E6%9E%B6%E6%9E%84%E5%9F%BA%E7%A1%80/" class="post-category">
+                                    2. 分布式架构基础
+                                </a>
+                            
+                            <a href="/categories/2-%E5%88%86%E5%B8%83%E5%BC%8F%E6%9E%B6%E6%9E%84%E5%9F%BA%E7%A1%80/%E5%88%86%E5%B8%83%E5%BC%8F/" class="post-category">
+                                    分布式
+                                </a>
+                            
+                            <a href="/categories/2-%E5%88%86%E5%B8%83%E5%BC%8F%E6%9E%B6%E6%9E%84%E5%9F%BA%E7%A1%80/%E5%88%86%E5%B8%83%E5%BC%8F/%E5%88%86%E5%B8%83%E5%BC%8F/" class="post-category">
+                                    分布式
+                                </a>
+                            
+                            <a href="/categories/2-%E5%88%86%E5%B8%83%E5%BC%8F%E6%9E%B6%E6%9E%84%E5%9F%BA%E7%A1%80/%E5%88%86%E5%B8%83%E5%BC%8F/%E5%88%86%E5%B8%83%E5%BC%8F/2-%E5%88%86%E5%B8%83%E5%BC%8F%E6%9E%B6%E6%9E%84%E5%9F%BA%E7%A1%80/" class="post-category">
+                                    2. 分布式架构基础
+                                </a>
+                            
+                            
+                        </span>
+                    </div>
+                </div>
+                
+            </div>
+        </div>
+        
+    </div>
+</article>
+
+</div>
+
+
+
+<!-- 代码块功能依赖 -->
+<script type="text/javascript" src="/libs/codeBlock/codeBlockFuction.js"></script>
+
+<!-- 代码语言 -->
+
+<script type="text/javascript" src="/libs/codeBlock/codeLang.js"></script>
+
+
+<!-- 代码块复制 -->
+
+<script type="text/javascript" src="/libs/codeBlock/codeCopy.js"></script>
+
+
+<!-- 代码块收缩 -->
+
+<script type="text/javascript" src="/libs/codeBlock/codeShrink.js"></script>
+
+
+    </div>
+    <div id="toc-aside" class="expanded col l3 hide-on-med-and-down">
+        <div class="toc-widget card" style="background-color: white;">
+            <div class="toc-title"><i class="far fa-list-alt"></i>&nbsp;&nbsp;目录</div>
+            <div id="toc-content"></div>
+        </div>
+    </div>
+</div>
+
+<!-- TOC 悬浮按钮. -->
+
+<div id="floating-toc-btn" class="hide-on-med-and-down">
+    <a class="btn-floating btn-large bg-color">
+        <i class="fas fa-list-ul"></i>
+    </a>
+</div>
+
+
+<script src="/libs/tocbot/tocbot.min.js"></script>
+<script>
+    $(function () {
+        tocbot.init({
+            tocSelector: '#toc-content',
+            contentSelector: '#articleContent',
+            headingsOffset: -($(window).height() * 0.4 - 45),
+            collapseDepth: Number('0'),
+            headingSelector: 'h2, h3, h4'
+        });
+
+        // modify the toc link href to support Chinese.
+        let i = 0;
+        let tocHeading = 'toc-heading-';
+        $('#toc-content a').each(function () {
+            $(this).attr('href', '#' + tocHeading + (++i));
+        });
+
+        // modify the heading title id to support Chinese.
+        i = 0;
+        $('#articleContent').children('h2, h3, h4').each(function () {
+            $(this).attr('id', tocHeading + (++i));
+        });
+
+        // Set scroll toc fixed.
+        let tocHeight = parseInt($(window).height() * 0.4 - 64);
+        let $tocWidget = $('.toc-widget');
+        $(window).scroll(function () {
+            let scroll = $(window).scrollTop();
+            /* add post toc fixed. */
+            if (scroll > tocHeight) {
+                $tocWidget.addClass('toc-fixed');
+            } else {
+                $tocWidget.removeClass('toc-fixed');
+            }
+        });
+
+        
+        /* 修复文章卡片 div 的宽度. */
+        let fixPostCardWidth = function (srcId, targetId) {
+            let srcDiv = $('#' + srcId);
+            if (srcDiv.length === 0) {
+                return;
+            }
+
+            let w = srcDiv.width();
+            if (w >= 450) {
+                w = w + 21;
+            } else if (w >= 350 && w < 450) {
+                w = w + 18;
+            } else if (w >= 300 && w < 350) {
+                w = w + 16;
+            } else {
+                w = w + 14;
+            }
+            $('#' + targetId).width(w);
+        };
+
+        // 切换TOC目录展开收缩的相关操作.
+        const expandedClass = 'expanded';
+        let $tocAside = $('#toc-aside');
+        let $mainContent = $('#main-content');
+        $('#floating-toc-btn .btn-floating').click(function () {
+            if ($tocAside.hasClass(expandedClass)) {
+                $tocAside.removeClass(expandedClass).hide();
+                $mainContent.removeClass('l9');
+            } else {
+                $tocAside.addClass(expandedClass).show();
+                $mainContent.addClass('l9');
+            }
+            fixPostCardWidth('artDetail', 'prenext-posts');
+        });
+        
+    });
+</script>
+
+    
+
+</main>
+
+
+
+
+    <footer class="page-footer bg-color">
+    
+        <link rel="stylesheet" href="/libs/aplayer/APlayer.min.css">
+<style>
+    .aplayer .aplayer-lrc p {
+        
+        display: none;
+        
+        font-size: 12px;
+        font-weight: 700;
+        line-height: 16px !important;
+    }
+
+    .aplayer .aplayer-lrc p.aplayer-lrc-current {
+        
+        display: none;
+        
+        font-size: 15px;
+        color: #42b983;
+    }
+
+    
+    .aplayer.aplayer-fixed.aplayer-narrow .aplayer-body {
+        left: -66px !important;
+    }
+
+    .aplayer.aplayer-fixed.aplayer-narrow .aplayer-body:hover {
+        left: 0px !important;
+    }
+
+    
+</style>
+<div class="">
+    
+    <div class="row">
+        <meting-js class="col l8 offset-l2 m10 offset-m1 s12"
+                   server="netease"
+                   type="playlist"
+                   id="503838841"
+                   fixed='true'
+                   autoplay='false'
+                   theme='#42b983'
+                   loop='all'
+                   order='random'
+                   preload='auto'
+                   volume='0.7'
+                   list-folded='true'
+        >
+        </meting-js>
+    </div>
+</div>
+
+<script src="/libs/aplayer/APlayer.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/meting@2/dist/Meting.min.js"></script>
+
+    
+
+    <div class="container row center-align"
+         style="margin-bottom: 0px !important;">
+        <div class="col s12 m8 l8 copy-right">
+            Copyright&nbsp;&copy;
+            
+                <span id="year">2019-2022</span>
+            
+            <a href="/about" target="_blank">luyanan</a>
+            |&nbsp;Powered by&nbsp;<a href="https://hexo.io/" target="_blank">Hexo</a>
+            |&nbsp;Theme&nbsp;<a href="https://github.com/blinkfox/hexo-theme-matery" target="_blank">Matery</a>
+            <br>
+            
+                &nbsp;<i class="fas fa-chart-area"></i>&nbsp;站点总字数:&nbsp;<span
+                        class="white-color">803.3k</span>
+            
+            
+            
+                
+            
+            
+                <span id="busuanzi_container_site_pv">
+                &nbsp;|&nbsp;<i class="far fa-eye"></i>&nbsp;总访问量:&nbsp;
+                    <span id="busuanzi_value_site_pv" class="white-color"></span>
+            </span>
+            
+            
+                <span id="busuanzi_container_site_uv">
+                &nbsp;|&nbsp;<i class="fas fa-users"></i>&nbsp;总访问人数:&nbsp;
+                    <span id="busuanzi_value_site_uv" class="white-color"></span>
+            </span>
+            
+            <br>
+
+            <!-- 运行天数提醒. -->
+            
+            <br>
+            
+        </div>
+        <div class="col s12 m4 l4 social-link social-statis">
+    <a href="https://github.com/rainsoil" class="tooltipped" target="_blank" data-tooltip="访问我的GitHub" data-position="top" data-delay="50">
+        <i class="fab fa-github"></i>
+    </a>
+
+
+
+    <a href="mailto:luyanan0718@163.com" class="tooltipped" target="_blank" data-tooltip="邮件联系我" data-position="top" data-delay="50">
+        <i class="fas fa-envelope-open"></i>
+    </a>
+
+
+
+
+
+
+
+    <a href="tencent://AddContact/?fromId=50&fromSubId=1&subcmd=all&uin=914596513" class="tooltipped" target="_blank" data-tooltip="QQ联系我: 914596513" data-position="top" data-delay="50">
+        <i class="fab fa-qq"></i>
+    </a>
+
+
+
+
+
+
+
+    <a href="/atom.xml" class="tooltipped" target="_blank" data-tooltip="RSS 订阅" data-position="top" data-delay="50">
+        <i class="fas fa-rss"></i>
+    </a>
+
+</div>
+    </div>
+</footer>
+
+<div class="progress-bar"></div>
+
+
+    <!-- 搜索遮罩框 -->
+<div id="searchModal" class="modal">
+    <div class="modal-content">
+        <div class="search-header">
+            <span class="title"><i class="fas fa-search"></i>&nbsp;&nbsp;搜索</span>
+            <input type="search" id="searchInput" name="s" placeholder="请输入搜索的关键字"
+                   class="search-input">
+        </div>
+        <div id="searchResult"></div>
+    </div>
+</div>
+
+<script type="text/javascript">
+$(function () {
+    var searchFunc = function (path, search_id, content_id) {
+        'use strict';
+        $.ajax({
+            url: path,
+            dataType: "xml",
+            success: function (xmlResponse) {
+                // get the contents from search data
+                var datas = $("entry", xmlResponse).map(function () {
+                    return {
+                        title: $("title", this).text(),
+                        content: $("content", this).text(),
+                        url: $("url", this).text()
+                    };
+                }).get();
+                var $input = document.getElementById(search_id);
+                var $resultContent = document.getElementById(content_id);
+                $input.addEventListener('input', function () {
+                    var str = '<ul class=\"search-result-list\">';
+                    var keywords = this.value.trim().toLowerCase().split(/[\s\-]+/);
+                    $resultContent.innerHTML = "";
+                    if (this.value.trim().length <= 0) {
+                        return;
+                    }
+                    // perform local searching
+                    datas.forEach(function (data) {
+                        var isMatch = true;
+                        var data_title = data.title.trim().toLowerCase();
+                        var data_content = data.content.trim().replace(/<[^>]+>/g, "").toLowerCase();
+                        var data_url = data.url;
+                        data_url = data_url.indexOf('/') === 0 ? data.url : '/' + data_url;
+                        var index_title = -1;
+                        var index_content = -1;
+                        var first_occur = -1;
+                        // only match artiles with not empty titles and contents
+                        if (data_title !== '' && data_content !== '') {
+                            keywords.forEach(function (keyword, i) {
+                                index_title = data_title.indexOf(keyword);
+                                index_content = data_content.indexOf(keyword);
+                                if (index_title < 0 && index_content < 0) {
+                                    isMatch = false;
+                                } else {
+                                    if (index_content < 0) {
+                                        index_content = 0;
+                                    }
+                                    if (i === 0) {
+                                        first_occur = index_content;
+                                    }
+                                }
+                            });
+                        }
+                        // show search results
+                        if (isMatch) {
+                            str += "<li><a href='" + data_url + "' class='search-result-title'>" + data_title + "</a>";
+                            var content = data.content.trim().replace(/<[^>]+>/g, "");
+                            if (first_occur >= 0) {
+                                // cut out 100 characters
+                                var start = first_occur - 20;
+                                var end = first_occur + 80;
+                                if (start < 0) {
+                                    start = 0;
+                                }
+                                if (start === 0) {
+                                    end = 100;
+                                }
+                                if (end > content.length) {
+                                    end = content.length;
+                                }
+                                var match_content = content.substr(start, end);
+                                // highlight all keywords
+                                keywords.forEach(function (keyword) {
+                                    var regS = new RegExp(keyword, "gi");
+                                    match_content = match_content.replace(regS, "<em class=\"search-keyword\">" + keyword + "</em>");
+                                });
+
+                                str += "<p class=\"search-result\">" + match_content + "...</p>"
+                            }
+                            str += "</li>";
+                        }
+                    });
+                    str += "</ul>";
+                    $resultContent.innerHTML = str;
+                });
+            }
+        });
+    };
+
+    searchFunc('/search.xml', 'searchInput', 'searchResult');
+});
+</script>
+
+    <!-- 回到顶部按钮 -->
+<div id="backTop" class="top-scroll">
+    <a class="btn-floating btn-large waves-effect waves-light" href="#!">
+        <i class="fas fa-arrow-up"></i>
+    </a>
+</div>
+
+
+    <script src="/libs/materialize/materialize.min.js"></script>
+    <script src="/libs/masonry/masonry.pkgd.min.js"></script>
+    <script src="/libs/aos/aos.js"></script>
+    <script src="/libs/scrollprogress/scrollProgress.min.js"></script>
+    <script src="/libs/lightGallery/js/lightgallery-all.min.js"></script>
+    <script src="/js/matery.js"></script>
+
+    
+
+    
+
+    <!-- 雪花特效 -->
+    
+
+    <!-- 鼠标星星特效 -->
+    
+
+    <!-- Baidu Analytics -->
+
+    <!-- Baidu Push -->
+
+<script>
+    (function () {
+        var bp = document.createElement('script');
+        var curProtocol = window.location.protocol.split(':')[0];
+        if (curProtocol === 'https') {
+            bp.src = 'https://zz.bdstatic.com/linksubmit/push.js';
+        } else {
+            bp.src = 'http://push.zhanzhang.baidu.com/push.js';
+        }
+        var s = document.getElementsByTagName("script")[0];
+        s.parentNode.insertBefore(bp, s);
+    })();
+</script>
+
+    
+    <script src="/libs/others/clicklove.js" async="async"></script>
+    
+    
+    <script async src="/libs/others/busuanzi.pure.mini.js"></script>
+    
+
+    
+
+    
+
+    <!--腾讯兔小巢-->
+    
+    
+    <script type="text/javascript" color="0,0,255"
+        pointColor="0,0,255" opacity='0.7'
+        zIndex="-1" count="99"
+        src="/libs/background/canvas-nest.js"></script>
+    
+
+    
+
+    
+
+    
+    <script src="/libs/instantpage/instantpage.js" type="module"></script>
+    
+
+</body>
+
+</html>

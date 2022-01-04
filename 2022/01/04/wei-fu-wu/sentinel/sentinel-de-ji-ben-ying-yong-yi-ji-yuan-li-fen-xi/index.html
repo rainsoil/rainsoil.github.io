@@ -1,0 +1,1713 @@
+<!DOCTYPE HTML>
+<html lang="zh-CN">
+
+
+<head>
+    <meta charset="utf-8">
+    <meta name="keywords" content="Sentinel的基本应用以及原理分析, railsoil">
+    <meta name="description" content="Sentinel的基本应用以及原理分析限流的基本认识场景分析一个互联网产品, 打算搞一次大促来增加销量以及曝光. 公司的架构师基于往期的流量情况做了一个活动流量的预估. 然后整个公司的各个技术团队开始按照这个目标进行设计和优化, 最终在大家">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="renderer" content="webkit|ie-stand|ie-comp">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="format-detection" content="telephone=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="referrer" content="no-referrer-when-downgrade">
+    <!-- Global site tag (gtag.js) - Google Analytics -->
+
+
+    <title>Sentinel的基本应用以及原理分析 | railsoil</title>
+    <link rel="icon" type="image/png" href="/favicon.png">
+
+    <link rel="stylesheet" type="text/css" href="/libs/awesome/css/all.min.css">
+    <link rel="stylesheet" type="text/css" href="/libs/materialize/materialize.min.css">
+    <link rel="stylesheet" type="text/css" href="/libs/aos/aos.css">
+    <link rel="stylesheet" type="text/css" href="/libs/animate/animate.min.css">
+    <link rel="stylesheet" type="text/css" href="/libs/lightGallery/css/lightgallery.min.css">
+    <link rel="stylesheet" type="text/css" href="/css/matery.css">
+    <link rel="stylesheet" type="text/css" href="/css/my.css">
+
+    <script src="/libs/jquery/jquery.min.js"></script>
+
+<meta name="generator" content="Hexo 5.4.0"><link rel="alternate" href="/atom.xml" title="railsoil" type="application/atom+xml">
+<link rel="stylesheet" href="/css/prism-tomorrow.css" type="text/css"></head>
+
+
+
+
+<body>
+    <header class="navbar-fixed">
+    <nav id="headNav" class="bg-color nav-transparent">
+        <div id="navContainer" class="nav-wrapper container">
+            <div class="brand-logo">
+                <a href="/" class="waves-effect waves-light">
+                    
+                    <img src="/medias/logo.png" class="logo-img" alt="LOGO">
+                    
+                    <span class="logo-span">railsoil</span>
+                </a>
+            </div>
+            
+
+<a href="#" data-target="mobile-nav" class="sidenav-trigger button-collapse"><i class="fas fa-bars"></i></a>
+<ul class="right nav-menu">
+  
+  <li class="hide-on-med-and-down nav-item">
+    
+    <a href="/" class="waves-effect waves-light">
+      
+      <i class="fas fa-home" style="zoom: 0.6;"></i>
+      
+      <span>首页</span>
+    </a>
+    
+  </li>
+  
+  <li class="hide-on-med-and-down nav-item">
+    
+    <a href="/tags" class="waves-effect waves-light">
+      
+      <i class="fas fa-tags" style="zoom: 0.6;"></i>
+      
+      <span>标签</span>
+    </a>
+    
+  </li>
+  
+  <li class="hide-on-med-and-down nav-item">
+    
+    <a href="/categories" class="waves-effect waves-light">
+      
+      <i class="fas fa-bookmark" style="zoom: 0.6;"></i>
+      
+      <span>分类</span>
+    </a>
+    
+  </li>
+  
+  <li class="hide-on-med-and-down nav-item">
+    
+    <a href="/archives" class="waves-effect waves-light">
+      
+      <i class="fas fa-archive" style="zoom: 0.6;"></i>
+      
+      <span>归档</span>
+    </a>
+    
+  </li>
+  
+  <li class="hide-on-med-and-down nav-item">
+    
+    <a href="/about" class="waves-effect waves-light">
+      
+      <i class="fas fa-user-circle" style="zoom: 0.6;"></i>
+      
+      <span>关于</span>
+    </a>
+    
+  </li>
+  
+  <li>
+    <a href="#searchModal" class="modal-trigger waves-effect waves-light">
+      <i id="searchIcon" class="fas fa-search" title="搜索" style="zoom: 0.85;"></i>
+    </a>
+  </li>
+</ul>
+
+
+<div id="mobile-nav" class="side-nav sidenav">
+
+    <div class="mobile-head bg-color">
+        
+        <img src="/medias/logo.png" class="logo-img circle responsive-img">
+        
+        <div class="logo-name">railsoil</div>
+        <div class="logo-desc">
+            
+            Never really desperate, only the lost of the soul.
+            
+        </div>
+    </div>
+
+    <ul class="menu-list mobile-menu-list">
+        
+        <li class="m-nav-item">
+	  
+		<a href="/" class="waves-effect waves-light">
+			
+			    <i class="fa-fw fas fa-home"></i>
+			
+			首页
+		</a>
+          
+        </li>
+        
+        <li class="m-nav-item">
+	  
+		<a href="/tags" class="waves-effect waves-light">
+			
+			    <i class="fa-fw fas fa-tags"></i>
+			
+			标签
+		</a>
+          
+        </li>
+        
+        <li class="m-nav-item">
+	  
+		<a href="/categories" class="waves-effect waves-light">
+			
+			    <i class="fa-fw fas fa-bookmark"></i>
+			
+			分类
+		</a>
+          
+        </li>
+        
+        <li class="m-nav-item">
+	  
+		<a href="/archives" class="waves-effect waves-light">
+			
+			    <i class="fa-fw fas fa-archive"></i>
+			
+			归档
+		</a>
+          
+        </li>
+        
+        <li class="m-nav-item">
+	  
+		<a href="/about" class="waves-effect waves-light">
+			
+			    <i class="fa-fw fas fa-user-circle"></i>
+			
+			关于
+		</a>
+          
+        </li>
+        
+        
+    </ul>
+</div>
+
+
+        </div>
+
+        
+    </nav>
+
+</header>
+
+    
+
+
+
+<div class="bg-cover pd-header post-cover" style="background-image: url('/medias/featureimages/4.jpg')">
+    <div class="container" style="right: 0px;left: 0px;">
+        <div class="row">
+            <div class="col s12 m12 l12">
+                <div class="brand">
+                    <h1 class="description center-align post-title">Sentinel的基本应用以及原理分析</h1>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+
+<main class="post-container content">
+
+    
+    <link rel="stylesheet" href="/libs/tocbot/tocbot.css">
+<style>
+    #articleContent h1::before,
+    #articleContent h2::before,
+    #articleContent h3::before,
+    #articleContent h4::before,
+    #articleContent h5::before,
+    #articleContent h6::before {
+        display: block;
+        content: " ";
+        height: 100px;
+        margin-top: -100px;
+        visibility: hidden;
+    }
+
+    #articleContent :focus {
+        outline: none;
+    }
+
+    .toc-fixed {
+        position: fixed;
+        top: 64px;
+    }
+
+    .toc-widget {
+        width: 345px;
+        padding-left: 20px;
+    }
+
+    .toc-widget .toc-title {
+        padding: 35px 0 15px 17px;
+        font-size: 1.5rem;
+        font-weight: bold;
+        line-height: 1.5rem;
+    }
+
+    .toc-widget ol {
+        padding: 0;
+        list-style: none;
+    }
+
+    #toc-content {
+        padding-bottom: 30px;
+        overflow: auto;
+    }
+
+    #toc-content ol {
+        padding-left: 10px;
+    }
+
+    #toc-content ol li {
+        padding-left: 10px;
+    }
+
+    #toc-content .toc-link:hover {
+        color: #42b983;
+        font-weight: 700;
+        text-decoration: underline;
+    }
+
+    #toc-content .toc-link::before {
+        background-color: transparent;
+        max-height: 25px;
+
+        position: absolute;
+        right: 23.5vw;
+        display: block;
+    }
+
+    #toc-content .is-active-link {
+        color: #42b983;
+    }
+
+    #floating-toc-btn {
+        position: fixed;
+        right: 15px;
+        bottom: 76px;
+        padding-top: 15px;
+        margin-bottom: 0;
+        z-index: 998;
+    }
+
+    #floating-toc-btn .btn-floating {
+        width: 48px;
+        height: 48px;
+    }
+
+    #floating-toc-btn .btn-floating i {
+        line-height: 48px;
+        font-size: 1.4rem;
+    }
+</style>
+<div class="row">
+    <div id="main-content" class="col s12 m12 l9">
+        <!-- 文章内容详情 -->
+<div id="artDetail">
+    <div class="card">
+        <div class="card-content article-info">
+            <div class="row tag-cate">
+                <div class="col s7">
+                    
+                          <div class="article-tag">
+                            <span class="chip bg-color">无标签</span>
+                          </div>
+                    
+                </div>
+                <div class="col s5 right-align">
+                    
+                    <div class="post-cate">
+                        <i class="fas fa-bookmark fa-fw icon-category"></i>
+                        
+                            <a href="/categories/Sentinel/" class="post-category">
+                                Sentinel
+                            </a>
+                        
+                            <a href="/categories/Sentinel/%E5%BE%AE%E6%9C%8D%E5%8A%A1/" class="post-category">
+                                微服务
+                            </a>
+                        
+                            <a href="/categories/Sentinel/%E5%BE%AE%E6%9C%8D%E5%8A%A1/%E5%BE%AE%E6%9C%8D%E5%8A%A1/" class="post-category">
+                                微服务
+                            </a>
+                        
+                            <a href="/categories/Sentinel/%E5%BE%AE%E6%9C%8D%E5%8A%A1/%E5%BE%AE%E6%9C%8D%E5%8A%A1/Sentinel/" class="post-category">
+                                Sentinel
+                            </a>
+                        
+                    </div>
+                    
+                </div>
+            </div>
+
+            <div class="post-info">
+                
+                <div class="post-date info-break-policy">
+                    <i class="far fa-calendar-minus fa-fw"></i>发布日期:&nbsp;&nbsp;
+                    2022-01-04
+                </div>
+                
+
+                
+
+                
+                <div class="info-break-policy">
+                    <i class="far fa-file-word fa-fw"></i>文章字数:&nbsp;&nbsp;
+                    6k
+                </div>
+                
+
+                
+                <div class="info-break-policy">
+                    <i class="far fa-clock fa-fw"></i>阅读时长:&nbsp;&nbsp;
+                    26 分
+                </div>
+                
+
+                
+                    <div id="busuanzi_container_page_pv" class="info-break-policy">
+                        <i class="far fa-eye fa-fw"></i>阅读次数:&nbsp;&nbsp;
+                        <span id="busuanzi_value_page_pv"></span>
+                    </div>
+				
+            </div>
+        </div>
+        <hr class="clearfix">
+
+        
+
+        
+
+        <div class="card-content article-card-content">
+            <div id="articleContent">
+                <h1 id="Sentinel的基本应用以及原理分析"><a href="#Sentinel的基本应用以及原理分析" class="headerlink" title="Sentinel的基本应用以及原理分析"></a>Sentinel的基本应用以及原理分析</h1><h2 id="限流的基本认识"><a href="#限流的基本认识" class="headerlink" title="限流的基本认识"></a>限流的基本认识</h2><h3 id="场景分析"><a href="#场景分析" class="headerlink" title="场景分析"></a>场景分析</h3><p>一个互联网产品, 打算搞一次大促来增加销量以及曝光. 公司的架构师基于往期的流量情况做了一个活动流量的预估. 然后整个公司的各个技术团队开始按照这个目标进行设计和优化, 最终在大家的不懈努力下,达到了链路压测的目标流量峰值. 到了活动开始那天, 大家都盯着监控面板, 看着流量像洪水一样涌进来, 由于前期的宣传工作做得非常好, 使得这个流程远远超过预期的峰值, 后端服务开始不稳定, CPU、内存各种爆表. 部分服务开始出现无响应的情况. 最后, 整个系统开始崩溃, 用户无法正常访问服务, 最后导致公司巨大的损失. </p>
+<h3 id="引入限流"><a href="#引入限流" class="headerlink" title="引入限流"></a>引入限流</h3><p>在10.1黄金周, 各大旅游景点都是人满为患, 所以有些景点为了避免出现踩踏事故, 会采取限流措施. </p>
+<p>那在架构场景中, 是不是也能这样做呢? 针对这个场景, 能不能设置一个最大的流量限制, 如果超过这个流量, 我们就拒绝提供服务, 从而使得我们的服务不会挂掉. </p>
+<p>当前, 限流虽然能够保证系统不被压垮, 但是对于被限流的用户来说, 就会很不开心. 所以限流其实是一种有损的解决方案, 但是相对于全部不可用, 有损服务是最好的一种解决方法. </p>
+<h3 id="限流的作用"><a href="#限流的作用" class="headerlink" title="限流的作用"></a>限流的作用</h3><p>除了前面说的限流使用场景之外，限流的设置还能防止恶意请求流量、恶意攻击. </p>
+<p>所以, 限流的基本原理是通过对并发访问/请求进行限速或者一个时间窗口内的请求进行限速来保护系统, 一旦达到限制速率则可以拒绝服务(定向到错误页面或者告知资源没有了)、排队或等待(秒杀、下单)、降级(返回兜底数据或者默认数据,如商品详情库存默认有货). </p>
+<p>一般互联网企业常见的限流有: 限制总并发数(如数据库连接池、线程池)、限制瞬间并发数(nginx的limit_conn模块、用来限制瞬间并发连接数)、限制时间窗口内的平均速率(如Guava 的RateLimiter、nginx的limit_req模块、限制每秒的平均速率);其他的还有限制远程接口调用速率、限制MQ的消费速率、另外还可以根据网络连接数、网络流量、CPU或内存负载等来限流. </p>
+<p>有了限流, 就意味着在处理高并发的时候多了一种保护机制, 不用担心瞬间流量导致系统挂掉或者雪崩, 最后做到有损服务而不是不服务, 但是限流需要做好评估, 不能乱用, 否则一些正常流量出现一些奇怪的问题而导致用户体验很差造成用户损失. </p>
+<h2 id="常见的限流算法"><a href="#常见的限流算法" class="headerlink" title="常见的限流算法"></a>常见的限流算法</h2><h3 id="滑动窗口算法"><a href="#滑动窗口算法" class="headerlink" title="滑动窗口算法"></a>滑动窗口算法</h3><p>发送和接收方都会维护一个数据帧的序列, 这个序列被称为窗口。发送方的窗口大小由接收方确定,目的在于控制发送速度, 以免接收方的缓存不够大, 而导致溢出. 同时控制流量也可以避免网络拥塞. 下面图中的4，5，6号数据帧已经被发送出去, 但是未收到关联的ACK， 7，8，9 帧则是等待发送. 可以看出发送端的窗口大小为6, 这时由接收端告知的. 此时如果发送端收到4号ACK， 则窗口的左边缘向右收缩, 窗口的右边缘则向右扩展, 此时窗口就向前滑动了, 则数据帧10 也可以被发送. </p>
+<p><img src="http://files.luyanan.com//img/20191212160950.png"></p>
+<h3 id="漏桶-控制传输速率Leaky-bucket"><a href="#漏桶-控制传输速率Leaky-bucket" class="headerlink" title="漏桶(控制传输速率Leaky bucket)"></a>漏桶(控制传输速率Leaky bucket)</h3><p>漏桶算法思路是: 不断的往桶里面注水, 无论注水的速度是大还是小, 水都是按照固定的速率往外漏水, 如果桶满了, 水会溢出. </p>
+<p>桶本身具有一个恒定的速率往下漏水, 而上方时快时慢的会由水进入桶中,当桶还未满时, 上方的水可以加入. 一旦水满, 上方的水就无法加入. 桶满正是算法中的一个关键的触发条件(即流量异常判断成立的条件).而此条件下如何处理上方流下的水, 有两种方式: </p>
+<p>在桶满水之后, 常见的两种处理方式:</p>
+<ol>
+<li>暂时拦截住上方水的向下流动, 等待桶中的一部分水漏走后, 再放行上方水. </li>
+<li>溢出的上方水直接抛弃.</li>
+</ol>
+<p>特点： </p>
+<ol>
+<li>漏水的速率是固定的. </li>
+<li>即使存在突然注水量变大的情况, 漏水的速率也是固定的. </li>
+</ol>
+<p><img src="http://files.luyanan.com//img/20191212161823.png"></p>
+<h3 id="令牌桶-能够解决突发流量"><a href="#令牌桶-能够解决突发流量" class="headerlink" title="令牌桶(能够解决突发流量)"></a>令牌桶(能够解决突发流量)</h3><p>令牌桶算法是网络流量整形(Traffic Shaping) 和速率限制(Rate Limiting) 中最常用的一种算法. 典型情况下, 令牌桶算法用来控制发送到网络上的数据数目, 并允许突发数据的发送. </p>
+<p>令牌桶是一个存放固定容量令牌(token)的桶, 按照固定速率往桶里添加令牌, 令牌桶算法实际上由三部分组成, 两个流和一个桶, 分别是令牌桶、数据流和令牌桶. </p>
+<h4 id="令牌流和令牌桶"><a href="#令牌流和令牌桶" class="headerlink" title="令牌流和令牌桶"></a>令牌流和令牌桶</h4><p>系统会以一定的速度生成令牌, 并将其防止到令牌桶中, 可以将令牌桶想象成一个缓存区(可以用队列这种数据结构来实现), 当缓冲区填满的时候, 新生成的令牌会被扔掉, 这里有两个变量很重要. </p>
+<p>第一个是生成令牌的速度, 一般成为 <code>rate</code>,  比如我们设定rate=2, 即每秒生成2个令牌，也就是每 1/2 秒生成一个令牌. </p>
+<p>第二个是令牌桶的大小, 一般称为burst, 比如我们设定burst = 10, 即令牌桶最大只能容纳10个令牌. </p>
+<p><img src="http://files.luyanan.com//img/20191212163617.png"></p>
+<p>有三种情况可能发生: </p>
+<ol>
+<li><em>数据流的速率等于令牌流的速率</em>, 这种情况下每个到来的数据包或者请求都能对应一个令牌, 然后无延迟的通过队列. </li>
+<li><strong>数据流的速率小于令牌桶的速率</strong>, 通过队列的数据包或者请求只消耗了一部分令牌, 剩下的令牌会在令牌桶中积累下来, 直到桶被装满, 剩下的令牌可以在突发请求的时候消耗掉. </li>
+<li><strong>数据流的速率大于令牌流的速率</strong> , 这意味着桶里的令牌很快就被耗尽, 导致服务中断一段时间, 如果数据包或者请求持久到来, 将发生丢包或者拒绝响应. </li>
+</ol>
+<h2 id="使用Sentinel-实现限流"><a href="#使用Sentinel-实现限流" class="headerlink" title="使用Sentinel 实现限流"></a>使用Sentinel 实现限流</h2><h3 id="介绍"><a href="#介绍" class="headerlink" title="介绍"></a>介绍</h3><p>sentinel 是Alibaba 开源的一个面向分布式服务架构的轻量级流量控制组件,主要以流量为切入点, 从限流、流量整型、熔断降级、系统负载保存等多个维度来保证微服务的稳定性. </p>
+<h3 id="简单实现"><a href="#简单实现" class="headerlink" title="简单实现"></a>简单实现</h3><p>我们先再pom.xml 中添加sentinel 的依赖</p>
+<pre class=" language-xml"><code class="language-xml">   <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>dependency</span><span class="token punctuation">></span></span>
+            <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>groupId</span><span class="token punctuation">></span></span>com.alibaba.csp<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>groupId</span><span class="token punctuation">></span></span>
+            <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>artifactId</span><span class="token punctuation">></span></span>sentinel-core<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>artifactId</span><span class="token punctuation">></span></span>
+            <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>version</span><span class="token punctuation">></span></span>1.6.3<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>version</span><span class="token punctuation">></span></span>
+        <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>dependency</span><span class="token punctuation">></span></span>
+</code></pre>
+<p>代码示例</p>
+<pre class=" language-java"><code class="language-java"><span class="token keyword">package</span> com<span class="token punctuation">.</span>sentinel<span class="token punctuation">;</span>
+
+<span class="token keyword">import</span> com<span class="token punctuation">.</span>alibaba<span class="token punctuation">.</span>csp<span class="token punctuation">.</span>sentinel<span class="token punctuation">.</span>Entry<span class="token punctuation">;</span>
+<span class="token keyword">import</span> com<span class="token punctuation">.</span>alibaba<span class="token punctuation">.</span>csp<span class="token punctuation">.</span>sentinel<span class="token punctuation">.</span>SphU<span class="token punctuation">;</span>
+<span class="token keyword">import</span> com<span class="token punctuation">.</span>alibaba<span class="token punctuation">.</span>csp<span class="token punctuation">.</span>sentinel<span class="token punctuation">.</span>slots<span class="token punctuation">.</span>block<span class="token punctuation">.</span>BlockException<span class="token punctuation">;</span>
+<span class="token keyword">import</span> com<span class="token punctuation">.</span>alibaba<span class="token punctuation">.</span>csp<span class="token punctuation">.</span>sentinel<span class="token punctuation">.</span>slots<span class="token punctuation">.</span>block<span class="token punctuation">.</span>RuleConstant<span class="token punctuation">;</span>
+<span class="token keyword">import</span> com<span class="token punctuation">.</span>alibaba<span class="token punctuation">.</span>csp<span class="token punctuation">.</span>sentinel<span class="token punctuation">.</span>slots<span class="token punctuation">.</span>block<span class="token punctuation">.</span>flow<span class="token punctuation">.</span>FlowRule<span class="token punctuation">;</span>
+<span class="token keyword">import</span> com<span class="token punctuation">.</span>alibaba<span class="token punctuation">.</span>csp<span class="token punctuation">.</span>sentinel<span class="token punctuation">.</span>slots<span class="token punctuation">.</span>block<span class="token punctuation">.</span>flow<span class="token punctuation">.</span>FlowRuleManager<span class="token punctuation">;</span>
+
+<span class="token keyword">import</span> java<span class="token punctuation">.</span>util<span class="token punctuation">.</span>ArrayList<span class="token punctuation">;</span>
+<span class="token keyword">import</span> java<span class="token punctuation">.</span>util<span class="token punctuation">.</span>List<span class="token punctuation">;</span>
+
+<span class="token comment" spellcheck="true">/**
+ * @author luyanan
+ * @since 2019/12/13
+ * &lt;p>&lt;/p>
+ **/</span>
+<span class="token keyword">public</span> <span class="token keyword">class</span> <span class="token class-name">SentinelDemo</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+
+    <span class="token keyword">private</span> <span class="token keyword">final</span> <span class="token keyword">static</span> String resource <span class="token operator">=</span> <span class="token string">"hello"</span><span class="token punctuation">;</span>
+
+    <span class="token comment" spellcheck="true">/**
+     * &lt;p>初始化限流规则&lt;/p>
+     *
+     * @return &amp;#123;@link &amp;#125;
+     * @author luyanan
+     * @since 2019/12/13
+     */</span>
+    <span class="token keyword">private</span> <span class="token keyword">static</span> <span class="token keyword">void</span> <span class="token function">initFlowRules</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+
+
+        List<span class="token operator">&lt;</span>FlowRule<span class="token operator">></span> rules <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">ArrayList</span><span class="token operator">&lt;</span><span class="token operator">></span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        FlowRule flowRule <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">FlowRule</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token comment" spellcheck="true">// 资源(方法名称/接口)</span>
+        flowRule<span class="token punctuation">.</span><span class="token function">setResource</span><span class="token punctuation">(</span>resource<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token comment" spellcheck="true">// 限流的阈值类型  qps和线程数</span>
+        flowRule<span class="token punctuation">.</span><span class="token function">setGrade</span><span class="token punctuation">(</span>RuleConstant<span class="token punctuation">.</span>FLOW_GRADE_QPS<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token comment" spellcheck="true">// 设置数量</span>
+        flowRule<span class="token punctuation">.</span><span class="token function">setCount</span><span class="token punctuation">(</span><span class="token number">1000</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        rules<span class="token punctuation">.</span><span class="token function">add</span><span class="token punctuation">(</span>flowRule<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        FlowRuleManager<span class="token punctuation">.</span><span class="token function">loadRules</span><span class="token punctuation">(</span>rules<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+
+    <span class="token keyword">public</span> <span class="token keyword">static</span> <span class="token keyword">void</span> <span class="token function">main</span><span class="token punctuation">(</span>String<span class="token punctuation">[</span><span class="token punctuation">]</span> args<span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+        <span class="token comment" spellcheck="true">// 初始化规则</span>
+        <span class="token function">initFlowRules</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token keyword">while</span> <span class="token punctuation">(</span><span class="token boolean">true</span><span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+            Entry entry <span class="token operator">=</span> null<span class="token punctuation">;</span>
+            <span class="token keyword">try</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+                entry <span class="token operator">=</span> SphU<span class="token punctuation">.</span><span class="token function">entry</span><span class="token punctuation">(</span>resource<span class="token punctuation">)</span><span class="token punctuation">;</span>
+                System<span class="token punctuation">.</span>out<span class="token punctuation">.</span><span class="token function">println</span><span class="token punctuation">(</span><span class="token string">"hello world"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span> <span class="token keyword">catch</span> <span class="token punctuation">(</span><span class="token class-name">BlockException</span> e<span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+                <span class="token comment" spellcheck="true">// 如果被限流, 则会抛出异常</span>
+                e<span class="token punctuation">.</span><span class="token function">printStackTrace</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span> <span class="token keyword">finally</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+                <span class="token keyword">if</span> <span class="token punctuation">(</span>entry <span class="token operator">!=</span> null<span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+                    <span class="token comment" spellcheck="true">// 释放</span>
+                    entry<span class="token punctuation">.</span><span class="token function">exit</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+                <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+            <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+        <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+    <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+
+<span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+</code></pre>
+<p>通过上面的代码, 我们就基本完成了一个单机版的限流</p>
+<h3 id="接入控制台"><a href="#接入控制台" class="headerlink" title="接入控制台"></a>接入控制台</h3><h4 id="获取sentinel-控制台"><a href="#获取sentinel-控制台" class="headerlink" title="获取sentinel 控制台"></a>获取sentinel 控制台</h4><p>从release页面获取最新版本的控制台jar包</p>
+<h4 id="启动"><a href="#启动" class="headerlink" title="启动"></a>启动</h4><p>使用如下命令启动控制台</p>
+<pre class=" language-bash"><code class="language-bash">java -Dserver.port<span class="token operator">=</span>8080 -Dcsp.sentinel.dashboard.server<span class="token operator">=</span>localhost:8080 -Dproject.name<span class="token operator">=</span>sentinel-dashboard -jar sentinel-dashboard.jar
+</code></pre>
+<p>其中 <code>-Dserver.port=8080</code> 用于指定 Sentinel 控制台端口为 <code>8080</code>。</p>
+<p>从 Sentinel 1.6.0 起，Sentinel 控制台引入基本的<strong>登录</strong>功能，默认用户名和密码都是 <code>sentinel</code></p>
+<h4 id="客户端接入控制台"><a href="#客户端接入控制台" class="headerlink" title="客户端接入控制台"></a>客户端接入控制台</h4><p>控制台启动后, 客户端需要按照以下步骤接入到控制台</p>
+<h4 id="1-添加依赖"><a href="#1-添加依赖" class="headerlink" title="1. 添加依赖"></a>1. 添加依赖</h4><pre class=" language-xml"><code class="language-xml"> <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>dependency</span><span class="token punctuation">></span></span>
+            <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>groupId</span><span class="token punctuation">></span></span>com.alibaba.csp<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>groupId</span><span class="token punctuation">></span></span>
+            <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>artifactId</span><span class="token punctuation">></span></span>sentinel-transport-simple-http<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>artifactId</span><span class="token punctuation">></span></span>
+            <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>version</span><span class="token punctuation">></span></span>1.6.3<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>version</span><span class="token punctuation">></span></span>
+        <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>dependency</span><span class="token punctuation">></span></span>
+</code></pre>
+<h4 id="2-配置启动参数"><a href="#2-配置启动参数" class="headerlink" title="2. 配置启动参数"></a>2. 配置启动参数</h4><p>启动时加入 JVM 参数 <code>-Dcsp.sentinel.dashboard.server=consoleIp:port</code> 指定控制台地址和端口。若启动多个应用，则需要通过 <code>-Dcsp.sentinel.api.port=xxxx</code> 指定客户端监控 API 的端口（默认是 8719）</p>
+<h4 id="3-然后就可以访问-localhost-8080-查看访问控制台了"><a href="#3-然后就可以访问-localhost-8080-查看访问控制台了" class="headerlink" title="3. 然后就可以访问 localhost:8080 查看访问控制台了"></a>3. 然后就可以访问 <code>localhost:8080</code> 查看访问控制台了</h4><h3 id="使用注解实现限流"><a href="#使用注解实现限流" class="headerlink" title="使用注解实现限流"></a>使用注解实现限流</h3><p>Sentinel 支持通过 <code>@SentinelResource</code> 注解定义资源并配置 <code>blockHandler</code> 和 <code>fallback</code> 函数来进行限流之后的处理。示例：</p>
+<h4 id="添加依赖"><a href="#添加依赖" class="headerlink" title="添加依赖"></a>添加依赖</h4><pre class=" language-xml"><code class="language-xml">
+        <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>dependency</span><span class="token punctuation">></span></span>
+            <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>groupId</span><span class="token punctuation">></span></span>org.springframework.boot<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>groupId</span><span class="token punctuation">></span></span>
+            <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>artifactId</span><span class="token punctuation">></span></span>spring-boot-starter-aop<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>artifactId</span><span class="token punctuation">></span></span>
+        <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>dependency</span><span class="token punctuation">></span></span>
+        <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>dependency</span><span class="token punctuation">></span></span>
+            <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>groupId</span><span class="token punctuation">></span></span>com.alibaba.csp<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>groupId</span><span class="token punctuation">></span></span>
+            <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>artifactId</span><span class="token punctuation">></span></span>sentinel-annotation-aspectj<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>artifactId</span><span class="token punctuation">></span></span>
+            <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>version</span><span class="token punctuation">></span></span>1.6.3<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>version</span><span class="token punctuation">></span></span>
+        <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>dependency</span><span class="token punctuation">></span></span>
+</code></pre>
+<h4 id="编写配置类和加载规则"><a href="#编写配置类和加载规则" class="headerlink" title="编写配置类和加载规则"></a>编写配置类和加载规则</h4><pre class=" language-java"><code class="language-java"><span class="token keyword">package</span> com<span class="token punctuation">.</span>sentinel<span class="token punctuation">;</span>
+
+<span class="token keyword">import</span> com<span class="token punctuation">.</span>alibaba<span class="token punctuation">.</span>csp<span class="token punctuation">.</span>sentinel<span class="token punctuation">.</span>annotation<span class="token punctuation">.</span>aspectj<span class="token punctuation">.</span>SentinelResourceAspect<span class="token punctuation">;</span>
+<span class="token keyword">import</span> com<span class="token punctuation">.</span>alibaba<span class="token punctuation">.</span>csp<span class="token punctuation">.</span>sentinel<span class="token punctuation">.</span>slots<span class="token punctuation">.</span>block<span class="token punctuation">.</span>RuleConstant<span class="token punctuation">;</span>
+<span class="token keyword">import</span> com<span class="token punctuation">.</span>alibaba<span class="token punctuation">.</span>csp<span class="token punctuation">.</span>sentinel<span class="token punctuation">.</span>slots<span class="token punctuation">.</span>block<span class="token punctuation">.</span>flow<span class="token punctuation">.</span>FlowRule<span class="token punctuation">;</span>
+<span class="token keyword">import</span> com<span class="token punctuation">.</span>alibaba<span class="token punctuation">.</span>csp<span class="token punctuation">.</span>sentinel<span class="token punctuation">.</span>slots<span class="token punctuation">.</span>block<span class="token punctuation">.</span>flow<span class="token punctuation">.</span>FlowRuleManager<span class="token punctuation">;</span>
+<span class="token keyword">import</span> org<span class="token punctuation">.</span>springframework<span class="token punctuation">.</span>context<span class="token punctuation">.</span>annotation<span class="token punctuation">.</span>Bean<span class="token punctuation">;</span>
+<span class="token keyword">import</span> org<span class="token punctuation">.</span>springframework<span class="token punctuation">.</span>context<span class="token punctuation">.</span>annotation<span class="token punctuation">.</span>Configuration<span class="token punctuation">;</span>
+
+<span class="token keyword">import</span> java<span class="token punctuation">.</span>util<span class="token punctuation">.</span>ArrayList<span class="token punctuation">;</span>
+<span class="token keyword">import</span> java<span class="token punctuation">.</span>util<span class="token punctuation">.</span>List<span class="token punctuation">;</span>
+
+<span class="token comment" spellcheck="true">/**
+ * @author luyanan
+ * @since 2019/12/16
+ * &lt;p>&lt;/p>
+ **/</span>
+<span class="token annotation punctuation">@Configuration</span>
+<span class="token keyword">public</span> <span class="token keyword">class</span> <span class="token class-name">SentinelConfiguration</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+
+
+    <span class="token annotation punctuation">@Bean</span>
+    <span class="token keyword">public</span> SentinelResourceAspect <span class="token function">sentinelResourceAspect</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+        <span class="token function">initFlowRules</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token keyword">return</span> <span class="token keyword">new</span> <span class="token class-name">SentinelResourceAspect</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+
+    <span class="token comment" spellcheck="true">/**
+     * &lt;p>初始化规则&lt;/p>
+     *
+     * @author luyanan
+     * @since 2019/12/16
+     */</span>
+    <span class="token keyword">private</span> <span class="token keyword">void</span> <span class="token function">initFlowRules</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+
+        List<span class="token operator">&lt;</span>FlowRule<span class="token operator">></span> ruleList <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">ArrayList</span><span class="token operator">&lt;</span><span class="token operator">></span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+        FlowRule flowRule <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">FlowRule</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token comment" spellcheck="true">// 资源的地址</span>
+        flowRule<span class="token punctuation">.</span><span class="token function">setResource</span><span class="token punctuation">(</span><span class="token string">"hello"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token comment" spellcheck="true">// 限流的类型</span>
+        flowRule<span class="token punctuation">.</span><span class="token function">setGrade</span><span class="token punctuation">(</span>RuleConstant<span class="token punctuation">.</span>FLOW_GRADE_QPS<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        flowRule<span class="token punctuation">.</span><span class="token function">setCount</span><span class="token punctuation">(</span><span class="token number">10</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+        ruleList<span class="token punctuation">.</span><span class="token function">add</span><span class="token punctuation">(</span>flowRule<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        FlowRuleManager<span class="token punctuation">.</span><span class="token function">loadRules</span><span class="token punctuation">(</span>ruleList<span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+    <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+
+
+<span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+</code></pre>
+<h4 id="编写测试的方法"><a href="#编写测试的方法" class="headerlink" title="编写测试的方法"></a>编写测试的方法</h4><pre class=" language-java"><code class="language-java"><span class="token comment" spellcheck="true">/**
+ * @author luyanan
+ * @since 2019/12/16
+ * &lt;p>&lt;/p>
+ **/</span>
+<span class="token annotation punctuation">@RestController</span>
+<span class="token annotation punctuation">@RequestMapping</span><span class="token punctuation">(</span><span class="token string">"user"</span><span class="token punctuation">)</span>
+<span class="token keyword">public</span> <span class="token keyword">class</span> <span class="token class-name">SentinelController</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+
+
+    <span class="token annotation punctuation">@SentinelResource</span><span class="token punctuation">(</span>value <span class="token operator">=</span> <span class="token string">"hello"</span><span class="token punctuation">)</span>
+    <span class="token annotation punctuation">@GetMapping</span><span class="token punctuation">(</span><span class="token string">"hello"</span><span class="token punctuation">)</span>
+    <span class="token keyword">public</span> String <span class="token function">hello</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+        System<span class="token punctuation">.</span>out<span class="token punctuation">.</span><span class="token function">println</span><span class="token punctuation">(</span><span class="token string">"hello world"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token keyword">return</span> <span class="token string">"hello"</span><span class="token punctuation">;</span>
+    <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+<span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+</code></pre>
+<h2 id="规则的种类"><a href="#规则的种类" class="headerlink" title="规则的种类"></a>规则的种类</h2><p>Sentinel 的所有规则都可以在内存态中动态地查询及修改，修改之后立即生效。同时 Sentinel 也提供相关 API，供您来定制自己的规则策略。</p>
+<p>Sentinel 支持以下几种规则：<strong>流量控制规则</strong>、<strong>熔断降级规则</strong>、<strong>系统保护规则</strong>、<strong>来源访问控制规则</strong> 和 <strong>热点参数规则</strong>。</p>
+<h3 id="流量控制规则-FlowRule"><a href="#流量控制规则-FlowRule" class="headerlink" title="流量控制规则 (FlowRule)"></a>流量控制规则 (FlowRule)</h3><h4 id="流量规则的定义"><a href="#流量规则的定义" class="headerlink" title="流量规则的定义"></a>流量规则的定义</h4><p>重要属性：</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>说明</th>
+<th>默认值</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>resource</td>
+<td>资源名，资源名是限流规则的作用对象</td>
+<td></td>
+</tr>
+<tr>
+<td>count</td>
+<td>限流阈值</td>
+<td></td>
+</tr>
+<tr>
+<td>grade</td>
+<td>限流阈值类型，QPS 模式（1）或并发线程数模式（0）</td>
+<td>QPS 模式</td>
+</tr>
+<tr>
+<td>limitApp</td>
+<td>流控针对的调用来源</td>
+<td><code>default</code>，代表不区分调用来源</td>
+</tr>
+<tr>
+<td>strategy</td>
+<td>调用关系限流策略：直接、链路、关联</td>
+<td>根据资源本身（直接）</td>
+</tr>
+<tr>
+<td>controlBehavior</td>
+<td>流控效果（直接拒绝 / 排队等待 / 慢启动模式），不支持按调用关系限流</td>
+<td>直接拒绝</td>
+</tr>
+</tbody></table>
+<p>同一个资源可以同时有多个限流规则，检查规则时会依次检查。</p>
+<h4 id="通过代码定义流量控制规则"><a href="#通过代码定义流量控制规则" class="headerlink" title="通过代码定义流量控制规则"></a>通过代码定义流量控制规则</h4><p>理解上面规则的定义之后，我们可以通过调用 <code>FlowRuleManager.loadRules()</code> 方法来用硬编码的方式定义流量控制规则，比如：</p>
+<pre class=" language-java"><code class="language-java"><span class="token keyword">private</span> <span class="token keyword">void</span> <span class="token function">initFlowQpsRule</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+    List<span class="token operator">&lt;</span>FlowRule<span class="token operator">></span> rules <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">ArrayList</span><span class="token operator">&lt;</span><span class="token operator">></span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    FlowRule rule <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">FlowRule</span><span class="token punctuation">(</span>resourceName<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token comment" spellcheck="true">// set limit qps to 20</span>
+    rule<span class="token punctuation">.</span><span class="token function">setCount</span><span class="token punctuation">(</span><span class="token number">20</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    rule<span class="token punctuation">.</span><span class="token function">setGrade</span><span class="token punctuation">(</span>RuleConstant<span class="token punctuation">.</span>FLOW_GRADE_QPS<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    rule<span class="token punctuation">.</span><span class="token function">setLimitApp</span><span class="token punctuation">(</span><span class="token string">"default"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    rules<span class="token punctuation">.</span><span class="token function">add</span><span class="token punctuation">(</span>rule<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    FlowRuleManager<span class="token punctuation">.</span><span class="token function">loadRules</span><span class="token punctuation">(</span>rules<span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+</code></pre>
+<h2 id="原理分析"><a href="#原理分析" class="headerlink" title="原理分析"></a>原理分析</h2><h3 id="入口"><a href="#入口" class="headerlink" title="入口"></a>入口</h3><pre class=" language-java"><code class="language-java"> entry<span class="token operator">=</span> SphU<span class="token punctuation">.</span><span class="token function">entry</span><span class="token punctuation">(</span>resource<span class="token punctuation">)</span><span class="token punctuation">;</span>             
+</code></pre>
+<p>进入到</p>
+<pre class=" language-java"><code class="language-java">    <span class="token keyword">public</span> <span class="token keyword">static</span> Entry <span class="token function">entry</span><span class="token punctuation">(</span>String name<span class="token punctuation">)</span> <span class="token keyword">throws</span> BlockException <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+        <span class="token keyword">return</span> Env<span class="token punctuation">.</span>sph<span class="token punctuation">.</span><span class="token function">entry</span><span class="token punctuation">(</span>name<span class="token punctuation">,</span> EntryType<span class="token punctuation">.</span>OUT<span class="token punctuation">,</span> <span class="token number">1</span><span class="token punctuation">,</span> OBJECTS0<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+</code></pre>
+<h3 id="Env-sph"><a href="#Env-sph" class="headerlink" title="Env.sph"></a>Env.sph</h3><pre class=" language-java"><code class="language-java"><span class="token keyword">public</span> <span class="token keyword">class</span> <span class="token class-name">Env</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+
+    <span class="token keyword">public</span> <span class="token keyword">static</span> <span class="token keyword">final</span> Sph sph <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">CtSph</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+    <span class="token keyword">static</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+        <span class="token comment" spellcheck="true">// If init fails, the process will exit.</span>
+        InitExecutor<span class="token punctuation">.</span><span class="token function">doInit</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+
+<span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+</code></pre>
+<p>我们发现有一个静态块</p>
+<h3 id="InitExecutor-doInit"><a href="#InitExecutor-doInit" class="headerlink" title="InitExecutor.doInit();"></a>InitExecutor.doInit();</h3><pre class=" language-java"><code class="language-java"> <span class="token keyword">public</span> <span class="token keyword">static</span> <span class="token keyword">void</span> <span class="token function">doInit</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+        <span class="token keyword">if</span> <span class="token punctuation">(</span><span class="token operator">!</span>initialized<span class="token punctuation">.</span><span class="token function">compareAndSet</span><span class="token punctuation">(</span><span class="token boolean">false</span><span class="token punctuation">,</span> <span class="token boolean">true</span><span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+            <span class="token keyword">return</span><span class="token punctuation">;</span>
+        <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+        <span class="token keyword">try</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+            ServiceLoader<span class="token operator">&lt;</span>InitFunc<span class="token operator">></span> loader <span class="token operator">=</span> ServiceLoader<span class="token punctuation">.</span><span class="token function">load</span><span class="token punctuation">(</span>InitFunc<span class="token punctuation">.</span><span class="token keyword">class</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+            List<span class="token operator">&lt;</span>OrderWrapper<span class="token operator">></span> initList <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">ArrayList</span><span class="token operator">&lt;</span>OrderWrapper<span class="token operator">></span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <span class="token keyword">for</span> <span class="token punctuation">(</span>InitFunc initFunc <span class="token operator">:</span> loader<span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+                RecordLog<span class="token punctuation">.</span><span class="token function">info</span><span class="token punctuation">(</span><span class="token string">"[InitExecutor] Found init func: "</span> <span class="token operator">+</span> initFunc<span class="token punctuation">.</span><span class="token function">getClass</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">getCanonicalName</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+                <span class="token function">insertSorted</span><span class="token punctuation">(</span>initList<span class="token punctuation">,</span> initFunc<span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+            <span class="token keyword">for</span> <span class="token punctuation">(</span>OrderWrapper w <span class="token operator">:</span> initList<span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+                w<span class="token punctuation">.</span>func<span class="token punctuation">.</span><span class="token function">init</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+                RecordLog<span class="token punctuation">.</span><span class="token function">info</span><span class="token punctuation">(</span>String<span class="token punctuation">.</span><span class="token function">format</span><span class="token punctuation">(</span><span class="token string">"[InitExecutor] Executing %s with order %d"</span><span class="token punctuation">,</span>
+                    w<span class="token punctuation">.</span>func<span class="token punctuation">.</span><span class="token function">getClass</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">getCanonicalName</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">,</span> w<span class="token punctuation">.</span>order<span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+        <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span> <span class="token keyword">catch</span> <span class="token punctuation">(</span><span class="token class-name">Exception</span> ex<span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+            RecordLog<span class="token punctuation">.</span><span class="token function">warn</span><span class="token punctuation">(</span><span class="token string">"[InitExecutor] WARN: Initialization failed"</span><span class="token punctuation">,</span> ex<span class="token punctuation">)</span><span class="token punctuation">;</span>
+            ex<span class="token punctuation">.</span><span class="token function">printStackTrace</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span> <span class="token keyword">catch</span> <span class="token punctuation">(</span><span class="token class-name">Error</span> error<span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+            RecordLog<span class="token punctuation">.</span><span class="token function">warn</span><span class="token punctuation">(</span><span class="token string">"[InitExecutor] ERROR: Initialization failed with fatal error"</span><span class="token punctuation">,</span> error<span class="token punctuation">)</span><span class="token punctuation">;</span>
+            error<span class="token punctuation">.</span><span class="token function">printStackTrace</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+    <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+</code></pre>
+<p>我们发现, 这里通过SPI 机制加载<code>InitFunc</code> 的实现类, 然后分别调用他们的 <code>init</code> 方法. </p>
+<h3 id="Env-sph-entry"><a href="#Env-sph-entry" class="headerlink" title="Env.sph.entry"></a>Env.sph.entry</h3><pre class=" language-java"><code class="language-java">  <span class="token annotation punctuation">@Override</span>
+    <span class="token keyword">public</span> Entry <span class="token function">entry</span><span class="token punctuation">(</span>String name<span class="token punctuation">,</span> EntryType type<span class="token punctuation">,</span> <span class="token keyword">int</span> count<span class="token punctuation">,</span> Object<span class="token punctuation">.</span><span class="token punctuation">.</span><span class="token punctuation">.</span> args<span class="token punctuation">)</span> <span class="token keyword">throws</span> BlockException <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+        StringResourceWrapper resource <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">StringResourceWrapper</span><span class="token punctuation">(</span>name<span class="token punctuation">,</span> type<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token keyword">return</span> <span class="token function">entry</span><span class="token punctuation">(</span>resource<span class="token punctuation">,</span> count<span class="token punctuation">,</span> args<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+</code></pre>
+<p>这里通过name 和type  包装一个<code>StringResourceWrapper</code>, 即抽象的资源. </p>
+<h3 id="CtSph-entry"><a href="#CtSph-entry" class="headerlink" title="CtSph.entry"></a>CtSph.entry</h3><pre class=" language-java"><code class="language-java">   <span class="token keyword">public</span> Entry <span class="token function">entry</span><span class="token punctuation">(</span>ResourceWrapper resourceWrapper<span class="token punctuation">,</span> <span class="token keyword">int</span> count<span class="token punctuation">,</span> Object<span class="token punctuation">.</span><span class="token punctuation">.</span><span class="token punctuation">.</span> args<span class="token punctuation">)</span> <span class="token keyword">throws</span> BlockException <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+        <span class="token keyword">return</span> <span class="token function">entryWithPriority</span><span class="token punctuation">(</span>resourceWrapper<span class="token punctuation">,</span> count<span class="token punctuation">,</span> <span class="token boolean">false</span><span class="token punctuation">,</span> args<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+</code></pre>
+<h3 id="entryWithPriority"><a href="#entryWithPriority" class="headerlink" title="entryWithPriority"></a>entryWithPriority</h3><pre class=" language-java"><code class="language-java"><span class="token keyword">private</span> Entry <span class="token function">entryWithPriority</span><span class="token punctuation">(</span>ResourceWrapper resourceWrapper<span class="token punctuation">,</span> <span class="token keyword">int</span> count<span class="token punctuation">,</span> <span class="token keyword">boolean</span> prioritized<span class="token punctuation">,</span> Object<span class="token punctuation">.</span><span class="token punctuation">.</span><span class="token punctuation">.</span> args<span class="token punctuation">)</span>
+        <span class="token keyword">throws</span> BlockException <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+        Context context <span class="token operator">=</span> ContextUtil<span class="token punctuation">.</span><span class="token function">getContext</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token keyword">if</span> <span class="token punctuation">(</span>context <span class="token keyword">instanceof</span> <span class="token class-name">NullContext</span><span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+            <span class="token comment" spellcheck="true">// The &amp;#123;@link NullContext&amp;#125; indicates that the amount of context has exceeded the threshold,</span>
+            <span class="token comment" spellcheck="true">// so here init the entry only. No rule checking will be done.</span>
+            <span class="token keyword">return</span> <span class="token keyword">new</span> <span class="token class-name">CtEntry</span><span class="token punctuation">(</span>resourceWrapper<span class="token punctuation">,</span> null<span class="token punctuation">,</span> context<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+
+        <span class="token keyword">if</span> <span class="token punctuation">(</span>context <span class="token operator">==</span> null<span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+            <span class="token comment" spellcheck="true">// Using default context.</span>
+            context <span class="token operator">=</span> InternalContextUtil<span class="token punctuation">.</span><span class="token function">internalEnter</span><span class="token punctuation">(</span>Constants<span class="token punctuation">.</span>CONTEXT_DEFAULT_NAME<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+
+        <span class="token comment" spellcheck="true">// Global switch is close, no rule checking will do.</span>
+        <span class="token keyword">if</span> <span class="token punctuation">(</span><span class="token operator">!</span>Constants<span class="token punctuation">.</span>ON<span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+            <span class="token keyword">return</span> <span class="token keyword">new</span> <span class="token class-name">CtEntry</span><span class="token punctuation">(</span>resourceWrapper<span class="token punctuation">,</span> null<span class="token punctuation">,</span> context<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+
+        ProcessorSlot<span class="token operator">&lt;</span>Object<span class="token operator">></span> chain <span class="token operator">=</span> <span class="token function">lookProcessChain</span><span class="token punctuation">(</span>resourceWrapper<span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+        <span class="token comment" spellcheck="true">/*
+         * Means amount of resources (slot chain) exceeds &amp;#123;@link Constants.MAX_SLOT_CHAIN_SIZE&amp;#125;,
+         * so no rule checking will be done.
+         */</span>
+        <span class="token keyword">if</span> <span class="token punctuation">(</span>chain <span class="token operator">==</span> null<span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+            <span class="token keyword">return</span> <span class="token keyword">new</span> <span class="token class-name">CtEntry</span><span class="token punctuation">(</span>resourceWrapper<span class="token punctuation">,</span> null<span class="token punctuation">,</span> context<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+
+        Entry e <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">CtEntry</span><span class="token punctuation">(</span>resourceWrapper<span class="token punctuation">,</span> chain<span class="token punctuation">,</span> context<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token keyword">try</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+            chain<span class="token punctuation">.</span><span class="token function">entry</span><span class="token punctuation">(</span>context<span class="token punctuation">,</span> resourceWrapper<span class="token punctuation">,</span> null<span class="token punctuation">,</span> count<span class="token punctuation">,</span> prioritized<span class="token punctuation">,</span> args<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span> <span class="token keyword">catch</span> <span class="token punctuation">(</span><span class="token class-name">BlockException</span> e1<span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+            e<span class="token punctuation">.</span><span class="token function">exit</span><span class="token punctuation">(</span>count<span class="token punctuation">,</span> args<span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <span class="token keyword">throw</span> e1<span class="token punctuation">;</span>
+        <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span> <span class="token keyword">catch</span> <span class="token punctuation">(</span><span class="token class-name">Throwable</span> e1<span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+            <span class="token comment" spellcheck="true">// This should not happen, unless there are errors existing in Sentinel internal.</span>
+            RecordLog<span class="token punctuation">.</span><span class="token function">info</span><span class="token punctuation">(</span><span class="token string">"Sentinel unexpected exception"</span><span class="token punctuation">,</span> e1<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+        <span class="token keyword">return</span> e<span class="token punctuation">;</span>
+    <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+</code></pre>
+<h3 id="InternalContextUtil-internalEnter"><a href="#InternalContextUtil-internalEnter" class="headerlink" title="InternalContextUtil.internalEnter"></a>InternalContextUtil.internalEnter</h3><pre class=" language-java"><code class="language-java">   <span class="token keyword">private</span> <span class="token keyword">final</span> <span class="token keyword">static</span> <span class="token keyword">class</span> <span class="token class-name">InternalContextUtil</span> <span class="token keyword">extends</span> <span class="token class-name">ContextUtil</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+        <span class="token keyword">static</span> Context <span class="token function">internalEnter</span><span class="token punctuation">(</span>String name<span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+            <span class="token keyword">return</span> <span class="token function">trueEnter</span><span class="token punctuation">(</span>name<span class="token punctuation">,</span> <span class="token string">""</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+
+        <span class="token keyword">static</span> Context <span class="token function">internalEnter</span><span class="token punctuation">(</span>String name<span class="token punctuation">,</span> String origin<span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+            <span class="token keyword">return</span> <span class="token function">trueEnter</span><span class="token punctuation">(</span>name<span class="token punctuation">,</span> origin<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+    <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+</code></pre>
+<h3 id="trueEnter"><a href="#trueEnter" class="headerlink" title="trueEnter"></a>trueEnter</h3><pre class=" language-java"><code class="language-java"><span class="token keyword">protected</span> <span class="token keyword">static</span> Context <span class="token function">trueEnter</span><span class="token punctuation">(</span>String name<span class="token punctuation">,</span> String origin<span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+        Context context <span class="token operator">=</span> contextHolder<span class="token punctuation">.</span><span class="token function">get</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token keyword">if</span> <span class="token punctuation">(</span>context <span class="token operator">==</span> null<span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+            Map<span class="token operator">&lt;</span>String<span class="token punctuation">,</span> DefaultNode<span class="token operator">></span> localCacheNameMap <span class="token operator">=</span> contextNameNodeMap<span class="token punctuation">;</span>
+            DefaultNode node <span class="token operator">=</span> localCacheNameMap<span class="token punctuation">.</span><span class="token function">get</span><span class="token punctuation">(</span>name<span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <span class="token keyword">if</span> <span class="token punctuation">(</span>node <span class="token operator">==</span> null<span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+                <span class="token keyword">if</span> <span class="token punctuation">(</span>localCacheNameMap<span class="token punctuation">.</span><span class="token function">size</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">></span> Constants<span class="token punctuation">.</span>MAX_CONTEXT_NAME_SIZE<span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+                    <span class="token function">setNullContext</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+                    <span class="token keyword">return</span> NULL_CONTEXT<span class="token punctuation">;</span>
+                <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span> <span class="token keyword">else</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+                    <span class="token keyword">try</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+                        LOCK<span class="token punctuation">.</span><span class="token function">lock</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+                        node <span class="token operator">=</span> contextNameNodeMap<span class="token punctuation">.</span><span class="token function">get</span><span class="token punctuation">(</span>name<span class="token punctuation">)</span><span class="token punctuation">;</span>
+                        <span class="token keyword">if</span> <span class="token punctuation">(</span>node <span class="token operator">==</span> null<span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+                            <span class="token keyword">if</span> <span class="token punctuation">(</span>contextNameNodeMap<span class="token punctuation">.</span><span class="token function">size</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">></span> Constants<span class="token punctuation">.</span>MAX_CONTEXT_NAME_SIZE<span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+                                <span class="token function">setNullContext</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+                                <span class="token keyword">return</span> NULL_CONTEXT<span class="token punctuation">;</span>
+                            <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span> <span class="token keyword">else</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+                                node <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">EntranceNode</span><span class="token punctuation">(</span><span class="token keyword">new</span> <span class="token class-name">StringResourceWrapper</span><span class="token punctuation">(</span>name<span class="token punctuation">,</span> EntryType<span class="token punctuation">.</span>IN<span class="token punctuation">)</span><span class="token punctuation">,</span> null<span class="token punctuation">)</span><span class="token punctuation">;</span>
+                                <span class="token comment" spellcheck="true">// Add entrance node.</span>
+                                Constants<span class="token punctuation">.</span>ROOT<span class="token punctuation">.</span><span class="token function">addChild</span><span class="token punctuation">(</span>node<span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+                                Map<span class="token operator">&lt;</span>String<span class="token punctuation">,</span> DefaultNode<span class="token operator">></span> newMap <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">HashMap</span><span class="token operator">&lt;</span><span class="token operator">></span><span class="token punctuation">(</span>contextNameNodeMap<span class="token punctuation">.</span><span class="token function">size</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">+</span> <span class="token number">1</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+                                newMap<span class="token punctuation">.</span><span class="token function">putAll</span><span class="token punctuation">(</span>contextNameNodeMap<span class="token punctuation">)</span><span class="token punctuation">;</span>
+                                newMap<span class="token punctuation">.</span><span class="token function">put</span><span class="token punctuation">(</span>name<span class="token punctuation">,</span> node<span class="token punctuation">)</span><span class="token punctuation">;</span>
+                                contextNameNodeMap <span class="token operator">=</span> newMap<span class="token punctuation">;</span>
+                            <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+                        <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+                    <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span> <span class="token keyword">finally</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+                        LOCK<span class="token punctuation">.</span><span class="token function">unlock</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+                    <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+                <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+            <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+            context <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">Context</span><span class="token punctuation">(</span>node<span class="token punctuation">,</span> name<span class="token punctuation">)</span><span class="token punctuation">;</span>
+            context<span class="token punctuation">.</span><span class="token function">setOrigin</span><span class="token punctuation">(</span>origin<span class="token punctuation">)</span><span class="token punctuation">;</span>
+            contextHolder<span class="token punctuation">.</span><span class="token function">set</span><span class="token punctuation">(</span>context<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+
+        <span class="token keyword">return</span> context<span class="token punctuation">;</span>
+    <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+</code></pre>
+<h3 id="lookProcessChain"><a href="#lookProcessChain" class="headerlink" title="lookProcessChain"></a>lookProcessChain</h3><pre class=" language-java"><code class="language-java">ProcessorSlot<span class="token operator">&lt;</span>Object<span class="token operator">></span> <span class="token function">lookProcessChain</span><span class="token punctuation">(</span>ResourceWrapper resourceWrapper<span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+        ProcessorSlotChain chain <span class="token operator">=</span> chainMap<span class="token punctuation">.</span><span class="token function">get</span><span class="token punctuation">(</span>resourceWrapper<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token keyword">if</span> <span class="token punctuation">(</span>chain <span class="token operator">==</span> null<span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+            <span class="token keyword">synchronized</span> <span class="token punctuation">(</span>LOCK<span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+                chain <span class="token operator">=</span> chainMap<span class="token punctuation">.</span><span class="token function">get</span><span class="token punctuation">(</span>resourceWrapper<span class="token punctuation">)</span><span class="token punctuation">;</span>
+                <span class="token keyword">if</span> <span class="token punctuation">(</span>chain <span class="token operator">==</span> null<span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+                    <span class="token comment" spellcheck="true">// Entry size limit.</span>
+                    <span class="token keyword">if</span> <span class="token punctuation">(</span>chainMap<span class="token punctuation">.</span><span class="token function">size</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">>=</span> Constants<span class="token punctuation">.</span>MAX_SLOT_CHAIN_SIZE<span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+                        <span class="token keyword">return</span> null<span class="token punctuation">;</span>
+                    <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+
+                    chain <span class="token operator">=</span> SlotChainProvider<span class="token punctuation">.</span><span class="token function">newSlotChain</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+                    Map<span class="token operator">&lt;</span>ResourceWrapper<span class="token punctuation">,</span> ProcessorSlotChain<span class="token operator">></span> newMap <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">HashMap</span><span class="token operator">&lt;</span>ResourceWrapper<span class="token punctuation">,</span> ProcessorSlotChain<span class="token operator">></span><span class="token punctuation">(</span>
+                        chainMap<span class="token punctuation">.</span><span class="token function">size</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">+</span> <span class="token number">1</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+                    newMap<span class="token punctuation">.</span><span class="token function">putAll</span><span class="token punctuation">(</span>chainMap<span class="token punctuation">)</span><span class="token punctuation">;</span>
+                    newMap<span class="token punctuation">.</span><span class="token function">put</span><span class="token punctuation">(</span>resourceWrapper<span class="token punctuation">,</span> chain<span class="token punctuation">)</span><span class="token punctuation">;</span>
+                    chainMap <span class="token operator">=</span> newMap<span class="token punctuation">;</span>
+                <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+            <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+        <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+        <span class="token keyword">return</span> chain<span class="token punctuation">;</span>
+    <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+</code></pre>
+<h3 id="chain-SlotChainProvider-newSlotChain-构建一个Chanin"><a href="#chain-SlotChainProvider-newSlotChain-构建一个Chanin" class="headerlink" title="chain = SlotChainProvider.newSlotChain(); 构建一个Chanin"></a>chain = SlotChainProvider.newSlotChain(); 构建一个Chanin</h3><pre class=" language-java"><code class="language-java"><span class="token keyword">public</span> <span class="token keyword">static</span> ProcessorSlotChain <span class="token function">newSlotChain</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+        <span class="token keyword">if</span> <span class="token punctuation">(</span>builder <span class="token operator">!=</span> null<span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+            <span class="token keyword">return</span> builder<span class="token punctuation">.</span><span class="token function">build</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+
+        <span class="token function">resolveSlotChainBuilder</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+        <span class="token keyword">if</span> <span class="token punctuation">(</span>builder <span class="token operator">==</span> null<span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+            RecordLog<span class="token punctuation">.</span><span class="token function">warn</span><span class="token punctuation">(</span><span class="token string">"[SlotChainProvider] Wrong state when resolving slot chain builder, using default"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+            builder <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">DefaultSlotChainBuilder</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+        <span class="token keyword">return</span> builder<span class="token punctuation">.</span><span class="token function">build</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+</code></pre>
+<h3 id="new-DefaultSlotChainBuilder"><a href="#new-DefaultSlotChainBuilder" class="headerlink" title="new DefaultSlotChainBuilder()"></a>new DefaultSlotChainBuilder()</h3><pre class=" language-java"><code class="language-java"><span class="token keyword">public</span> <span class="token keyword">class</span> <span class="token class-name">DefaultSlotChainBuilder</span> <span class="token keyword">implements</span> <span class="token class-name">SlotChainBuilder</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+    <span class="token keyword">public</span> <span class="token function">DefaultSlotChainBuilder</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+    <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+
+    <span class="token keyword">public</span> ProcessorSlotChain <span class="token function">build</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+        ProcessorSlotChain chain <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">DefaultProcessorSlotChain</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        chain<span class="token punctuation">.</span><span class="token function">addLast</span><span class="token punctuation">(</span><span class="token keyword">new</span> <span class="token class-name">NodeSelectorSlot</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        chain<span class="token punctuation">.</span><span class="token function">addLast</span><span class="token punctuation">(</span><span class="token keyword">new</span> <span class="token class-name">ClusterBuilderSlot</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        chain<span class="token punctuation">.</span><span class="token function">addLast</span><span class="token punctuation">(</span><span class="token keyword">new</span> <span class="token class-name">LogSlot</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        chain<span class="token punctuation">.</span><span class="token function">addLast</span><span class="token punctuation">(</span><span class="token keyword">new</span> <span class="token class-name">StatisticSlot</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        chain<span class="token punctuation">.</span><span class="token function">addLast</span><span class="token punctuation">(</span><span class="token keyword">new</span> <span class="token class-name">SystemSlot</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        chain<span class="token punctuation">.</span><span class="token function">addLast</span><span class="token punctuation">(</span><span class="token keyword">new</span> <span class="token class-name">AuthoritySlot</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        chain<span class="token punctuation">.</span><span class="token function">addLast</span><span class="token punctuation">(</span><span class="token keyword">new</span> <span class="token class-name">FlowSlot</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        chain<span class="token punctuation">.</span><span class="token function">addLast</span><span class="token punctuation">(</span><span class="token keyword">new</span> <span class="token class-name">DegradeSlot</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token keyword">return</span> chain<span class="token punctuation">;</span>
+    <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+<span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+</code></pre>
+<p>即最后的调用顺序如下： NodeSelectorSlot =&gt; ClusterBuilderSlot =&gt; LogSlot =&gt; StatisticSlot =&gt; AuthoritySlot =&gt; SystemSlot =&gt; FlowSlot =&gt; DegradeSlot<br> 如果想改变他们的调用顺序，可通过SPI机制实现</p>
+<h3 id="NodeSelectorSlot"><a href="#NodeSelectorSlot" class="headerlink" title="NodeSelectorSlot"></a>NodeSelectorSlot</h3><p>构造调用链，具体参考 <a target="_blank" rel="noopener" href="https://links.jianshu.com/go?to=https://github.com/all4you/sentinel-tutorial/blob/master/sentinel-principle/sentinel-slot-chain/sentinel-slot-chain.md">NodeSelectorSlot</a></p>
+<pre class=" language-dart"><code class="language-dart"><span class="token metadata symbol">@Override</span>
+public <span class="token keyword">void</span> <span class="token function">entry</span><span class="token punctuation">(</span>Context context<span class="token punctuation">,</span> ResourceWrapper resourceWrapper<span class="token punctuation">,</span> Object obj<span class="token punctuation">,</span> int count<span class="token punctuation">,</span> boolean prioritized<span class="token punctuation">,</span> Object<span class="token punctuation">.</span><span class="token punctuation">.</span><span class="token punctuation">.</span> args<span class="token punctuation">)</span>
+    throws Throwable <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+    <span class="token comment" spellcheck="true">// 每个资源对应一个 ProcessorSlotChain</span>
+    <span class="token comment" spellcheck="true">// 一个资源可以对应多个Context</span>
+    <span class="token comment" spellcheck="true">// 一个ContextName 对应一个 DefaultNode , 即 一个资源可能对应多个 DefaultNode, 但 一个资源只有一个 ClusterNode</span>
+    <span class="token comment" spellcheck="true">// 针对同一段代码，不同线程对应的Context实例是不一样的，但是对应的Context Name是一样的，所以这时认为是同一个Context，Context我们用Name区分</span>
+    DefaultNode node <span class="token operator">=</span> map<span class="token punctuation">.</span><span class="token keyword">get</span><span class="token punctuation">(</span>context<span class="token punctuation">.</span><span class="token function">getName</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token keyword">if</span> <span class="token punctuation">(</span>node <span class="token operator">==</span> <span class="token keyword">null</span><span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+        <span class="token function">synchronized</span> <span class="token punctuation">(</span><span class="token keyword">this</span><span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+            node <span class="token operator">=</span> map<span class="token punctuation">.</span><span class="token keyword">get</span><span class="token punctuation">(</span>context<span class="token punctuation">.</span><span class="token function">getName</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <span class="token keyword">if</span> <span class="token punctuation">(</span>node <span class="token operator">==</span> <span class="token keyword">null</span><span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+                node <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">DefaultNode</span><span class="token punctuation">(</span>resourceWrapper<span class="token punctuation">,</span> <span class="token keyword">null</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+                <span class="token comment" spellcheck="true">// key 为 ontextName , vaue 为 DefaultNode</span>
+                HashMap<span class="token operator">&lt;</span>String<span class="token punctuation">,</span> DefaultNode<span class="token operator">></span> cacheMap <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">HashMap</span><span class="token operator">&lt;</span>String<span class="token punctuation">,</span> DefaultNode<span class="token operator">></span><span class="token punctuation">(</span>map<span class="token punctuation">.</span><span class="token function">size</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+                cacheMap<span class="token punctuation">.</span><span class="token function">putAll</span><span class="token punctuation">(</span>map<span class="token punctuation">)</span><span class="token punctuation">;</span>
+                cacheMap<span class="token punctuation">.</span><span class="token function">put</span><span class="token punctuation">(</span>context<span class="token punctuation">.</span><span class="token function">getName</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">,</span> node<span class="token punctuation">)</span><span class="token punctuation">;</span>
+                map <span class="token operator">=</span> cacheMap<span class="token punctuation">;</span>
+                <span class="token comment" spellcheck="true">// Build invocation tree</span>
+                <span class="token punctuation">(</span><span class="token punctuation">(</span>DefaultNode<span class="token punctuation">)</span> context<span class="token punctuation">.</span><span class="token function">getLastNode</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">addChild</span><span class="token punctuation">(</span>node<span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+
+        <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+    <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+    context<span class="token punctuation">.</span><span class="token function">setCurNode</span><span class="token punctuation">(</span>node<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token function">fireEntry</span><span class="token punctuation">(</span>context<span class="token punctuation">,</span> resourceWrapper<span class="token punctuation">,</span> node<span class="token punctuation">,</span> count<span class="token punctuation">,</span> prioritized<span class="token punctuation">,</span> args<span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+</code></pre>
+<h3 id="ClusterBuilderSlot"><a href="#ClusterBuilderSlot" class="headerlink" title="ClusterBuilderSlot"></a>ClusterBuilderSlot</h3><p>具体参考 <a target="_blank" rel="noopener" href="https://links.jianshu.com/go?to=https://github.com/all4you/sentinel-tutorial/blob/master/sentinel-principle/sentinel-slot-chain/sentinel-slot-chain.md">ClusterBuilderSlot</a></p>
+<p>每个资源对应一个ClusterNode，并且DefaultNode引用了ClusterNode</p>
+<h3 id="LogSlot"><a href="#LogSlot" class="headerlink" title="LogSlot"></a>LogSlot</h3><p>记录日志用的，先执行下面的 Solt， 如果报错了或者被Block了，记录到日志中</p>
+<pre class=" language-java"><code class="language-java"><span class="token annotation punctuation">@Override</span>
+<span class="token keyword">public</span> <span class="token keyword">void</span> <span class="token function">entry</span><span class="token punctuation">(</span>Context context<span class="token punctuation">,</span> ResourceWrapper resourceWrapper<span class="token punctuation">,</span> DefaultNode obj<span class="token punctuation">,</span> <span class="token keyword">int</span> count<span class="token punctuation">,</span> <span class="token keyword">boolean</span> prioritized<span class="token punctuation">,</span> Object<span class="token punctuation">.</span><span class="token punctuation">.</span><span class="token punctuation">.</span> args<span class="token punctuation">)</span>
+    <span class="token keyword">throws</span> Throwable <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+    <span class="token keyword">try</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+        <span class="token function">fireEntry</span><span class="token punctuation">(</span>context<span class="token punctuation">,</span> resourceWrapper<span class="token punctuation">,</span> obj<span class="token punctuation">,</span> count<span class="token punctuation">,</span> prioritized<span class="token punctuation">,</span> args<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span> <span class="token keyword">catch</span> <span class="token punctuation">(</span><span class="token class-name">BlockException</span> e<span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+        EagleEyeLogUtil<span class="token punctuation">.</span><span class="token function">log</span><span class="token punctuation">(</span>resourceWrapper<span class="token punctuation">.</span><span class="token function">getName</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">,</span> e<span class="token punctuation">.</span><span class="token function">getClass</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">getSimpleName</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">,</span> e<span class="token punctuation">.</span><span class="token function">getRuleLimitApp</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">,</span>
+            context<span class="token punctuation">.</span><span class="token function">getOrigin</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">,</span> count<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token keyword">throw</span> e<span class="token punctuation">;</span>
+    <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span> <span class="token keyword">catch</span> <span class="token punctuation">(</span><span class="token class-name">Throwable</span> e<span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+        RecordLog<span class="token punctuation">.</span><span class="token function">warn</span><span class="token punctuation">(</span><span class="token string">"Unexpected entry exception"</span><span class="token punctuation">,</span> e<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+<span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+</code></pre>
+<h3 id="StatisticSlot"><a href="#StatisticSlot" class="headerlink" title="StatisticSlot"></a>StatisticSlot</h3><p>核心实现，各种计数的实现逻辑，基于时间窗口实现。 基于触发请求通过 和 请求Block 的回调逻辑，回调逻辑在 MetricCallbackInit 中初始化了， 最终还是靠 StatisticSlotCallbackRegistry</p>
+<pre class=" language-java"><code class="language-java"><span class="token comment" spellcheck="true">// 省略了一些代码</span>
+<span class="token annotation punctuation">@Override</span>
+<span class="token keyword">public</span> <span class="token keyword">void</span> <span class="token function">entry</span><span class="token punctuation">(</span>Context context<span class="token punctuation">,</span> ResourceWrapper resourceWrapper<span class="token punctuation">,</span> DefaultNode node<span class="token punctuation">,</span> <span class="token keyword">int</span> count<span class="token punctuation">,</span> <span class="token keyword">boolean</span> prioritized<span class="token punctuation">,</span> Object<span class="token punctuation">.</span><span class="token punctuation">.</span><span class="token punctuation">.</span> args<span class="token punctuation">)</span> <span class="token keyword">throws</span> Throwable <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+    <span class="token keyword">try</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+        <span class="token comment" spellcheck="true">// 执行下来的Solt ，判断是否通过</span>
+        <span class="token function">fireEntry</span><span class="token punctuation">(</span>context<span class="token punctuation">,</span> resourceWrapper<span class="token punctuation">,</span> node<span class="token punctuation">,</span> count<span class="token punctuation">,</span> prioritized<span class="token punctuation">,</span> args<span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+        <span class="token comment" spellcheck="true">// Request passed, add thread count and pass count.</span>
+        node<span class="token punctuation">.</span><span class="token function">increaseThreadNum</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        node<span class="token punctuation">.</span><span class="token function">addPassRequest</span><span class="token punctuation">(</span>count<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span> <span class="token keyword">catch</span> <span class="token punctuation">(</span><span class="token class-name">BlockException</span> e<span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+        <span class="token comment" spellcheck="true">// Blocked, set block exception to current entry.</span>
+        context<span class="token punctuation">.</span><span class="token function">getCurEntry</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">setError</span><span class="token punctuation">(</span>e<span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+        <span class="token comment" spellcheck="true">// Add block count.</span>
+        node<span class="token punctuation">.</span><span class="token function">increaseBlockQps</span><span class="token punctuation">(</span>count<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token keyword">if</span> <span class="token punctuation">(</span>context<span class="token punctuation">.</span><span class="token function">getCurEntry</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">getOriginNode</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">!=</span> null<span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+            context<span class="token punctuation">.</span><span class="token function">getCurEntry</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">getOriginNode</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">increaseBlockQps</span><span class="token punctuation">(</span>count<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+    <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+<span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+</code></pre>
+<p>DefaultNode 继承自 StatisticNode , 在 StatisticNode 中有两个属性</p>
+<pre class=" language-java"><code class="language-java"><span class="token comment" spellcheck="true">// 第一个参数表示 窗口的个数；第二个参数表示 窗口对多长时间进行统计  比如 QPS xx/秒   那就是 1000 毫秒， 所以窗口的长度为  1000/个数</span>
+<span class="token keyword">private</span> <span class="token keyword">transient</span> <span class="token keyword">volatile</span> Metric rollingCounterInSecond <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">ArrayMetric</span><span class="token punctuation">(</span>SampleCountProperty<span class="token punctuation">.</span>SAMPLE_COUNT<span class="token punctuation">,</span> IntervalProperty<span class="token punctuation">.</span>INTERVAL<span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+<span class="token comment" spellcheck="true">// 窗口长度为1000 60个 刚好一分钟</span>
+<span class="token keyword">private</span> <span class="token keyword">transient</span> Metric rollingCounterInMinute <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">ArrayMetric</span><span class="token punctuation">(</span><span class="token number">60</span><span class="token punctuation">,</span> <span class="token number">60</span> <span class="token operator">*</span> <span class="token number">1000</span><span class="token punctuation">,</span> <span class="token boolean">false</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+</code></pre>
+<p>ArrayMetric 持有 LeapArray ， LeapArray 主要有两个实现类 OccupiableBucketLeapArray 、 BucketLeapArray ， 但根据当前时间获取窗口的核心实现在 LeapArray 抽象类中</p>
+<p>滑动窗口简单理解就是： 根据任何时间，都可以获取一个对应的窗口，在该窗口内，保存着在窗口长度时间内通过的请求数、被block的请求数、异常数、RT。基于这些数据，我们就可以得到对应的资源的QPS、RT等指标信息。</p>
+<p>核心方法在 LeapArray#currentWindow ， 整体思路如下</p>
+<ol>
+<li>根据当前时间获取时间窗口的下标  (time/windowLength) % array.length()</li>
+<li>计算当前时间对应时间窗口的开始时间  time - time % windowLength</li>
+<li>根据下标获取时间窗口，这里分三种情况：<br> (1) 根据下标没有获取到窗口，此时创建一个窗口。此时代表窗口没有创建 或者 窗口还没有开始滑动， 所以对应的下标位置为null<br> (2) 根据下标获取到窗口，并且该窗口的开始时间和上面计算的开始时间一样，此时直接返回该窗口<br> (3) 根据下标获取到窗口，但是该窗口的开始时间大于上面计算的开始时间，这时需要用计算的开始时间重置该窗口的开始时间，这就类似于窗口在滑动</li>
+</ol>
+<pre class=" language-csharp"><code class="language-csharp"><span class="token keyword">public</span> WindowWrap<span class="token operator">&lt;</span>T<span class="token operator">></span> <span class="token function">currentWindow</span><span class="token punctuation">(</span><span class="token keyword">long</span> timeMillis<span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+    <span class="token keyword">if</span> <span class="token punctuation">(</span>timeMillis <span class="token operator">&lt;</span> <span class="token number">0</span><span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+        <span class="token keyword">return</span> <span class="token keyword">null</span><span class="token punctuation">;</span>
+    <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+
+    <span class="token comment" spellcheck="true">// 计算窗口数组下标</span>
+    <span class="token keyword">int</span> idx <span class="token operator">=</span> <span class="token function">calculateTimeIdx</span><span class="token punctuation">(</span>timeMillis<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token comment" spellcheck="true">// 计算开始时间</span>
+    <span class="token keyword">long</span> windowStart <span class="token operator">=</span> <span class="token function">calculateWindowStart</span><span class="token punctuation">(</span>timeMillis<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token keyword">while</span> <span class="token punctuation">(</span><span class="token keyword">true</span><span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+        WindowWrap<span class="token operator">&lt;</span>T<span class="token operator">></span> old <span class="token operator">=</span> array<span class="token punctuation">.</span><span class="token keyword">get</span><span class="token punctuation">(</span>idx<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token keyword">if</span> <span class="token punctuation">(</span>old <span class="token operator">==</span> <span class="token keyword">null</span><span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+            WindowWrap<span class="token operator">&lt;</span>T<span class="token operator">></span> window <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">WindowWrap</span><span class="token operator">&lt;</span>T<span class="token operator">></span><span class="token punctuation">(</span>windowLengthInMs<span class="token punctuation">,</span> windowStart<span class="token punctuation">,</span> <span class="token function">newEmptyBucket</span><span class="token punctuation">(</span>timeMillis<span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <span class="token keyword">if</span> <span class="token punctuation">(</span>array<span class="token punctuation">.</span><span class="token function">compareAndSet</span><span class="token punctuation">(</span>idx<span class="token punctuation">,</span> <span class="token keyword">null</span><span class="token punctuation">,</span> window<span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+                <span class="token comment" spellcheck="true">// Successfully updated, return the created bucket.</span>
+                <span class="token keyword">return</span> window<span class="token punctuation">;</span>
+            <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span> <span class="token keyword">else</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+                <span class="token comment" spellcheck="true">//  循环重试 Contention failed, the thread will yield its time slice to wait for bucket available.</span>
+                Thread<span class="token punctuation">.</span><span class="token keyword">yield</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+        <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span> <span class="token keyword">else</span> <span class="token keyword">if</span> <span class="token punctuation">(</span>windowStart <span class="token operator">==</span> old<span class="token punctuation">.</span><span class="token function">windowStart</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+            <span class="token keyword">return</span> old<span class="token punctuation">;</span>
+        <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span> <span class="token keyword">else</span> <span class="token keyword">if</span> <span class="token punctuation">(</span>windowStart <span class="token operator">></span> old<span class="token punctuation">.</span><span class="token function">windowStart</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+            <span class="token keyword">if</span> <span class="token punctuation">(</span>updateLock<span class="token punctuation">.</span><span class="token function">tryLock</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+                <span class="token keyword">try</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+                    <span class="token comment" spellcheck="true">// Successfully get the update lock, now we reset the bucket.</span>
+                    <span class="token keyword">return</span> <span class="token function">resetWindowTo</span><span class="token punctuation">(</span>old<span class="token punctuation">,</span> windowStart<span class="token punctuation">)</span><span class="token punctuation">;</span>
+                <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span> <span class="token keyword">finally</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+                    updateLock<span class="token punctuation">.</span><span class="token function">unlock</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+                <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+            <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span> <span class="token keyword">else</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+                <span class="token comment" spellcheck="true">// Contention failed, the thread will yield its time slice to wait for bucket available.</span>
+                Thread<span class="token punctuation">.</span><span class="token keyword">yield</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+        <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span> <span class="token keyword">else</span> <span class="token keyword">if</span> <span class="token punctuation">(</span>windowStart <span class="token operator">&lt;</span> old<span class="token punctuation">.</span><span class="token function">windowStart</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+            <span class="token comment" spellcheck="true">// Should not go through here, as the provided time is already behind.</span>
+            <span class="token keyword">return</span> <span class="token keyword">new</span> <span class="token class-name">WindowWrap</span><span class="token operator">&lt;</span>T<span class="token operator">></span><span class="token punctuation">(</span>windowLengthInMs<span class="token punctuation">,</span> windowStart<span class="token punctuation">,</span> <span class="token function">newEmptyBucket</span><span class="token punctuation">(</span>timeMillis<span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+    <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+<span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+</code></pre>
+<p>todo OccupiableBucketLeapArray 还不太理解</p>
+<h3 id="AuthoritySlot"><a href="#AuthoritySlot" class="headerlink" title="AuthoritySlot"></a>AuthoritySlot</h3><p>黑白名单规则校验，非常简单</p>
+<pre class=" language-java"><code class="language-java"><span class="token annotation punctuation">@Override</span>
+<span class="token keyword">public</span> <span class="token keyword">void</span> <span class="token function">entry</span><span class="token punctuation">(</span>Context context<span class="token punctuation">,</span> ResourceWrapper resourceWrapper<span class="token punctuation">,</span> DefaultNode node<span class="token punctuation">,</span> <span class="token keyword">int</span> count<span class="token punctuation">,</span> <span class="token keyword">boolean</span> prioritized<span class="token punctuation">,</span> Object<span class="token punctuation">.</span><span class="token punctuation">.</span><span class="token punctuation">.</span> args<span class="token punctuation">)</span> <span class="token keyword">throws</span> Throwable <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+    <span class="token function">checkBlackWhiteAuthority</span><span class="token punctuation">(</span>resourceWrapper<span class="token punctuation">,</span> context<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token function">fireEntry</span><span class="token punctuation">(</span>context<span class="token punctuation">,</span> resourceWrapper<span class="token punctuation">,</span> node<span class="token punctuation">,</span> count<span class="token punctuation">,</span> prioritized<span class="token punctuation">,</span> args<span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+</code></pre>
+<ol>
+<li>加载所有的黑白名单规则</li>
+<li>遍历所有黑白名单规则，调用 AuthorityRuleChecker#passCheck 方法，如果不通过则抛出 AuthorityException</li>
+<li>校验逻辑：从 Context 中拿到 originName, 然后判断 originName 是否在 规则的 limitApp 中, 然后判断是 黑名单 还是白名单，然后校验返回结果</li>
+</ol>
+<h3 id="SystemSlot"><a href="#SystemSlot" class="headerlink" title="SystemSlot"></a>SystemSlot</h3><p>仅对入口流量有效，校验顺序 QPS -&gt; 线程数 -&gt; RT -&gt; BBR -&gt; CPU</p>
+<pre class=" language-java"><code class="language-java"><span class="token annotation punctuation">@Override</span>
+<span class="token keyword">public</span> <span class="token keyword">void</span> <span class="token function">entry</span><span class="token punctuation">(</span>Context context<span class="token punctuation">,</span> ResourceWrapper resourceWrapper<span class="token punctuation">,</span> DefaultNode node<span class="token punctuation">,</span> <span class="token keyword">int</span> count<span class="token punctuation">,</span> <span class="token keyword">boolean</span> prioritized<span class="token punctuation">,</span> Object<span class="token punctuation">.</span><span class="token punctuation">.</span><span class="token punctuation">.</span> args<span class="token punctuation">)</span> <span class="token keyword">throws</span> Throwable <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+    SystemRuleManager<span class="token punctuation">.</span><span class="token function">checkSystem</span><span class="token punctuation">(</span>resourceWrapper<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token function">fireEntry</span><span class="token punctuation">(</span>context<span class="token punctuation">,</span> resourceWrapper<span class="token punctuation">,</span> node<span class="token punctuation">,</span> count<span class="token punctuation">,</span> prioritized<span class="token punctuation">,</span> args<span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+</code></pre>
+<h3 id="FlowSlot"><a href="#FlowSlot" class="headerlink" title="FlowSlot"></a>FlowSlot</h3><p>限流处理</p>
+<p>三种拒绝策略：直接拒绝、WarnUP、匀速排队</p>
+<p>三种限流模式：直接、关联、链路</p>
+<pre class=" language-java"><code class="language-java"><span class="token annotation punctuation">@Override</span>
+<span class="token keyword">public</span> <span class="token keyword">void</span> <span class="token function">entry</span><span class="token punctuation">(</span>Context context<span class="token punctuation">,</span> ResourceWrapper resourceWrapper<span class="token punctuation">,</span> DefaultNode node<span class="token punctuation">,</span> <span class="token keyword">int</span> count<span class="token punctuation">,</span>
+                    <span class="token keyword">boolean</span> prioritized<span class="token punctuation">,</span> Object<span class="token punctuation">.</span><span class="token punctuation">.</span><span class="token punctuation">.</span> args<span class="token punctuation">)</span> <span class="token keyword">throws</span> Throwable <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+    <span class="token function">checkFlow</span><span class="token punctuation">(</span>resourceWrapper<span class="token punctuation">,</span> context<span class="token punctuation">,</span> node<span class="token punctuation">,</span> count<span class="token punctuation">,</span> prioritized<span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+    <span class="token function">fireEntry</span><span class="token punctuation">(</span>context<span class="token punctuation">,</span> resourceWrapper<span class="token punctuation">,</span> node<span class="token punctuation">,</span> count<span class="token punctuation">,</span> prioritized<span class="token punctuation">,</span> args<span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+</code></pre>
+<p>FlowRuleChecker#checkFlow</p>
+<ol>
+<li>获取所有限流规则</li>
+<li>遍历规则，执行 FlowRuleChecker#canPassCheck =&gt; FlowRuleChecker#passLocalCheck =&gt; rule.getRater().canPass(selectedNode, acquireCount, prioritized)</li>
+<li>rule.getRater() 返回一个 TrafficShapingController 对象， 它有3种实现(代码中有4中，但官方文档只介绍了3种)，即对应上面的三种流控模式，每个规则对用的 TrafficShapingController 是在加载规则的时候就确定了</li>
+</ol>
+<p>// FlowRuleUtil#generateRater</p>
+<pre class=" language-cpp"><code class="language-cpp"><span class="token keyword">private</span> <span class="token keyword">static</span> TrafficShapingController <span class="token function">generateRater</span><span class="token punctuation">(</span><span class="token comment" spellcheck="true">/*@Valid*/</span> FlowRule rule<span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+    <span class="token keyword">if</span> <span class="token punctuation">(</span>rule<span class="token punctuation">.</span><span class="token function">getGrade</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">==</span> RuleConstant<span class="token punctuation">.</span>FLOW_GRADE_QPS<span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+        <span class="token keyword">switch</span> <span class="token punctuation">(</span>rule<span class="token punctuation">.</span><span class="token function">getControlBehavior</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+            <span class="token keyword">case</span> RuleConstant<span class="token punctuation">.</span>CONTROL_BEHAVIOR_WARM_UP<span class="token operator">:</span>
+                <span class="token keyword">return</span> <span class="token keyword">new</span> <span class="token function">WarmUpController</span><span class="token punctuation">(</span>rule<span class="token punctuation">.</span><span class="token function">getCount</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">,</span> rule<span class="token punctuation">.</span><span class="token function">getWarmUpPeriodSec</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">,</span>
+                    ColdFactorProperty<span class="token punctuation">.</span>coldFactor<span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <span class="token keyword">case</span> RuleConstant<span class="token punctuation">.</span>CONTROL_BEHAVIOR_RATE_LIMITER<span class="token operator">:</span>
+                <span class="token keyword">return</span> <span class="token keyword">new</span> <span class="token function">RateLimiterController</span><span class="token punctuation">(</span>rule<span class="token punctuation">.</span><span class="token function">getMaxQueueingTimeMs</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">,</span> rule<span class="token punctuation">.</span><span class="token function">getCount</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <span class="token keyword">case</span> RuleConstant<span class="token punctuation">.</span>CONTROL_BEHAVIOR_WARM_UP_RATE_LIMITER<span class="token operator">:</span>
+                <span class="token keyword">return</span> <span class="token keyword">new</span> <span class="token function">WarmUpRateLimiterController</span><span class="token punctuation">(</span>rule<span class="token punctuation">.</span><span class="token function">getCount</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">,</span> rule<span class="token punctuation">.</span><span class="token function">getWarmUpPeriodSec</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">,</span>
+                    rule<span class="token punctuation">.</span><span class="token function">getMaxQueueingTimeMs</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">,</span> ColdFactorProperty<span class="token punctuation">.</span>coldFactor<span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <span class="token keyword">case</span> RuleConstant<span class="token punctuation">.</span>CONTROL_BEHAVIOR_DEFAULT<span class="token operator">:</span>
+            <span class="token keyword">default</span><span class="token operator">:</span>
+                <span class="token comment" spellcheck="true">// Default mode or unknown mode: default traffic shaping controller (fast-reject).</span>
+        <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+    <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+    <span class="token keyword">return</span> <span class="token keyword">new</span> <span class="token function">DefaultController</span><span class="token punctuation">(</span>rule<span class="token punctuation">.</span><span class="token function">getCount</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">,</span> rule<span class="token punctuation">.</span><span class="token function">getGrade</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+</code></pre>
+<h5 id="DefaultController"><a href="#DefaultController" class="headerlink" title="DefaultController"></a>DefaultController</h5><p>比较简单，判断逻辑 (当前的Count + 本次调用) 是否大于 规则中设置的 阈值</p>
+<h5 id="WarmUpController"><a href="#WarmUpController" class="headerlink" title="WarmUpController"></a>WarmUpController</h5><p>让QPS在指定的时间内增加到 阈值， 目前每太看懂</p>
+<h5 id="RateLimiterController"><a href="#RateLimiterController" class="headerlink" title="RateLimiterController"></a>RateLimiterController</h5><p>也比较简单，先按规则中配置的QPS计算每个请求的平均响应时间，然后判断当前请求是否能够等那么久(规则中的时间窗口)</p>
+<h5 id="三种限流模式在哪里体现？"><a href="#三种限流模式在哪里体现？" class="headerlink" title="三种限流模式在哪里体现？"></a>三种限流模式在哪里体现？</h5><p>其实这个主要就是判断 你的指标数据应该要从哪个 Node 中获取，这部分逻辑在 FlowRuleChecker#selectNodeByRequesterAndStrategy 方法中</p>
+<ol>
+<li>直接： 根据你的 originName 和 limitApp 来判断是取 ClusterNode 还是 OriginNode</li>
+<li>关联： 根据关联的资源名取对应的 ClusterNode</li>
+<li>链路： 判断关联的资源 和 当前的 contextName 是否一致，是则返回 当前的 DefaultNode</li>
+</ol>
+<h3 id="DegradeSlot"><a href="#DegradeSlot" class="headerlink" title="DegradeSlot"></a>DegradeSlot</h3><p>降级处理</p>
+<p>目前有三种降级模式：基于RT、基于异常比例、基于一分钟异常数</p>
+<pre class=" language-java"><code class="language-java"><span class="token annotation punctuation">@Override</span>
+<span class="token keyword">public</span> <span class="token keyword">void</span> <span class="token function">entry</span><span class="token punctuation">(</span>Context context<span class="token punctuation">,</span> ResourceWrapper resourceWrapper<span class="token punctuation">,</span> DefaultNode node<span class="token punctuation">,</span> <span class="token keyword">int</span> count<span class="token punctuation">,</span> <span class="token keyword">boolean</span> prioritized<span class="token punctuation">,</span> Object<span class="token punctuation">.</span><span class="token punctuation">.</span><span class="token punctuation">.</span> args<span class="token punctuation">)</span>
+    <span class="token keyword">throws</span> Throwable <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+    DegradeRuleManager<span class="token punctuation">.</span><span class="token function">checkDegrade</span><span class="token punctuation">(</span>resourceWrapper<span class="token punctuation">,</span> context<span class="token punctuation">,</span> node<span class="token punctuation">,</span> count<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token function">fireEntry</span><span class="token punctuation">(</span>context<span class="token punctuation">,</span> resourceWrapper<span class="token punctuation">,</span> node<span class="token punctuation">,</span> count<span class="token punctuation">,</span> prioritized<span class="token punctuation">,</span> args<span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+</code></pre>
+<h5 id="基于RT"><a href="#基于RT" class="headerlink" title="基于RT"></a>基于RT</h5><p>从时间窗口获取RT和规则中配置的阈值进行比较， 通过则 重置计数，然后直接返回； 不通过则 计数加1，如果 计数 &gt;= 5，则进行降级处理</p>
+<h5 id="基于异常比例"><a href="#基于异常比例" class="headerlink" title="基于异常比例"></a>基于异常比例</h5><p>前提条件 QPS &gt; =5 , 然后用 1s异常数/1s总请求数 , 和规则中配置的阈值进行比较</p>
+<h5 id="基于1分钟异常数"><a href="#基于1分钟异常数" class="headerlink" title="基于1分钟异常数"></a>基于1分钟异常数</h5><p>直接用1分钟内的异常数和规则的阈值做比较</p>
+<h5 id="如何按时间窗口降级"><a href="#如何按时间窗口降级" class="headerlink" title="如何按时间窗口降级"></a>如何按时间窗口降级</h5><p>定时任务 + flag<br> 如果降级了， 设置 flag = true , 在 时间窗口秒后， 重置 flag = false ，然后再 passCheck 方法的入口处， 如果 flag = true 就直接降级</p>
+
+                
+            </div>
+            <hr/>
+
+            
+
+    <div class="reprint" id="reprint-statement">
+        
+            <div class="reprint__author">
+                <span class="reprint-meta" style="font-weight: bold;">
+                    <i class="fas fa-user">
+                        文章作者:
+                    </i>
+                </span>
+                <span class="reprint-info">
+                    <a href="/about" rel="external nofollow noreferrer">luyanan</a>
+                </span>
+            </div>
+            <div class="reprint__type">
+                <span class="reprint-meta" style="font-weight: bold;">
+                    <i class="fas fa-link">
+                        文章链接:
+                    </i>
+                </span>
+                <span class="reprint-info">
+                    <a href="https://rainsoil.github.io/2022/01/04/wei-fu-wu/sentinel/sentinel-de-ji-ben-ying-yong-yi-ji-yuan-li-fen-xi/">https://rainsoil.github.io/2022/01/04/wei-fu-wu/sentinel/sentinel-de-ji-ben-ying-yong-yi-ji-yuan-li-fen-xi/</a>
+                </span>
+            </div>
+            <div class="reprint__notice">
+                <span class="reprint-meta" style="font-weight: bold;">
+                    <i class="fas fa-copyright">
+                        版权声明:
+                    </i>
+                </span>
+                <span class="reprint-info">
+                    本博客所有文章除特別声明外，均采用
+                    <a href="https://creativecommons.org/licenses/by/4.0/deed.zh" rel="external nofollow noreferrer" target="_blank">CC BY 4.0</a>
+                    许可协议。转载请注明来源
+                    <a href="/about" target="_blank">luyanan</a>
+                    !
+                </span>
+            </div>
+        
+    </div>
+
+    <script async defer>
+      document.addEventListener("copy", function (e) {
+        let toastHTML = '<span>复制成功，请遵循本文的转载规则</span><button class="btn-flat toast-action" onclick="navToReprintStatement()" style="font-size: smaller">查看</a>';
+        M.toast({html: toastHTML})
+      });
+
+      function navToReprintStatement() {
+        $("html, body").animate({scrollTop: $("#reprint-statement").offset().top - 80}, 800);
+      }
+    </script>
+
+
+
+            <div class="tag_share" style="display: block;">
+                <div class="post-meta__tag-list" style="display: inline-block;">
+                    
+                        <div class="article-tag">
+                            <span class="chip bg-color">无标签</span>
+                        </div>
+                    
+                </div>
+                <div class="post_share" style="zoom: 80%; width: fit-content; display: inline-block; float: right; margin: -0.15rem 0;">
+                    <link rel="stylesheet" type="text/css" href="/libs/share/css/share.min.css">
+<div id="article-share">
+
+    
+    <div class="social-share" data-sites="twitter,facebook,google,qq,qzone,wechat,weibo,douban,linkedin" data-wechat-qrcode-helper="<p>微信扫一扫即可分享！</p>"></div>
+    <script src="/libs/share/js/social-share.min.js"></script>
+    
+
+    
+
+</div>
+
+                </div>
+            </div>
+            
+        </div>
+    </div>
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+<article id="prenext-posts" class="prev-next articles">
+    <div class="row article-row">
+        
+        <div class="article col s12 m6" data-aos="fade-up">
+            <div class="article-badge left-badge text-color">
+                <i class="fas fa-chevron-left"></i>&nbsp;上一篇</div>
+            <div class="card">
+                <a href="/2022/01/04/wei-fu-wu/rocketmq/rocketmq-wen-ti/">
+                    <div class="card-image">
+                        
+                        
+                        <img src="/medias/featureimages/6.jpg" class="responsive-img" alt="RocketMQ问题">
+                        
+                        <span class="card-title">RocketMQ问题</span>
+                    </div>
+                </a>
+                <div class="card-content article-content">
+                    <div class="summary block-with-text">
+                        
+                            
+                        
+                    </div>
+                    <div class="publish-info">
+                        <span class="publish-date">
+                            <i class="far fa-clock fa-fw icon-date"></i>2022-01-04
+                        </span>
+                        <span class="publish-author">
+                            
+                            <i class="fas fa-bookmark fa-fw icon-category"></i>
+                            
+                            <a href="/categories/RocketMQ/" class="post-category">
+                                    RocketMQ
+                                </a>
+                            
+                            <a href="/categories/RocketMQ/%E5%BE%AE%E6%9C%8D%E5%8A%A1/" class="post-category">
+                                    微服务
+                                </a>
+                            
+                            <a href="/categories/RocketMQ/%E5%BE%AE%E6%9C%8D%E5%8A%A1/%E5%BE%AE%E6%9C%8D%E5%8A%A1/" class="post-category">
+                                    微服务
+                                </a>
+                            
+                            <a href="/categories/RocketMQ/%E5%BE%AE%E6%9C%8D%E5%8A%A1/%E5%BE%AE%E6%9C%8D%E5%8A%A1/RocketMQ/" class="post-category">
+                                    RocketMQ
+                                </a>
+                            
+                            
+                        </span>
+                    </div>
+                </div>
+                
+            </div>
+        </div>
+        
+        
+        <div class="article col s12 m6" data-aos="fade-up">
+            <div class="article-badge right-badge text-color">
+                下一篇&nbsp;<i class="fas fa-chevron-right"></i>
+            </div>
+            <div class="card">
+                <a href="/2022/01/04/wei-fu-wu/rocketmq/rocketmq-shi-wu-xing-xiao-xi/">
+                    <div class="card-image">
+                        
+                        
+                        <img src="/medias/featureimages/8.jpg" class="responsive-img" alt="RocketMQ事务性消息">
+                        
+                        <span class="card-title">RocketMQ事务性消息</span>
+                    </div>
+                </a>
+                <div class="card-content article-content">
+                    <div class="summary block-with-text">
+                        
+                            
+                        
+                    </div>
+                    <div class="publish-info">
+                            <span class="publish-date">
+                                <i class="far fa-clock fa-fw icon-date"></i>2022-01-04
+                            </span>
+                        <span class="publish-author">
+                            
+                            <i class="fas fa-bookmark fa-fw icon-category"></i>
+                            
+                            <a href="/categories/RocketMQ/" class="post-category">
+                                    RocketMQ
+                                </a>
+                            
+                            <a href="/categories/RocketMQ/%E5%BE%AE%E6%9C%8D%E5%8A%A1/" class="post-category">
+                                    微服务
+                                </a>
+                            
+                            <a href="/categories/RocketMQ/%E5%BE%AE%E6%9C%8D%E5%8A%A1/%E5%BE%AE%E6%9C%8D%E5%8A%A1/" class="post-category">
+                                    微服务
+                                </a>
+                            
+                            <a href="/categories/RocketMQ/%E5%BE%AE%E6%9C%8D%E5%8A%A1/%E5%BE%AE%E6%9C%8D%E5%8A%A1/RocketMQ/" class="post-category">
+                                    RocketMQ
+                                </a>
+                            
+                            
+                        </span>
+                    </div>
+                </div>
+                
+            </div>
+        </div>
+        
+    </div>
+</article>
+
+</div>
+
+
+
+<!-- 代码块功能依赖 -->
+<script type="text/javascript" src="/libs/codeBlock/codeBlockFuction.js"></script>
+
+<!-- 代码语言 -->
+
+<script type="text/javascript" src="/libs/codeBlock/codeLang.js"></script>
+
+
+<!-- 代码块复制 -->
+
+<script type="text/javascript" src="/libs/codeBlock/codeCopy.js"></script>
+
+
+<!-- 代码块收缩 -->
+
+<script type="text/javascript" src="/libs/codeBlock/codeShrink.js"></script>
+
+
+    </div>
+    <div id="toc-aside" class="expanded col l3 hide-on-med-and-down">
+        <div class="toc-widget card" style="background-color: white;">
+            <div class="toc-title"><i class="far fa-list-alt"></i>&nbsp;&nbsp;目录</div>
+            <div id="toc-content"></div>
+        </div>
+    </div>
+</div>
+
+<!-- TOC 悬浮按钮. -->
+
+<div id="floating-toc-btn" class="hide-on-med-and-down">
+    <a class="btn-floating btn-large bg-color">
+        <i class="fas fa-list-ul"></i>
+    </a>
+</div>
+
+
+<script src="/libs/tocbot/tocbot.min.js"></script>
+<script>
+    $(function () {
+        tocbot.init({
+            tocSelector: '#toc-content',
+            contentSelector: '#articleContent',
+            headingsOffset: -($(window).height() * 0.4 - 45),
+            collapseDepth: Number('0'),
+            headingSelector: 'h2, h3, h4'
+        });
+
+        // modify the toc link href to support Chinese.
+        let i = 0;
+        let tocHeading = 'toc-heading-';
+        $('#toc-content a').each(function () {
+            $(this).attr('href', '#' + tocHeading + (++i));
+        });
+
+        // modify the heading title id to support Chinese.
+        i = 0;
+        $('#articleContent').children('h2, h3, h4').each(function () {
+            $(this).attr('id', tocHeading + (++i));
+        });
+
+        // Set scroll toc fixed.
+        let tocHeight = parseInt($(window).height() * 0.4 - 64);
+        let $tocWidget = $('.toc-widget');
+        $(window).scroll(function () {
+            let scroll = $(window).scrollTop();
+            /* add post toc fixed. */
+            if (scroll > tocHeight) {
+                $tocWidget.addClass('toc-fixed');
+            } else {
+                $tocWidget.removeClass('toc-fixed');
+            }
+        });
+
+        
+        /* 修复文章卡片 div 的宽度. */
+        let fixPostCardWidth = function (srcId, targetId) {
+            let srcDiv = $('#' + srcId);
+            if (srcDiv.length === 0) {
+                return;
+            }
+
+            let w = srcDiv.width();
+            if (w >= 450) {
+                w = w + 21;
+            } else if (w >= 350 && w < 450) {
+                w = w + 18;
+            } else if (w >= 300 && w < 350) {
+                w = w + 16;
+            } else {
+                w = w + 14;
+            }
+            $('#' + targetId).width(w);
+        };
+
+        // 切换TOC目录展开收缩的相关操作.
+        const expandedClass = 'expanded';
+        let $tocAside = $('#toc-aside');
+        let $mainContent = $('#main-content');
+        $('#floating-toc-btn .btn-floating').click(function () {
+            if ($tocAside.hasClass(expandedClass)) {
+                $tocAside.removeClass(expandedClass).hide();
+                $mainContent.removeClass('l9');
+            } else {
+                $tocAside.addClass(expandedClass).show();
+                $mainContent.addClass('l9');
+            }
+            fixPostCardWidth('artDetail', 'prenext-posts');
+        });
+        
+    });
+</script>
+
+    
+
+</main>
+
+
+
+
+    <footer class="page-footer bg-color">
+    
+        <link rel="stylesheet" href="/libs/aplayer/APlayer.min.css">
+<style>
+    .aplayer .aplayer-lrc p {
+        
+        display: none;
+        
+        font-size: 12px;
+        font-weight: 700;
+        line-height: 16px !important;
+    }
+
+    .aplayer .aplayer-lrc p.aplayer-lrc-current {
+        
+        display: none;
+        
+        font-size: 15px;
+        color: #42b983;
+    }
+
+    
+    .aplayer.aplayer-fixed.aplayer-narrow .aplayer-body {
+        left: -66px !important;
+    }
+
+    .aplayer.aplayer-fixed.aplayer-narrow .aplayer-body:hover {
+        left: 0px !important;
+    }
+
+    
+</style>
+<div class="">
+    
+    <div class="row">
+        <meting-js class="col l8 offset-l2 m10 offset-m1 s12"
+                   server="netease"
+                   type="playlist"
+                   id="503838841"
+                   fixed='true'
+                   autoplay='false'
+                   theme='#42b983'
+                   loop='all'
+                   order='random'
+                   preload='auto'
+                   volume='0.7'
+                   list-folded='true'
+        >
+        </meting-js>
+    </div>
+</div>
+
+<script src="/libs/aplayer/APlayer.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/meting@2/dist/Meting.min.js"></script>
+
+    
+
+    <div class="container row center-align"
+         style="margin-bottom: 0px !important;">
+        <div class="col s12 m8 l8 copy-right">
+            Copyright&nbsp;&copy;
+            
+                <span id="year">2019-2022</span>
+            
+            <a href="/about" target="_blank">luyanan</a>
+            |&nbsp;Powered by&nbsp;<a href="https://hexo.io/" target="_blank">Hexo</a>
+            |&nbsp;Theme&nbsp;<a href="https://github.com/blinkfox/hexo-theme-matery" target="_blank">Matery</a>
+            <br>
+            
+                &nbsp;<i class="fas fa-chart-area"></i>&nbsp;站点总字数:&nbsp;<span
+                        class="white-color">803.3k</span>
+            
+            
+            
+                
+            
+            
+                <span id="busuanzi_container_site_pv">
+                &nbsp;|&nbsp;<i class="far fa-eye"></i>&nbsp;总访问量:&nbsp;
+                    <span id="busuanzi_value_site_pv" class="white-color"></span>
+            </span>
+            
+            
+                <span id="busuanzi_container_site_uv">
+                &nbsp;|&nbsp;<i class="fas fa-users"></i>&nbsp;总访问人数:&nbsp;
+                    <span id="busuanzi_value_site_uv" class="white-color"></span>
+            </span>
+            
+            <br>
+
+            <!-- 运行天数提醒. -->
+            
+            <br>
+            
+        </div>
+        <div class="col s12 m4 l4 social-link social-statis">
+    <a href="https://github.com/rainsoil" class="tooltipped" target="_blank" data-tooltip="访问我的GitHub" data-position="top" data-delay="50">
+        <i class="fab fa-github"></i>
+    </a>
+
+
+
+    <a href="mailto:luyanan0718@163.com" class="tooltipped" target="_blank" data-tooltip="邮件联系我" data-position="top" data-delay="50">
+        <i class="fas fa-envelope-open"></i>
+    </a>
+
+
+
+
+
+
+
+    <a href="tencent://AddContact/?fromId=50&fromSubId=1&subcmd=all&uin=914596513" class="tooltipped" target="_blank" data-tooltip="QQ联系我: 914596513" data-position="top" data-delay="50">
+        <i class="fab fa-qq"></i>
+    </a>
+
+
+
+
+
+
+
+    <a href="/atom.xml" class="tooltipped" target="_blank" data-tooltip="RSS 订阅" data-position="top" data-delay="50">
+        <i class="fas fa-rss"></i>
+    </a>
+
+</div>
+    </div>
+</footer>
+
+<div class="progress-bar"></div>
+
+
+    <!-- 搜索遮罩框 -->
+<div id="searchModal" class="modal">
+    <div class="modal-content">
+        <div class="search-header">
+            <span class="title"><i class="fas fa-search"></i>&nbsp;&nbsp;搜索</span>
+            <input type="search" id="searchInput" name="s" placeholder="请输入搜索的关键字"
+                   class="search-input">
+        </div>
+        <div id="searchResult"></div>
+    </div>
+</div>
+
+<script type="text/javascript">
+$(function () {
+    var searchFunc = function (path, search_id, content_id) {
+        'use strict';
+        $.ajax({
+            url: path,
+            dataType: "xml",
+            success: function (xmlResponse) {
+                // get the contents from search data
+                var datas = $("entry", xmlResponse).map(function () {
+                    return {
+                        title: $("title", this).text(),
+                        content: $("content", this).text(),
+                        url: $("url", this).text()
+                    };
+                }).get();
+                var $input = document.getElementById(search_id);
+                var $resultContent = document.getElementById(content_id);
+                $input.addEventListener('input', function () {
+                    var str = '<ul class=\"search-result-list\">';
+                    var keywords = this.value.trim().toLowerCase().split(/[\s\-]+/);
+                    $resultContent.innerHTML = "";
+                    if (this.value.trim().length <= 0) {
+                        return;
+                    }
+                    // perform local searching
+                    datas.forEach(function (data) {
+                        var isMatch = true;
+                        var data_title = data.title.trim().toLowerCase();
+                        var data_content = data.content.trim().replace(/<[^>]+>/g, "").toLowerCase();
+                        var data_url = data.url;
+                        data_url = data_url.indexOf('/') === 0 ? data.url : '/' + data_url;
+                        var index_title = -1;
+                        var index_content = -1;
+                        var first_occur = -1;
+                        // only match artiles with not empty titles and contents
+                        if (data_title !== '' && data_content !== '') {
+                            keywords.forEach(function (keyword, i) {
+                                index_title = data_title.indexOf(keyword);
+                                index_content = data_content.indexOf(keyword);
+                                if (index_title < 0 && index_content < 0) {
+                                    isMatch = false;
+                                } else {
+                                    if (index_content < 0) {
+                                        index_content = 0;
+                                    }
+                                    if (i === 0) {
+                                        first_occur = index_content;
+                                    }
+                                }
+                            });
+                        }
+                        // show search results
+                        if (isMatch) {
+                            str += "<li><a href='" + data_url + "' class='search-result-title'>" + data_title + "</a>";
+                            var content = data.content.trim().replace(/<[^>]+>/g, "");
+                            if (first_occur >= 0) {
+                                // cut out 100 characters
+                                var start = first_occur - 20;
+                                var end = first_occur + 80;
+                                if (start < 0) {
+                                    start = 0;
+                                }
+                                if (start === 0) {
+                                    end = 100;
+                                }
+                                if (end > content.length) {
+                                    end = content.length;
+                                }
+                                var match_content = content.substr(start, end);
+                                // highlight all keywords
+                                keywords.forEach(function (keyword) {
+                                    var regS = new RegExp(keyword, "gi");
+                                    match_content = match_content.replace(regS, "<em class=\"search-keyword\">" + keyword + "</em>");
+                                });
+
+                                str += "<p class=\"search-result\">" + match_content + "...</p>"
+                            }
+                            str += "</li>";
+                        }
+                    });
+                    str += "</ul>";
+                    $resultContent.innerHTML = str;
+                });
+            }
+        });
+    };
+
+    searchFunc('/search.xml', 'searchInput', 'searchResult');
+});
+</script>
+
+    <!-- 回到顶部按钮 -->
+<div id="backTop" class="top-scroll">
+    <a class="btn-floating btn-large waves-effect waves-light" href="#!">
+        <i class="fas fa-arrow-up"></i>
+    </a>
+</div>
+
+
+    <script src="/libs/materialize/materialize.min.js"></script>
+    <script src="/libs/masonry/masonry.pkgd.min.js"></script>
+    <script src="/libs/aos/aos.js"></script>
+    <script src="/libs/scrollprogress/scrollProgress.min.js"></script>
+    <script src="/libs/lightGallery/js/lightgallery-all.min.js"></script>
+    <script src="/js/matery.js"></script>
+
+    
+
+    
+
+    <!-- 雪花特效 -->
+    
+
+    <!-- 鼠标星星特效 -->
+    
+
+    <!-- Baidu Analytics -->
+
+    <!-- Baidu Push -->
+
+<script>
+    (function () {
+        var bp = document.createElement('script');
+        var curProtocol = window.location.protocol.split(':')[0];
+        if (curProtocol === 'https') {
+            bp.src = 'https://zz.bdstatic.com/linksubmit/push.js';
+        } else {
+            bp.src = 'http://push.zhanzhang.baidu.com/push.js';
+        }
+        var s = document.getElementsByTagName("script")[0];
+        s.parentNode.insertBefore(bp, s);
+    })();
+</script>
+
+    
+    <script src="/libs/others/clicklove.js" async="async"></script>
+    
+    
+    <script async src="/libs/others/busuanzi.pure.mini.js"></script>
+    
+
+    
+
+    
+
+    <!--腾讯兔小巢-->
+    
+    
+    <script type="text/javascript" color="0,0,255"
+        pointColor="0,0,255" opacity='0.7'
+        zIndex="-1" count="99"
+        src="/libs/background/canvas-nest.js"></script>
+    
+
+    
+
+    
+
+    
+    <script src="/libs/instantpage/instantpage.js" type="module"></script>
+    
+
+</body>
+
+</html>

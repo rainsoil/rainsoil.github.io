@@ -1,0 +1,1287 @@
+<!DOCTYPE HTML>
+<html lang="zh-CN">
+
+
+<head>
+    <meta charset="utf-8">
+    <meta name="keywords" content="JVM之调优(5), railsoil">
+    <meta name="description" content="JVM之调优1. 重新认识JVM我们画一张图来展示JVM的大体物理结构
+
+2. GC优化内存被使用了以后, 难免会有不够用或者达到设定值的时候,就需要对内存空间进行垃圾回收. 
+2.1 垃圾收集发生的时机GC是由JVM 自动完成的,根据JV">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="renderer" content="webkit|ie-stand|ie-comp">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="format-detection" content="telephone=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="referrer" content="no-referrer-when-downgrade">
+    <!-- Global site tag (gtag.js) - Google Analytics -->
+
+
+    <title>JVM之调优(5) | railsoil</title>
+    <link rel="icon" type="image/png" href="/favicon.png">
+
+    <link rel="stylesheet" type="text/css" href="/libs/awesome/css/all.min.css">
+    <link rel="stylesheet" type="text/css" href="/libs/materialize/materialize.min.css">
+    <link rel="stylesheet" type="text/css" href="/libs/aos/aos.css">
+    <link rel="stylesheet" type="text/css" href="/libs/animate/animate.min.css">
+    <link rel="stylesheet" type="text/css" href="/libs/lightGallery/css/lightgallery.min.css">
+    <link rel="stylesheet" type="text/css" href="/css/matery.css">
+    <link rel="stylesheet" type="text/css" href="/css/my.css">
+
+    <script src="/libs/jquery/jquery.min.js"></script>
+
+<meta name="generator" content="Hexo 5.4.0"><link rel="alternate" href="/atom.xml" title="railsoil" type="application/atom+xml">
+<link rel="stylesheet" href="/css/prism-tomorrow.css" type="text/css"></head>
+
+
+
+
+<body>
+    <header class="navbar-fixed">
+    <nav id="headNav" class="bg-color nav-transparent">
+        <div id="navContainer" class="nav-wrapper container">
+            <div class="brand-logo">
+                <a href="/" class="waves-effect waves-light">
+                    
+                    <img src="/medias/logo.png" class="logo-img" alt="LOGO">
+                    
+                    <span class="logo-span">railsoil</span>
+                </a>
+            </div>
+            
+
+<a href="#" data-target="mobile-nav" class="sidenav-trigger button-collapse"><i class="fas fa-bars"></i></a>
+<ul class="right nav-menu">
+  
+  <li class="hide-on-med-and-down nav-item">
+    
+    <a href="/" class="waves-effect waves-light">
+      
+      <i class="fas fa-home" style="zoom: 0.6;"></i>
+      
+      <span>首页</span>
+    </a>
+    
+  </li>
+  
+  <li class="hide-on-med-and-down nav-item">
+    
+    <a href="/tags" class="waves-effect waves-light">
+      
+      <i class="fas fa-tags" style="zoom: 0.6;"></i>
+      
+      <span>标签</span>
+    </a>
+    
+  </li>
+  
+  <li class="hide-on-med-and-down nav-item">
+    
+    <a href="/categories" class="waves-effect waves-light">
+      
+      <i class="fas fa-bookmark" style="zoom: 0.6;"></i>
+      
+      <span>分类</span>
+    </a>
+    
+  </li>
+  
+  <li class="hide-on-med-and-down nav-item">
+    
+    <a href="/archives" class="waves-effect waves-light">
+      
+      <i class="fas fa-archive" style="zoom: 0.6;"></i>
+      
+      <span>归档</span>
+    </a>
+    
+  </li>
+  
+  <li class="hide-on-med-and-down nav-item">
+    
+    <a href="/about" class="waves-effect waves-light">
+      
+      <i class="fas fa-user-circle" style="zoom: 0.6;"></i>
+      
+      <span>关于</span>
+    </a>
+    
+  </li>
+  
+  <li>
+    <a href="#searchModal" class="modal-trigger waves-effect waves-light">
+      <i id="searchIcon" class="fas fa-search" title="搜索" style="zoom: 0.85;"></i>
+    </a>
+  </li>
+</ul>
+
+
+<div id="mobile-nav" class="side-nav sidenav">
+
+    <div class="mobile-head bg-color">
+        
+        <img src="/medias/logo.png" class="logo-img circle responsive-img">
+        
+        <div class="logo-name">railsoil</div>
+        <div class="logo-desc">
+            
+            Never really desperate, only the lost of the soul.
+            
+        </div>
+    </div>
+
+    <ul class="menu-list mobile-menu-list">
+        
+        <li class="m-nav-item">
+	  
+		<a href="/" class="waves-effect waves-light">
+			
+			    <i class="fa-fw fas fa-home"></i>
+			
+			首页
+		</a>
+          
+        </li>
+        
+        <li class="m-nav-item">
+	  
+		<a href="/tags" class="waves-effect waves-light">
+			
+			    <i class="fa-fw fas fa-tags"></i>
+			
+			标签
+		</a>
+          
+        </li>
+        
+        <li class="m-nav-item">
+	  
+		<a href="/categories" class="waves-effect waves-light">
+			
+			    <i class="fa-fw fas fa-bookmark"></i>
+			
+			分类
+		</a>
+          
+        </li>
+        
+        <li class="m-nav-item">
+	  
+		<a href="/archives" class="waves-effect waves-light">
+			
+			    <i class="fa-fw fas fa-archive"></i>
+			
+			归档
+		</a>
+          
+        </li>
+        
+        <li class="m-nav-item">
+	  
+		<a href="/about" class="waves-effect waves-light">
+			
+			    <i class="fa-fw fas fa-user-circle"></i>
+			
+			关于
+		</a>
+          
+        </li>
+        
+        
+    </ul>
+</div>
+
+
+        </div>
+
+        
+    </nav>
+
+</header>
+
+    
+
+
+
+<div class="bg-cover pd-header post-cover" style="background-image: url('/medias/featureimages/13.jpg')">
+    <div class="container" style="right: 0px;left: 0px;">
+        <div class="row">
+            <div class="col s12 m12 l12">
+                <div class="brand">
+                    <h1 class="description center-align post-title">JVM之调优(5)</h1>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+
+<main class="post-container content">
+
+    
+    <link rel="stylesheet" href="/libs/tocbot/tocbot.css">
+<style>
+    #articleContent h1::before,
+    #articleContent h2::before,
+    #articleContent h3::before,
+    #articleContent h4::before,
+    #articleContent h5::before,
+    #articleContent h6::before {
+        display: block;
+        content: " ";
+        height: 100px;
+        margin-top: -100px;
+        visibility: hidden;
+    }
+
+    #articleContent :focus {
+        outline: none;
+    }
+
+    .toc-fixed {
+        position: fixed;
+        top: 64px;
+    }
+
+    .toc-widget {
+        width: 345px;
+        padding-left: 20px;
+    }
+
+    .toc-widget .toc-title {
+        padding: 35px 0 15px 17px;
+        font-size: 1.5rem;
+        font-weight: bold;
+        line-height: 1.5rem;
+    }
+
+    .toc-widget ol {
+        padding: 0;
+        list-style: none;
+    }
+
+    #toc-content {
+        padding-bottom: 30px;
+        overflow: auto;
+    }
+
+    #toc-content ol {
+        padding-left: 10px;
+    }
+
+    #toc-content ol li {
+        padding-left: 10px;
+    }
+
+    #toc-content .toc-link:hover {
+        color: #42b983;
+        font-weight: 700;
+        text-decoration: underline;
+    }
+
+    #toc-content .toc-link::before {
+        background-color: transparent;
+        max-height: 25px;
+
+        position: absolute;
+        right: 23.5vw;
+        display: block;
+    }
+
+    #toc-content .is-active-link {
+        color: #42b983;
+    }
+
+    #floating-toc-btn {
+        position: fixed;
+        right: 15px;
+        bottom: 76px;
+        padding-top: 15px;
+        margin-bottom: 0;
+        z-index: 998;
+    }
+
+    #floating-toc-btn .btn-floating {
+        width: 48px;
+        height: 48px;
+    }
+
+    #floating-toc-btn .btn-floating i {
+        line-height: 48px;
+        font-size: 1.4rem;
+    }
+</style>
+<div class="row">
+    <div id="main-content" class="col s12 m12 l9">
+        <!-- 文章内容详情 -->
+<div id="artDetail">
+    <div class="card">
+        <div class="card-content article-info">
+            <div class="row tag-cate">
+                <div class="col s7">
+                    
+                          <div class="article-tag">
+                            <span class="chip bg-color">无标签</span>
+                          </div>
+                    
+                </div>
+                <div class="col s5 right-align">
+                    
+                    <div class="post-cate">
+                        <i class="fas fa-bookmark fa-fw icon-category"></i>
+                        
+                            <a href="/categories/jvm/" class="post-category">
+                                jvm
+                            </a>
+                        
+                            <a href="/categories/jvm/jvm/" class="post-category">
+                                jvm
+                            </a>
+                        
+                    </div>
+                    
+                </div>
+            </div>
+
+            <div class="post-info">
+                
+                <div class="post-date info-break-policy">
+                    <i class="far fa-calendar-minus fa-fw"></i>发布日期:&nbsp;&nbsp;
+                    2022-01-04
+                </div>
+                
+
+                
+
+                
+                <div class="info-break-policy">
+                    <i class="far fa-file-word fa-fw"></i>文章字数:&nbsp;&nbsp;
+                    3.7k
+                </div>
+                
+
+                
+                <div class="info-break-policy">
+                    <i class="far fa-clock fa-fw"></i>阅读时长:&nbsp;&nbsp;
+                    17 分
+                </div>
+                
+
+                
+                    <div id="busuanzi_container_page_pv" class="info-break-policy">
+                        <i class="far fa-eye fa-fw"></i>阅读次数:&nbsp;&nbsp;
+                        <span id="busuanzi_value_page_pv"></span>
+                    </div>
+				
+            </div>
+        </div>
+        <hr class="clearfix">
+
+        
+
+        
+
+        <div class="card-content article-card-content">
+            <div id="articleContent">
+                <h1 id="JVM之调优"><a href="#JVM之调优" class="headerlink" title="JVM之调优"></a>JVM之调优</h1><h2 id="1-重新认识JVM"><a href="#1-重新认识JVM" class="headerlink" title="1. 重新认识JVM"></a>1. 重新认识JVM</h2><p>我们画一张图来展示JVM的大体物理结构</p>
+<p><img src="http://files.luyanan.com//img/20200511085020.png" alt="image-20200511085019210"></p>
+<h2 id="2-GC优化"><a href="#2-GC优化" class="headerlink" title="2. GC优化"></a>2. GC优化</h2><p>内存被使用了以后, 难免会有不够用或者达到设定值的时候,就需要对内存空间进行垃圾回收. </p>
+<h3 id="2-1-垃圾收集发生的时机"><a href="#2-1-垃圾收集发生的时机" class="headerlink" title="2.1 垃圾收集发生的时机"></a>2.1 垃圾收集发生的时机</h3><p>GC是由JVM 自动完成的,根据JVM系统环境而定,所以时机是不确定的. 当然, 我们也可以手动进行垃圾回收,比如调用<code>system.gc()</code> 方法通知JVM进行一次垃圾回收,但是具体什么时刻运行也无法控制. 也就是说,<code>System.gc()</code> 只是通知要回收,什么时候回收是由JVM控制的,但是不建议手动调用此方法,因为消耗的资源比较大. </p>
+<p><strong>一般以下几种情况会发生垃圾回收:</strong></p>
+<ol>
+<li>当<code>Eden</code>区或者<code>S</code>区不够用了</li>
+<li>老年代空间不够用了. </li>
+<li>方法区空间不够用了</li>
+<li><code>System.gc()</code></li>
+</ol>
+<h3 id="2-2-实验环境准备"><a href="#2-2-实验环境准备" class="headerlink" title="2.2  实验环境准备"></a>2.2  实验环境准备</h3><p>我们这里准备一个<code>springboot</code> 项目,然后配置相应的参数</p>
+<h4 id="2-3-GC日志文件"><a href="#2-3-GC日志文件" class="headerlink" title="2.3  GC日志文件"></a>2.3  GC日志文件</h4><p><img src="http://files.luyanan.com//img/20200511090136.png" alt="image-20200511090135498"></p>
+<p>要想分析日志文件,得先拿到日志文件才行, 所以要先配置一下</p>
+<pre class=" language-bash"><code class="language-bash">-XX:+PrintGCDetails -XX:+PrintGCTimeStamps -XX:+PrintGCDateStamps -Xloggc:gc.log
+</code></pre>
+<p>然后启动项目,然后看到默认使用的是 <code>ParallelGC</code></p>
+<h4 id="2-3-1-ParallelGC-日志"><a href="#2-3-1-ParallelGC-日志" class="headerlink" title="2.3.1 ParallelGC 日志"></a>2.3.1 <code>ParallelGC</code> 日志</h4><blockquote>
+<p>吞吐量优先</p>
+</blockquote>
+<pre class=" language-text"><code class="language-text">Java HotSpot(TM) 64-Bit Server VM (25.151-b12) for windows-amd64 JRE (1.8.0_151-b12), built on Sep  5 2017 19:33:46 by "java_re" with MS VC++ 10.0 (VS2010)
+Memory: 4k page, physical 16636048k(7426340k free), swap 40753296k(25478464k free)
+CommandLine flags: -XX:-BytecodeVerificationLocal -XX:-BytecodeVerificationRemote -XX:InitialHeapSize=266176768 -XX:+ManagementServer -XX:MaxHeapSize=4258828288 -XX:+PrintGC -XX:+PrintGCDateStamps -XX:+PrintGCDetails -XX:+PrintGCTimeStamps -XX:TieredStopAtLevel=1 -XX:+UseCompressedClassPointers -XX:+UseCompressedOops -XX:-UseLargePagesIndividualAllocation -XX:+UseParallelGC 
+2020-05-11T09:04:45.331+0800: 3.376: [GC (Allocation Failure) [PSYoungGen: 65024K[Young区回收前]->8314K[Young区回收后](75776K[Young区总大小])] 65024K[整合堆回收前]->8330K[整个堆回收后](249344K[堆总大小]), 0.0110320 secs] [Times: user=0.00 sys=0.00, real=0.01 secs] 
+
+</code></pre>
+<p><code>注意:</code> 如果回收的差值中间有出入,则说明这部分空间是<code>Old</code> 空间释放出来的. </p>
+<h4 id="2-3-2-CMS-日志"><a href="#2-3-2-CMS-日志" class="headerlink" title="2.3.2 CMS 日志"></a>2.3.2 <code>CMS</code> 日志</h4><blockquote>
+<p>停顿时间优先</p>
+</blockquote>
+<pre class=" language-bash"><code class="language-bash">参数设置：-XX:+UseConcMarkSweepGC -Xloggc:cms-gc.log
+</code></pre>
+<h4 id="2-3-3-G1日志"><a href="#2-3-3-G1日志" class="headerlink" title="2.3.3  G1日志"></a>2.3.3  <code>G1</code>日志</h4><blockquote>
+<p>停顿时间优先</p>
+</blockquote>
+<p>参数设置 </p>
+<pre class=" language-bash"><code class="language-bash">-XX:+UseG1GC -Xloggc:g1-gc.log
+</code></pre>
+<pre class=" language-text"><code class="language-text">Java HotSpot(TM) 64-Bit Server VM (25.151-b12) for windows-amd64 JRE (1.8.0_151-b12), built on Sep  5 2017 19:33:46 by "java_re" with MS VC++ 10.0 (VS2010)
+Memory: 4k page, physical 16636048k(7679220k free), swap 40753296k(25282952k free)
+CommandLine flags: -XX:-BytecodeVerificationLocal -XX:-BytecodeVerificationRemote -XX:InitialHeapSize=266176768 -XX:+ManagementServer -XX:MaxHeapSize=4258828288 -XX:+PrintGC -XX:+PrintGCDateStamps -XX:+PrintGCDetails -XX:+PrintGCTimeStamps -XX:TieredStopAtLevel=1 -XX:+UseCompressedClassPointers -XX:+UseCompressedOops -XX:+UseG1GC #使用了G1垃圾收集器
+-XX:-UseLargePagesIndividualAllocation 
+# 什么时候发生的GC,相对的时间刻,GC发生的区域young,总共花费的是时间0.0035105s
+2020-05-11T09:21:41.242+0800: 1.976: [GC pause (G1 Evacuation Pause) (young), 0.0035105 secs]
+# 多少个垃圾回收线程,并行的时间
+   [Parallel Time: 2.8 ms, GC Workers: 4]
+   # GC线程开始对于上面的 1.976 的时间刻
+      [GC Worker Start (ms): Min: 1975.7, Avg: 1975.7, Max: 1975.7, Diff: 0.0]
+      [Ext Root Scanning (ms): Min: 0.3, Avg: 0.7, Max: 1.5, Diff: 1.2, Sum: 2.7]
+      [Update RS (ms): Min: 0.0, Avg: 0.0, Max: 0.0, Diff: 0.0, Sum: 0.0]
+         [Processed Buffers: Min: 0, Avg: 0.0, Max: 0, Diff: 0, Sum: 0]
+      [Scan RS (ms): Min: 0.0, Avg: 0.0, Max: 0.0, Diff: 0.0, Sum: 0.0]
+      [Code Root Scanning (ms): Min: 0.0, Avg: 0.1, Max: 0.2, Diff: 0.2, Sum: 0.3]
+      [Object Copy (ms): Min: 1.2, Avg: 1.9, Max: 2.3, Diff: 1.1, Sum: 7.6]
+      [Termination (ms): Min: 0.0, Avg: 0.0, Max: 0.0, Diff: 0.0, Sum: 0.0]
+         [Termination Attempts: Min: 1, Avg: 1.3, Max: 2, Diff: 1, Sum: 5]
+      [GC Worker Other (ms): Min: 0.0, Avg: 0.0, Max: 0.0, Diff: 0.0, Sum: 0.2]
+      [GC Worker Total (ms): Min: 2.7, Avg: 2.7, Max: 2.7, Diff: 0.0, Sum: 10.8]
+      [GC Worker End (ms): Min: 1978.4, Avg: 1978.4, Max: 1978.4, Diff: 0.0]
+   [Code Root Fixup: 0.0 ms]
+   [Code Root Purge: 0.0 ms]
+   [Clear CT: 0.0 ms]
+   [Other: 0.6 ms]
+      [Choose CSet: 0.0 ms]
+      [Ref Proc: 0.5 ms]
+      [Ref Enq: 0.0 ms]
+      [Redirty Cards: 0.0 ms]
+      [Humongous Register: 0.0 ms]
+      [Humongous Reclaim: 0.0 ms]
+      [Free CSet: 0.0 ms]
+   [Eden: 14.0M(14.0M)->0.0B(17.0M) Survivors: 0.0B->2048.0K Heap: 14.0M(254.0M)->2817.5K(254.0M)]
+ [Times: user=0.00 sys=0.00, real=0.00 secs] 
+2020-05-11T09:21:41.489+0800: 2.222: [GC pause (G1 Evacuation Pause) (young), 0.0047721 secs]
+   [Parallel Time: 3.5 ms, GC Workers: 4]
+      [GC Worker Start (ms): Min: 2222.1, Avg: 2222.1, Max: 2222.1, Diff: 0.0]
+      [Ext Root Scanning (ms): Min: 0.2, Avg: 0.4, Max: 0.8, Diff: 0.5, Sum: 1.5]
+      [Update RS (ms): Min: 0.5, Avg: 0.9, Max: 1.8, Diff: 1.3, Sum: 3.5]
+         [Processed Buffers: Min: 1, Avg: 1.3, Max: 2, Diff: 1, Sum: 5]
+      [Scan RS (ms): Min: 0.0, Avg: 0.0, Max: 0.0, Diff: 0.0, Sum: 0.0]
+      [Code Root Scanning (ms): Min: 0.0, Avg: 0.1, Max: 0.3, Diff: 0.3, Sum: 0.3]
+      [Object Copy (ms): Min: 1.4, Avg: 2.1, Max: 2.5, Diff: 1.1, Sum: 8.5]
+      [Termination (ms): Min: 0.0, Avg: 0.0, Max: 0.0, Diff: 0.0, Sum: 0.0]
+         [Termination Attempts: Min: 1, Avg: 7.3, Max: 13, Diff: 12, Sum: 29]
+      [GC Worker Other (ms): Min: 0.0, Avg: 0.0, Max: 0.0, Diff: 0.0, Sum: 0.0]
+      [GC Worker Total (ms): Min: 3.5, Avg: 3.5, Max: 3.5, Diff: 0.0, Sum: 13.9]
+      [GC Worker End (ms): Min: 2225.6, Avg: 2225.6, Max: 2225.6, Diff: 0.0]
+   [Code Root Fixup: 0.1 ms]
+   [Code Root Purge: 0.0 ms]
+   [Clear CT: 0.0 ms]
+   [Other: 1.1 ms]
+      [Choose CSet: 0.0 ms]
+      [Ref Proc: 1.0 ms]
+      [Ref Enq: 0.0 ms]
+      [Redirty Cards: 0.0 ms]
+      [Humongous Register: 0.0 ms]
+      [Humongous Reclaim: 0.0 ms]
+      [Free CSet: 0.0 ms]
+   [Eden: 17.0M(17.0M)->0.0B(149.0M) Survivors: 2048.0K->3072.0K Heap: 19.8M(254.0M)->6462.5K(254.0M)]
+ [Times: user=0.00 sys=0.00, real=0.00 secs] 
+2020-05-11T09:21:42.162+0800: 2.895: [GC pause (Metadata GC Threshold) (young) (initial-mark), 0.0097849 secs]
+   [Parallel Time: 4.7 ms, GC Workers: 4]
+      [GC Worker Start (ms): Min: 2895.2, Avg: 2895.2, Max: 2895.2, Diff: 0.0]
+      [Ext Root Scanning (ms): Min: 0.7, Avg: 1.0, Max: 1.4, Diff: 0.7, Sum: 4.0]
+      [Update RS (ms): Min: 0.0, Avg: 0.3, Max: 0.4, Diff: 0.4, Sum: 1.0]
+         [Processed Buffers: Min: 0, Avg: 2.8, Max: 6, Diff: 6, Sum: 11]
+      [Scan RS (ms): Min: 0.0, Avg: 0.0, Max: 0.1, Diff: 0.1, Sum: 0.2]
+      [Code Root Scanning (ms): Min: 0.0, Avg: 0.2, Max: 0.4, Diff: 0.4, Sum: 0.6]
+      [Object Copy (ms): Min: 2.8, Avg: 3.2, Max: 3.5, Diff: 0.7, Sum: 12.7]
+      [Termination (ms): Min: 0.0, Avg: 0.0, Max: 0.0, Diff: 0.0, Sum: 0.0]
+         [Termination Attempts: Min: 1, Avg: 2.5, Max: 4, Diff: 3, Sum: 10]
+      [GC Worker Other (ms): Min: 0.0, Avg: 0.0, Max: 0.0, Diff: 0.0, Sum: 0.0]
+      [GC Worker Total (ms): Min: 4.6, Avg: 4.6, Max: 4.7, Diff: 0.0, Sum: 18.6]
+      [GC Worker End (ms): Min: 2899.9, Avg: 2899.9, Max: 2899.9, Diff: 0.0]
+   [Code Root Fixup: 0.1 ms]
+   [Code Root Purge: 0.0 ms]
+   [Clear CT: 0.0 ms]
+   [Other: 5.0 ms]
+      [Choose CSet: 0.0 ms]
+      [Ref Proc: 4.7 ms]
+      [Ref Enq: 0.0 ms]
+      [Redirty Cards: 0.0 ms]
+      [Humongous Register: 0.0 ms]
+      [Humongous Reclaim: 0.0 ms]
+      [Free CSet: 0.1 ms]
+   [Eden: 89.0M(149.0M)->0.0B(138.0M) Survivors: 3072.0K->14.0M Heap: 94.8M(254.0M)->16.8M(254.0M)]
+ [Times: user=0.00 sys=0.00, real=0.01 secs] 
+2020-05-11T09:21:42.172+0800: 2.905: [GC concurrent-root-region-scan-start]
+2020-05-11T09:21:42.178+0800: 2.912: [GC concurrent-root-region-scan-end, 0.0068436 secs]
+2020-05-11T09:21:42.178+0800: 2.912: [GC concurrent-mark-start]
+2020-05-11T09:21:42.183+0800: 2.916: [GC concurrent-mark-end, 0.0043306 secs]
+2020-05-11T09:21:42.183+0800: 2.917: [GC remark 2020-05-11T09:21:42.183+0800: 2.917: [Finalize Marking, 0.0001185 secs] 2020-05-11T09:21:42.183+0800: 2.917: [GC ref-proc, 0.0002940 secs] 2020-05-11T09:21:42.184+0800: 2.917: [Unloading, 0.0019141 secs], 0.0024715 secs]
+ [Times: user=0.00 sys=0.00, real=0.00 secs] 
+2020-05-11T09:21:42.186+0800: 2.919: [GC cleanup 17M->17M(254M), 0.0006070 secs]
+ [Times: user=0.00 sys=0.00, real=0.00 secs] 
+</code></pre>
+<h3 id="2-4-GC日志分析工具"><a href="#2-4-GC日志分析工具" class="headerlink" title="2.4 GC日志分析工具"></a>2.4 GC日志分析工具</h3><h4 id="2-4-1-gceasy"><a href="#2-4-1-gceasy" class="headerlink" title="2.4.1 gceasy"></a>2.4.1 <code>gceasy</code></h4><blockquote>
+<p>官网: <a target="_blank" rel="noopener" href="https://gceasy.io/">https://gceasy.io</a></p>
+</blockquote>
+<p>可以比较不同的垃圾回收器的吞吐量和停顿时间</p>
+<p>比如打开前面生成的 <code>cms-gc.log</code>和<code>g1-gc.log</code></p>
+<p><img src="http://files.luyanan.com//img/20200511101227.png" alt="image-20200511101225972"></p>
+<p><img src="http://files.luyanan.com//img/20200511101255.png" alt="image-20200511101254302"></p>
+<h4 id="2-4-2-GCViewer"><a href="#2-4-2-GCViewer" class="headerlink" title="2.4.2 GCViewer"></a>2.4.2 <code>GCViewer</code></h4><p><img src="http://files.luyanan.com//img/20200511101538.png" alt="image-20200511101536127"></p>
+<h3 id="2-5-G1-调优指南"><a href="#2-5-G1-调优指南" class="headerlink" title="2.5 G1 调优指南"></a>2.5 G1 调优指南</h3><h3 id="2-5-1-调优"><a href="#2-5-1-调优" class="headerlink" title="2.5.1 调优"></a>2.5.1 调优</h3><p>是否选用G1垃圾收集器的判断依据</p>
+<blockquote>
+<p><a target="_blank" rel="noopener" href="https://docs.oracle.com/javase/8/docs/technotes/guides/vm/G1.html#use_cases">https://docs.oracle.com/javase/8/docs/technotes/guides/vm/G1.html#use_cases</a></p>
+</blockquote>
+<ol>
+<li>50% 以上的堆被存活对象占用</li>
+<li>对象分配和晋升的速度变化比较大</li>
+<li>垃圾回收时间比较长</li>
+</ol>
+<p><code>思考:</code> <a target="_blank" rel="noopener" href="https://blogs.oracle.com/poonam/increased-heap-usage-with-g1-gc">https://blogs.oracle.com/poonam/increased-heap-usage-with-g1-gc</a></p>
+<ol>
+<li><p>使用<code>G1GC</code>垃圾收集器: <code>-XX:+UseG1GC</code></p>
+<p>修改配置参数,获取到gc日志,使用<code>GCViewer</code>分析吞吐量和响应时间</p>
+<pre class=" language-text"><code class="language-text">Throughput       Min Pause       Max Pause      Avg Pause       GC count
+  99.16%         0.00016s         0.0137s        0.00559s          12 
+</code></pre>
+</li>
+<li><p>调整内存大小再获取gc日志分析</p>
+<pre class=" language-bash"><code class="language-bash">-XX:MetaspaceSize<span class="token operator">=</span>100M 
+-Xms300M
+-Xmx300M
+</code></pre>
+<p>比如设置堆内存的大小,获取到gc日志,使用<code>GCViewer</code> 分析吞吐量和响应时间</p>
+<pre class=" language-text"><code class="language-text">Throughput       Min Pause       Max Pause      Avg Pause       GC count
+  98.89%          0.00021s        0.01531s       0.00538s           12 
+</code></pre>
+</li>
+<li><p>调整最大的停顿时间</p>
+<pre class=" language-bash"><code class="language-bash">-XX:MaxGCPauseMillis<span class="token operator">=</span>20    设置最大GC停顿时间指标
+</code></pre>
+<p>比如设置最大的停顿时间, 获取到gc日志,然后分析吞吐量和停顿时间</p>
+<pre class=" language-text"><code class="language-text">Throughput       Min Pause       Max Pause      Avg Pause       GC count
+  98.96%          0.00015s        0.01737s       0.00574s          12 
+</code></pre>
+</li>
+<li><p>启动并发GC时堆内存占分比</p>
+<pre class=" language-text"><code class="language-text">-XX:InitiatingHeapOccupancyPercent=45 G1用它来触发并发GC周期,基于整个堆的使用率,而不只是某一代内存的 使用比例。值为 0 则表示“一直执行GC循环)'. 默认值为 45 (例如, 全部的 45% 或者使用了45%).
+</code></pre>
+<p>比如设置该百分比参数,获取到gc日志,分析吞吐量和响应时间</p>
+<pre class=" language-text"><code class="language-text">Throughput       Min Pause       Max Pause      Avg Pause       GC count
+  98.11%          0.00406s        0.00532s       0.00469s          12 
+</code></pre>
+</li>
+</ol>
+<h4 id="2-5-2-最佳指南"><a href="#2-5-2-最佳指南" class="headerlink" title="2.5.2  最佳指南"></a>2.5.2  最佳指南</h4><p><code>官网建议</code>: <a target="_blank" rel="noopener" href="https://docs.oracle.com/javase/8/docs/technotes/guides/vm/gctuning/g1_gc_tuning.html#recommendations">https://docs.oracle.com/javase/8/docs/technotes/guides/vm/gctuning/g1_gc_tuning.html#recommendations</a></p>
+<ol>
+<li> 不要手动设置新生代和老年代的大小,只要设置整个堆的大小</li>
+</ol>
+<p>   G1收集器在运行过程中,会自己调整新生代和老年代的大小</p>
+<p>   其实是通过<code>adapt</code> 代的大小来调整对象晋升的速度和年龄,从而达到为收集器设置的暂停时间目标. </p>
+<p>   如果手动设置了大小就意味着放弃了G1的自动调优</p>
+<ol start="2">
+<li><p>不断调优暂停时间目标</p>
+<p>一般情况下这个值设置到100ms或者200ms 都是可以的(不同情况下会不一样), 但是如果设置成50ms 就不太合理, 暂停时间设置的太短的话，就会导致出现G1跟不上垃圾产生的速度,最终退化为<code>Full GC</code>, 所以对这个参数的调优是一个持续的过程, 逐步调整到最佳状态,暂停时间只是一个目标,总不能总是得到满足. </p>
+</li>
+<li><p>使用<code>-XX:ConcGCThreads=n</code> 来增加标记线程的数量</p>
+<p> <code>IHOP</code>如果阈值设置过高, 可能就会遇到转移失败的风险,比如对象进行转移时空间不足. 如果阈值设置过低,就会时标记周期运行过于频繁,并且有可能混合收集期回收不到空间. </p>
+</li>
+<li><p><code>MixedGC</code> 调优</p>
+<pre class=" language-bash"><code class="language-bash">-XX:InitiatingHeapOccupancyPercent 
+-XX:G1MixedGCLiveThresholdPercent
+-XX:G1MixedGCCountTarger
+-XX:G1OldCSetRegionThresholdPercent
+</code></pre>
+</li>
+<li><p>适当增加堆内存大小</p>
+</li>
+</ol>
+<h2 id="3-高并发场景分析"><a href="#3-高并发场景分析" class="headerlink" title="3. 高并发场景分析"></a>3. 高并发场景分析</h2><blockquote>
+<p>以每秒3000笔订单为例</p>
+</blockquote>
+<p><img src="http://files.luyanan.com//img/20200511104859.png" alt="image-20200511104857175"></p>
+<h2 id="4-JVM-性能优化指南"><a href="#4-JVM-性能优化指南" class="headerlink" title="4. JVM 性能优化指南"></a>4. JVM 性能优化指南</h2><blockquote>
+<ol>
+<li> 发现问题</li>
+</ol>
+<ul>
+<li>GC频繁</li>
+<li>死锁</li>
+<li>OOM</li>
+<li>线程池不够用</li>
+<li>CPU负载过高</li>
+</ul>
+<ol start="2">
+<li>排查问题<ul>
+<li>打印出gc日志, 查看<code>minor gc/major gc</code>,结合工具<code>gcviewer</code></li>
+<li><code>jstack</code> 查看线程堆栈信息</li>
+<li><code>dump</code>  出堆文件,使用<code>MAT</code> 或其他工具分析</li>
+<li>合理使用<code>jdk</code>自带的<code>jconsole</code>，<code>jvisualvm</code>、<code>阿里的arthas</code> 等实时查看JVM状态</li>
+<li>灵活应用<code>jps</code> 、<code>jinfo</code>、<code>jstat</code>、<code>jmap</code> 等常用命令</li>
+</ul>
+</li>
+<li>解决方案<ul>
+<li>适当增加内存大小/选择合适的垃圾收集器</li>
+<li>使用ZK/redis 实现分布式锁</li>
+<li>设置本地、<code>nginx</code> 等缓存减少对后端服务器的访问</li>
+<li>后端代码优化及时释放资源/合理设置线程池中的参数</li>
+<li>集群部署从而减少单节点的压力</li>
+<li>利用一些消息中间件比如<code>MQ</code> 、<code>Kafka</code> 等实现异步消息</li>
+<li>…..</li>
+</ul>
+</li>
+</ol>
+</blockquote>
+<h2 id="5-常见问题思考"><a href="#5-常见问题思考" class="headerlink" title="5.  常见问题思考"></a>5.  常见问题思考</h2><h3 id="5-1-内存泄漏和内存溢出的区别"><a href="#5-1-内存泄漏和内存溢出的区别" class="headerlink" title="5.1 内存泄漏和内存溢出的区别"></a>5.1 内存泄漏和内存溢出的区别</h3><p><strong>内存泄漏</strong>: 对象无法得到及时的回收持续占用内存的对象,从而造成内存空间的浪费</p>
+<p><strong>内存溢出</strong>: 内存泄漏到一定的程序就会造成内存溢出, 但是内存溢出也可能是大对象导致的.</p>
+<h3 id="5-2-young-gc-会有stw-吗"><a href="#5-2-young-gc-会有stw-吗" class="headerlink" title="5.2 young gc 会有stw 吗?"></a>5.2 <code>young gc</code> 会有<code>stw</code> 吗?</h3><p>不管什么GC, 都会有<code>stop the world</code>,只是发生时间的长短</p>
+<h3 id="5-3-major-gc-和full-gc的区别"><a href="#5-3-major-gc-和full-gc的区别" class="headerlink" title="5.3 major gc 和full gc的区别"></a>5.3 <code>major gc</code> 和<code>full gc</code>的区别</h3><p><code>major gc</code> 是指老年代的gc,而<code>full gc</code> 是指新生到+老年代+方法区的gc</p>
+<h3 id="5-4-G1和CMS的区别"><a href="#5-4-G1和CMS的区别" class="headerlink" title="5.4 G1和CMS的区别"></a>5.4 G1和CMS的区别</h3><p>CMS 用于老年代的回收,而G1 用于新生代和老年代的回收</p>
+<p>G1是用了<code>Region</code> 方法对堆内存进行了划分,且基于标记整理算法实现, 整体减少了垃圾碎片的产生</p>
+<h3 id="5-5-什么是直接内存"><a href="#5-5-什么是直接内存" class="headerlink" title="5.5 什么是直接内存"></a>5.5 什么是直接内存</h3><p>直接内存是在java堆外，直接向系统申请的内存空间,通常访问直接内存的速度会优于java堆,因此处于性能的考虑, 读写频繁的场合可能会考虑到使用直接内存</p>
+<h3 id="5-6-不可达的对象一定要被回收吗"><a href="#5-6-不可达的对象一定要被回收吗" class="headerlink" title="5.6 不可达的对象一定要被回收吗?"></a>5.6 不可达的对象一定要被回收吗?</h3><p>即使在可达性分析法中不可达的对象,也并非是”非死不可”的, 这时候他们暂时处于”缓刑阶段”, 要真正宣告一个对象死亡,至少要经历两次标记过程,可达性分析法中不可达的对象被第一次标记并且进行一次筛选,筛选的条件是此对象是否有必要执行<code>ﬁnalize </code> 方法,当对象没有覆盖<code>ﬁnalize </code> 方法, 或者<code>ﬁnalize </code> 方法已经被虚拟机调用过时, 虚拟机将这两种情况视为没有必要执行. </p>
+<p>被判定为需要执行的对象将会被放在一个队列中进行第二次标记,除非这个对象与引用链上的任何一个对象建立关联, 否则就会被真的回收. </p>
+<h3 id="5-7-方法区中的无用类回收"><a href="#5-7-方法区中的无用类回收" class="headerlink" title="5.7 方法区中的无用类回收"></a>5.7 方法区中的无用类回收</h3><p>方法区主要回收的是无用的类,那么如何判断一个类是无用的类呢？</p>
+<p>判断一个常量是否是”废弃常量” 比较简单,而要判定一个类是否是”无用的类” 的条件则相对要苛刻的多,类需要同时满足下面3个条件才能算”无用的类”</p>
+<ul>
+<li>该类所有的实例都已经被回收了,也就是java堆中不存在该类的任何实例</li>
+<li>加载该类的<code>ClassLoader</code> 已经被回收</li>
+<li>该类对应的<code>java.lang.Class</code> 对象没有在任何地方被引用,无法在任何地方通过反射该类的方法. </li>
+</ul>
+<p>虚拟机可以对满足上述3个条件的无用类进行回收,这里说的仅仅是”可以”, 而并不是跟对象一样不使用了就必然会被回收. </p>
+<h3 id="5-7-不同的引用"><a href="#5-7-不同的引用" class="headerlink" title="5.7 不同的引用"></a>5.7 不同的引用</h3><p>JDK12以后, Java对引用进行了扩充: <code>强引用</code>、<code>软引用</code>、<code>弱引用</code>和<code>虚引用</code></p>
+
+                
+            </div>
+            <hr/>
+
+            
+
+    <div class="reprint" id="reprint-statement">
+        
+            <div class="reprint__author">
+                <span class="reprint-meta" style="font-weight: bold;">
+                    <i class="fas fa-user">
+                        文章作者:
+                    </i>
+                </span>
+                <span class="reprint-info">
+                    <a href="/about" rel="external nofollow noreferrer">luyanan</a>
+                </span>
+            </div>
+            <div class="reprint__type">
+                <span class="reprint-meta" style="font-weight: bold;">
+                    <i class="fas fa-link">
+                        文章链接:
+                    </i>
+                </span>
+                <span class="reprint-info">
+                    <a href="https://rainsoil.github.io/2022/01/04/jvm/jvm-zhi-diao-you-5/">https://rainsoil.github.io/2022/01/04/jvm/jvm-zhi-diao-you-5/</a>
+                </span>
+            </div>
+            <div class="reprint__notice">
+                <span class="reprint-meta" style="font-weight: bold;">
+                    <i class="fas fa-copyright">
+                        版权声明:
+                    </i>
+                </span>
+                <span class="reprint-info">
+                    本博客所有文章除特別声明外，均采用
+                    <a href="https://creativecommons.org/licenses/by/4.0/deed.zh" rel="external nofollow noreferrer" target="_blank">CC BY 4.0</a>
+                    许可协议。转载请注明来源
+                    <a href="/about" target="_blank">luyanan</a>
+                    !
+                </span>
+            </div>
+        
+    </div>
+
+    <script async defer>
+      document.addEventListener("copy", function (e) {
+        let toastHTML = '<span>复制成功，请遵循本文的转载规则</span><button class="btn-flat toast-action" onclick="navToReprintStatement()" style="font-size: smaller">查看</a>';
+        M.toast({html: toastHTML})
+      });
+
+      function navToReprintStatement() {
+        $("html, body").animate({scrollTop: $("#reprint-statement").offset().top - 80}, 800);
+      }
+    </script>
+
+
+
+            <div class="tag_share" style="display: block;">
+                <div class="post-meta__tag-list" style="display: inline-block;">
+                    
+                        <div class="article-tag">
+                            <span class="chip bg-color">无标签</span>
+                        </div>
+                    
+                </div>
+                <div class="post_share" style="zoom: 80%; width: fit-content; display: inline-block; float: right; margin: -0.15rem 0;">
+                    <link rel="stylesheet" type="text/css" href="/libs/share/css/share.min.css">
+<div id="article-share">
+
+    
+    <div class="social-share" data-sites="twitter,facebook,google,qq,qzone,wechat,weibo,douban,linkedin" data-wechat-qrcode-helper="<p>微信扫一扫即可分享！</p>"></div>
+    <script src="/libs/share/js/social-share.min.js"></script>
+    
+
+    
+
+</div>
+
+                </div>
+            </div>
+            
+        </div>
+    </div>
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+<article id="prenext-posts" class="prev-next articles">
+    <div class="row article-row">
+        
+        <div class="article col s12 m6" data-aos="fade-up">
+            <div class="article-badge left-badge text-color">
+                <i class="fas fa-chevron-left"></i>&nbsp;上一篇</div>
+            <div class="card">
+                <a href="/2022/01/04/jvm/jvm-zhi-yun-xing-shi-shu-ju-qu-2/">
+                    <div class="card-image">
+                        
+                        
+                        <img src="/medias/featureimages/21.jpg" class="responsive-img" alt="JVM之运行时数据区(2)">
+                        
+                        <span class="card-title">JVM之运行时数据区(2)</span>
+                    </div>
+                </a>
+                <div class="card-content article-content">
+                    <div class="summary block-with-text">
+                        
+                            
+                        
+                    </div>
+                    <div class="publish-info">
+                        <span class="publish-date">
+                            <i class="far fa-clock fa-fw icon-date"></i>2022-01-04
+                        </span>
+                        <span class="publish-author">
+                            
+                            <i class="fas fa-bookmark fa-fw icon-category"></i>
+                            
+                            <a href="/categories/jvm/" class="post-category">
+                                    jvm
+                                </a>
+                            
+                            <a href="/categories/jvm/jvm/" class="post-category">
+                                    jvm
+                                </a>
+                            
+                            
+                        </span>
+                    </div>
+                </div>
+                
+            </div>
+        </div>
+        
+        
+        <div class="article col s12 m6" data-aos="fade-up">
+            <div class="article-badge right-badge text-color">
+                下一篇&nbsp;<i class="fas fa-chevron-right"></i>
+            </div>
+            <div class="card">
+                <a href="/2022/01/04/k8s/kubernetes-xi-tong-he-xin-zu-jian-10/">
+                    <div class="card-image">
+                        
+                        
+                        <img src="/medias/featureimages/23.jpg" class="responsive-img" alt="kubernetes系统核心组件(10)">
+                        
+                        <span class="card-title">kubernetes系统核心组件(10)</span>
+                    </div>
+                </a>
+                <div class="card-content article-content">
+                    <div class="summary block-with-text">
+                        
+                            
+                        
+                    </div>
+                    <div class="publish-info">
+                            <span class="publish-date">
+                                <i class="far fa-clock fa-fw icon-date"></i>2022-01-04
+                            </span>
+                        <span class="publish-author">
+                            
+                            <i class="fas fa-bookmark fa-fw icon-category"></i>
+                            
+                            <a href="/categories/k8s/" class="post-category">
+                                    k8s
+                                </a>
+                            
+                            <a href="/categories/k8s/k8s/" class="post-category">
+                                    k8s
+                                </a>
+                            
+                            
+                        </span>
+                    </div>
+                </div>
+                
+            </div>
+        </div>
+        
+    </div>
+</article>
+
+</div>
+
+
+
+<!-- 代码块功能依赖 -->
+<script type="text/javascript" src="/libs/codeBlock/codeBlockFuction.js"></script>
+
+<!-- 代码语言 -->
+
+<script type="text/javascript" src="/libs/codeBlock/codeLang.js"></script>
+
+
+<!-- 代码块复制 -->
+
+<script type="text/javascript" src="/libs/codeBlock/codeCopy.js"></script>
+
+
+<!-- 代码块收缩 -->
+
+<script type="text/javascript" src="/libs/codeBlock/codeShrink.js"></script>
+
+
+    </div>
+    <div id="toc-aside" class="expanded col l3 hide-on-med-and-down">
+        <div class="toc-widget card" style="background-color: white;">
+            <div class="toc-title"><i class="far fa-list-alt"></i>&nbsp;&nbsp;目录</div>
+            <div id="toc-content"></div>
+        </div>
+    </div>
+</div>
+
+<!-- TOC 悬浮按钮. -->
+
+<div id="floating-toc-btn" class="hide-on-med-and-down">
+    <a class="btn-floating btn-large bg-color">
+        <i class="fas fa-list-ul"></i>
+    </a>
+</div>
+
+
+<script src="/libs/tocbot/tocbot.min.js"></script>
+<script>
+    $(function () {
+        tocbot.init({
+            tocSelector: '#toc-content',
+            contentSelector: '#articleContent',
+            headingsOffset: -($(window).height() * 0.4 - 45),
+            collapseDepth: Number('0'),
+            headingSelector: 'h2, h3, h4'
+        });
+
+        // modify the toc link href to support Chinese.
+        let i = 0;
+        let tocHeading = 'toc-heading-';
+        $('#toc-content a').each(function () {
+            $(this).attr('href', '#' + tocHeading + (++i));
+        });
+
+        // modify the heading title id to support Chinese.
+        i = 0;
+        $('#articleContent').children('h2, h3, h4').each(function () {
+            $(this).attr('id', tocHeading + (++i));
+        });
+
+        // Set scroll toc fixed.
+        let tocHeight = parseInt($(window).height() * 0.4 - 64);
+        let $tocWidget = $('.toc-widget');
+        $(window).scroll(function () {
+            let scroll = $(window).scrollTop();
+            /* add post toc fixed. */
+            if (scroll > tocHeight) {
+                $tocWidget.addClass('toc-fixed');
+            } else {
+                $tocWidget.removeClass('toc-fixed');
+            }
+        });
+
+        
+        /* 修复文章卡片 div 的宽度. */
+        let fixPostCardWidth = function (srcId, targetId) {
+            let srcDiv = $('#' + srcId);
+            if (srcDiv.length === 0) {
+                return;
+            }
+
+            let w = srcDiv.width();
+            if (w >= 450) {
+                w = w + 21;
+            } else if (w >= 350 && w < 450) {
+                w = w + 18;
+            } else if (w >= 300 && w < 350) {
+                w = w + 16;
+            } else {
+                w = w + 14;
+            }
+            $('#' + targetId).width(w);
+        };
+
+        // 切换TOC目录展开收缩的相关操作.
+        const expandedClass = 'expanded';
+        let $tocAside = $('#toc-aside');
+        let $mainContent = $('#main-content');
+        $('#floating-toc-btn .btn-floating').click(function () {
+            if ($tocAside.hasClass(expandedClass)) {
+                $tocAside.removeClass(expandedClass).hide();
+                $mainContent.removeClass('l9');
+            } else {
+                $tocAside.addClass(expandedClass).show();
+                $mainContent.addClass('l9');
+            }
+            fixPostCardWidth('artDetail', 'prenext-posts');
+        });
+        
+    });
+</script>
+
+    
+
+</main>
+
+
+
+
+    <footer class="page-footer bg-color">
+    
+        <link rel="stylesheet" href="/libs/aplayer/APlayer.min.css">
+<style>
+    .aplayer .aplayer-lrc p {
+        
+        display: none;
+        
+        font-size: 12px;
+        font-weight: 700;
+        line-height: 16px !important;
+    }
+
+    .aplayer .aplayer-lrc p.aplayer-lrc-current {
+        
+        display: none;
+        
+        font-size: 15px;
+        color: #42b983;
+    }
+
+    
+    .aplayer.aplayer-fixed.aplayer-narrow .aplayer-body {
+        left: -66px !important;
+    }
+
+    .aplayer.aplayer-fixed.aplayer-narrow .aplayer-body:hover {
+        left: 0px !important;
+    }
+
+    
+</style>
+<div class="">
+    
+    <div class="row">
+        <meting-js class="col l8 offset-l2 m10 offset-m1 s12"
+                   server="netease"
+                   type="playlist"
+                   id="503838841"
+                   fixed='true'
+                   autoplay='false'
+                   theme='#42b983'
+                   loop='all'
+                   order='random'
+                   preload='auto'
+                   volume='0.7'
+                   list-folded='true'
+        >
+        </meting-js>
+    </div>
+</div>
+
+<script src="/libs/aplayer/APlayer.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/meting@2/dist/Meting.min.js"></script>
+
+    
+
+    <div class="container row center-align"
+         style="margin-bottom: 0px !important;">
+        <div class="col s12 m8 l8 copy-right">
+            Copyright&nbsp;&copy;
+            
+                <span id="year">2019-2022</span>
+            
+            <a href="/about" target="_blank">luyanan</a>
+            |&nbsp;Powered by&nbsp;<a href="https://hexo.io/" target="_blank">Hexo</a>
+            |&nbsp;Theme&nbsp;<a href="https://github.com/blinkfox/hexo-theme-matery" target="_blank">Matery</a>
+            <br>
+            
+                &nbsp;<i class="fas fa-chart-area"></i>&nbsp;站点总字数:&nbsp;<span
+                        class="white-color">803.3k</span>
+            
+            
+            
+                
+            
+            
+                <span id="busuanzi_container_site_pv">
+                &nbsp;|&nbsp;<i class="far fa-eye"></i>&nbsp;总访问量:&nbsp;
+                    <span id="busuanzi_value_site_pv" class="white-color"></span>
+            </span>
+            
+            
+                <span id="busuanzi_container_site_uv">
+                &nbsp;|&nbsp;<i class="fas fa-users"></i>&nbsp;总访问人数:&nbsp;
+                    <span id="busuanzi_value_site_uv" class="white-color"></span>
+            </span>
+            
+            <br>
+
+            <!-- 运行天数提醒. -->
+            
+            <br>
+            
+        </div>
+        <div class="col s12 m4 l4 social-link social-statis">
+    <a href="https://github.com/rainsoil" class="tooltipped" target="_blank" data-tooltip="访问我的GitHub" data-position="top" data-delay="50">
+        <i class="fab fa-github"></i>
+    </a>
+
+
+
+    <a href="mailto:luyanan0718@163.com" class="tooltipped" target="_blank" data-tooltip="邮件联系我" data-position="top" data-delay="50">
+        <i class="fas fa-envelope-open"></i>
+    </a>
+
+
+
+
+
+
+
+    <a href="tencent://AddContact/?fromId=50&fromSubId=1&subcmd=all&uin=914596513" class="tooltipped" target="_blank" data-tooltip="QQ联系我: 914596513" data-position="top" data-delay="50">
+        <i class="fab fa-qq"></i>
+    </a>
+
+
+
+
+
+
+
+    <a href="/atom.xml" class="tooltipped" target="_blank" data-tooltip="RSS 订阅" data-position="top" data-delay="50">
+        <i class="fas fa-rss"></i>
+    </a>
+
+</div>
+    </div>
+</footer>
+
+<div class="progress-bar"></div>
+
+
+    <!-- 搜索遮罩框 -->
+<div id="searchModal" class="modal">
+    <div class="modal-content">
+        <div class="search-header">
+            <span class="title"><i class="fas fa-search"></i>&nbsp;&nbsp;搜索</span>
+            <input type="search" id="searchInput" name="s" placeholder="请输入搜索的关键字"
+                   class="search-input">
+        </div>
+        <div id="searchResult"></div>
+    </div>
+</div>
+
+<script type="text/javascript">
+$(function () {
+    var searchFunc = function (path, search_id, content_id) {
+        'use strict';
+        $.ajax({
+            url: path,
+            dataType: "xml",
+            success: function (xmlResponse) {
+                // get the contents from search data
+                var datas = $("entry", xmlResponse).map(function () {
+                    return {
+                        title: $("title", this).text(),
+                        content: $("content", this).text(),
+                        url: $("url", this).text()
+                    };
+                }).get();
+                var $input = document.getElementById(search_id);
+                var $resultContent = document.getElementById(content_id);
+                $input.addEventListener('input', function () {
+                    var str = '<ul class=\"search-result-list\">';
+                    var keywords = this.value.trim().toLowerCase().split(/[\s\-]+/);
+                    $resultContent.innerHTML = "";
+                    if (this.value.trim().length <= 0) {
+                        return;
+                    }
+                    // perform local searching
+                    datas.forEach(function (data) {
+                        var isMatch = true;
+                        var data_title = data.title.trim().toLowerCase();
+                        var data_content = data.content.trim().replace(/<[^>]+>/g, "").toLowerCase();
+                        var data_url = data.url;
+                        data_url = data_url.indexOf('/') === 0 ? data.url : '/' + data_url;
+                        var index_title = -1;
+                        var index_content = -1;
+                        var first_occur = -1;
+                        // only match artiles with not empty titles and contents
+                        if (data_title !== '' && data_content !== '') {
+                            keywords.forEach(function (keyword, i) {
+                                index_title = data_title.indexOf(keyword);
+                                index_content = data_content.indexOf(keyword);
+                                if (index_title < 0 && index_content < 0) {
+                                    isMatch = false;
+                                } else {
+                                    if (index_content < 0) {
+                                        index_content = 0;
+                                    }
+                                    if (i === 0) {
+                                        first_occur = index_content;
+                                    }
+                                }
+                            });
+                        }
+                        // show search results
+                        if (isMatch) {
+                            str += "<li><a href='" + data_url + "' class='search-result-title'>" + data_title + "</a>";
+                            var content = data.content.trim().replace(/<[^>]+>/g, "");
+                            if (first_occur >= 0) {
+                                // cut out 100 characters
+                                var start = first_occur - 20;
+                                var end = first_occur + 80;
+                                if (start < 0) {
+                                    start = 0;
+                                }
+                                if (start === 0) {
+                                    end = 100;
+                                }
+                                if (end > content.length) {
+                                    end = content.length;
+                                }
+                                var match_content = content.substr(start, end);
+                                // highlight all keywords
+                                keywords.forEach(function (keyword) {
+                                    var regS = new RegExp(keyword, "gi");
+                                    match_content = match_content.replace(regS, "<em class=\"search-keyword\">" + keyword + "</em>");
+                                });
+
+                                str += "<p class=\"search-result\">" + match_content + "...</p>"
+                            }
+                            str += "</li>";
+                        }
+                    });
+                    str += "</ul>";
+                    $resultContent.innerHTML = str;
+                });
+            }
+        });
+    };
+
+    searchFunc('/search.xml', 'searchInput', 'searchResult');
+});
+</script>
+
+    <!-- 回到顶部按钮 -->
+<div id="backTop" class="top-scroll">
+    <a class="btn-floating btn-large waves-effect waves-light" href="#!">
+        <i class="fas fa-arrow-up"></i>
+    </a>
+</div>
+
+
+    <script src="/libs/materialize/materialize.min.js"></script>
+    <script src="/libs/masonry/masonry.pkgd.min.js"></script>
+    <script src="/libs/aos/aos.js"></script>
+    <script src="/libs/scrollprogress/scrollProgress.min.js"></script>
+    <script src="/libs/lightGallery/js/lightgallery-all.min.js"></script>
+    <script src="/js/matery.js"></script>
+
+    
+
+    
+
+    <!-- 雪花特效 -->
+    
+
+    <!-- 鼠标星星特效 -->
+    
+
+    <!-- Baidu Analytics -->
+
+    <!-- Baidu Push -->
+
+<script>
+    (function () {
+        var bp = document.createElement('script');
+        var curProtocol = window.location.protocol.split(':')[0];
+        if (curProtocol === 'https') {
+            bp.src = 'https://zz.bdstatic.com/linksubmit/push.js';
+        } else {
+            bp.src = 'http://push.zhanzhang.baidu.com/push.js';
+        }
+        var s = document.getElementsByTagName("script")[0];
+        s.parentNode.insertBefore(bp, s);
+    })();
+</script>
+
+    
+    <script src="/libs/others/clicklove.js" async="async"></script>
+    
+    
+    <script async src="/libs/others/busuanzi.pure.mini.js"></script>
+    
+
+    
+
+    
+
+    <!--腾讯兔小巢-->
+    
+    
+    <script type="text/javascript" color="0,0,255"
+        pointColor="0,0,255" opacity='0.7'
+        zIndex="-1" count="99"
+        src="/libs/background/canvas-nest.js"></script>
+    
+
+    
+
+    
+
+    
+    <script src="/libs/instantpage/instantpage.js" type="module"></script>
+    
+
+</body>
+
+</html>

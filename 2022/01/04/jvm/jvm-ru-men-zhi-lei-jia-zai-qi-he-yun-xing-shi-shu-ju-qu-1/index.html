@@ -1,0 +1,1229 @@
+<!DOCTYPE HTML>
+<html lang="zh-CN">
+
+
+<head>
+    <meta charset="utf-8">
+    <meta name="keywords" content="JVM入门之类加载器和运行时数据区(1), railsoil">
+    <meta name="description" content="JVM入门之类加载器和运行时数据区1.  官网1.1 JDK8
+官网: https://docs.oracle.com/javase/8/
+
+1.2 The relation of JDK/JRE/JVMReference -&amp;gt; De">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="renderer" content="webkit|ie-stand|ie-comp">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="format-detection" content="telephone=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="referrer" content="no-referrer-when-downgrade">
+    <!-- Global site tag (gtag.js) - Google Analytics -->
+
+
+    <title>JVM入门之类加载器和运行时数据区(1) | railsoil</title>
+    <link rel="icon" type="image/png" href="/favicon.png">
+
+    <link rel="stylesheet" type="text/css" href="/libs/awesome/css/all.min.css">
+    <link rel="stylesheet" type="text/css" href="/libs/materialize/materialize.min.css">
+    <link rel="stylesheet" type="text/css" href="/libs/aos/aos.css">
+    <link rel="stylesheet" type="text/css" href="/libs/animate/animate.min.css">
+    <link rel="stylesheet" type="text/css" href="/libs/lightGallery/css/lightgallery.min.css">
+    <link rel="stylesheet" type="text/css" href="/css/matery.css">
+    <link rel="stylesheet" type="text/css" href="/css/my.css">
+
+    <script src="/libs/jquery/jquery.min.js"></script>
+
+<meta name="generator" content="Hexo 5.4.0"><link rel="alternate" href="/atom.xml" title="railsoil" type="application/atom+xml">
+<link rel="stylesheet" href="/css/prism-tomorrow.css" type="text/css"></head>
+
+
+
+
+<body>
+    <header class="navbar-fixed">
+    <nav id="headNav" class="bg-color nav-transparent">
+        <div id="navContainer" class="nav-wrapper container">
+            <div class="brand-logo">
+                <a href="/" class="waves-effect waves-light">
+                    
+                    <img src="/medias/logo.png" class="logo-img" alt="LOGO">
+                    
+                    <span class="logo-span">railsoil</span>
+                </a>
+            </div>
+            
+
+<a href="#" data-target="mobile-nav" class="sidenav-trigger button-collapse"><i class="fas fa-bars"></i></a>
+<ul class="right nav-menu">
+  
+  <li class="hide-on-med-and-down nav-item">
+    
+    <a href="/" class="waves-effect waves-light">
+      
+      <i class="fas fa-home" style="zoom: 0.6;"></i>
+      
+      <span>首页</span>
+    </a>
+    
+  </li>
+  
+  <li class="hide-on-med-and-down nav-item">
+    
+    <a href="/tags" class="waves-effect waves-light">
+      
+      <i class="fas fa-tags" style="zoom: 0.6;"></i>
+      
+      <span>标签</span>
+    </a>
+    
+  </li>
+  
+  <li class="hide-on-med-and-down nav-item">
+    
+    <a href="/categories" class="waves-effect waves-light">
+      
+      <i class="fas fa-bookmark" style="zoom: 0.6;"></i>
+      
+      <span>分类</span>
+    </a>
+    
+  </li>
+  
+  <li class="hide-on-med-and-down nav-item">
+    
+    <a href="/archives" class="waves-effect waves-light">
+      
+      <i class="fas fa-archive" style="zoom: 0.6;"></i>
+      
+      <span>归档</span>
+    </a>
+    
+  </li>
+  
+  <li class="hide-on-med-and-down nav-item">
+    
+    <a href="/about" class="waves-effect waves-light">
+      
+      <i class="fas fa-user-circle" style="zoom: 0.6;"></i>
+      
+      <span>关于</span>
+    </a>
+    
+  </li>
+  
+  <li>
+    <a href="#searchModal" class="modal-trigger waves-effect waves-light">
+      <i id="searchIcon" class="fas fa-search" title="搜索" style="zoom: 0.85;"></i>
+    </a>
+  </li>
+</ul>
+
+
+<div id="mobile-nav" class="side-nav sidenav">
+
+    <div class="mobile-head bg-color">
+        
+        <img src="/medias/logo.png" class="logo-img circle responsive-img">
+        
+        <div class="logo-name">railsoil</div>
+        <div class="logo-desc">
+            
+            Never really desperate, only the lost of the soul.
+            
+        </div>
+    </div>
+
+    <ul class="menu-list mobile-menu-list">
+        
+        <li class="m-nav-item">
+	  
+		<a href="/" class="waves-effect waves-light">
+			
+			    <i class="fa-fw fas fa-home"></i>
+			
+			首页
+		</a>
+          
+        </li>
+        
+        <li class="m-nav-item">
+	  
+		<a href="/tags" class="waves-effect waves-light">
+			
+			    <i class="fa-fw fas fa-tags"></i>
+			
+			标签
+		</a>
+          
+        </li>
+        
+        <li class="m-nav-item">
+	  
+		<a href="/categories" class="waves-effect waves-light">
+			
+			    <i class="fa-fw fas fa-bookmark"></i>
+			
+			分类
+		</a>
+          
+        </li>
+        
+        <li class="m-nav-item">
+	  
+		<a href="/archives" class="waves-effect waves-light">
+			
+			    <i class="fa-fw fas fa-archive"></i>
+			
+			归档
+		</a>
+          
+        </li>
+        
+        <li class="m-nav-item">
+	  
+		<a href="/about" class="waves-effect waves-light">
+			
+			    <i class="fa-fw fas fa-user-circle"></i>
+			
+			关于
+		</a>
+          
+        </li>
+        
+        
+    </ul>
+</div>
+
+
+        </div>
+
+        
+    </nav>
+
+</header>
+
+    
+
+
+
+<div class="bg-cover pd-header post-cover" style="background-image: url('/medias/featureimages/7.jpg')">
+    <div class="container" style="right: 0px;left: 0px;">
+        <div class="row">
+            <div class="col s12 m12 l12">
+                <div class="brand">
+                    <h1 class="description center-align post-title">JVM入门之类加载器和运行时数据区(1)</h1>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+
+<main class="post-container content">
+
+    
+    <link rel="stylesheet" href="/libs/tocbot/tocbot.css">
+<style>
+    #articleContent h1::before,
+    #articleContent h2::before,
+    #articleContent h3::before,
+    #articleContent h4::before,
+    #articleContent h5::before,
+    #articleContent h6::before {
+        display: block;
+        content: " ";
+        height: 100px;
+        margin-top: -100px;
+        visibility: hidden;
+    }
+
+    #articleContent :focus {
+        outline: none;
+    }
+
+    .toc-fixed {
+        position: fixed;
+        top: 64px;
+    }
+
+    .toc-widget {
+        width: 345px;
+        padding-left: 20px;
+    }
+
+    .toc-widget .toc-title {
+        padding: 35px 0 15px 17px;
+        font-size: 1.5rem;
+        font-weight: bold;
+        line-height: 1.5rem;
+    }
+
+    .toc-widget ol {
+        padding: 0;
+        list-style: none;
+    }
+
+    #toc-content {
+        padding-bottom: 30px;
+        overflow: auto;
+    }
+
+    #toc-content ol {
+        padding-left: 10px;
+    }
+
+    #toc-content ol li {
+        padding-left: 10px;
+    }
+
+    #toc-content .toc-link:hover {
+        color: #42b983;
+        font-weight: 700;
+        text-decoration: underline;
+    }
+
+    #toc-content .toc-link::before {
+        background-color: transparent;
+        max-height: 25px;
+
+        position: absolute;
+        right: 23.5vw;
+        display: block;
+    }
+
+    #toc-content .is-active-link {
+        color: #42b983;
+    }
+
+    #floating-toc-btn {
+        position: fixed;
+        right: 15px;
+        bottom: 76px;
+        padding-top: 15px;
+        margin-bottom: 0;
+        z-index: 998;
+    }
+
+    #floating-toc-btn .btn-floating {
+        width: 48px;
+        height: 48px;
+    }
+
+    #floating-toc-btn .btn-floating i {
+        line-height: 48px;
+        font-size: 1.4rem;
+    }
+</style>
+<div class="row">
+    <div id="main-content" class="col s12 m12 l9">
+        <!-- 文章内容详情 -->
+<div id="artDetail">
+    <div class="card">
+        <div class="card-content article-info">
+            <div class="row tag-cate">
+                <div class="col s7">
+                    
+                          <div class="article-tag">
+                            <span class="chip bg-color">无标签</span>
+                          </div>
+                    
+                </div>
+                <div class="col s5 right-align">
+                    
+                    <div class="post-cate">
+                        <i class="fas fa-bookmark fa-fw icon-category"></i>
+                        
+                            <a href="/categories/jvm/" class="post-category">
+                                jvm
+                            </a>
+                        
+                            <a href="/categories/jvm/jvm/" class="post-category">
+                                jvm
+                            </a>
+                        
+                    </div>
+                    
+                </div>
+            </div>
+
+            <div class="post-info">
+                
+                <div class="post-date info-break-policy">
+                    <i class="far fa-calendar-minus fa-fw"></i>发布日期:&nbsp;&nbsp;
+                    2022-01-04
+                </div>
+                
+
+                
+
+                
+                <div class="info-break-policy">
+                    <i class="far fa-file-word fa-fw"></i>文章字数:&nbsp;&nbsp;
+                    3.2k
+                </div>
+                
+
+                
+                <div class="info-break-policy">
+                    <i class="far fa-clock fa-fw"></i>阅读时长:&nbsp;&nbsp;
+                    13 分
+                </div>
+                
+
+                
+                    <div id="busuanzi_container_page_pv" class="info-break-policy">
+                        <i class="far fa-eye fa-fw"></i>阅读次数:&nbsp;&nbsp;
+                        <span id="busuanzi_value_page_pv"></span>
+                    </div>
+				
+            </div>
+        </div>
+        <hr class="clearfix">
+
+        
+
+        
+
+        <div class="card-content article-card-content">
+            <div id="articleContent">
+                <h1 id="JVM入门之类加载器和运行时数据区"><a href="#JVM入门之类加载器和运行时数据区" class="headerlink" title="JVM入门之类加载器和运行时数据区"></a>JVM入门之类加载器和运行时数据区</h1><h2 id="1-官网"><a href="#1-官网" class="headerlink" title="1.  官网"></a>1.  官网</h2><h3 id="1-1-JDK8"><a href="#1-1-JDK8" class="headerlink" title="1.1 JDK8"></a>1.1 <code>JDK8</code></h3><blockquote>
+<p><code>官网</code>: <a target="_blank" rel="noopener" href="https://docs.oracle.com/javase/8/">https://docs.oracle.com/javase/8/</a></p>
+</blockquote>
+<h3 id="1-2-The-relation-of-JDK-JRE-JVM"><a href="#1-2-The-relation-of-JDK-JRE-JVM" class="headerlink" title="1.2 The relation of JDK/JRE/JVM"></a>1.2 The relation of JDK/JRE/JVM</h3><p><code>Reference</code> -&gt; <code>Developer Guides</code> -&gt; 定位到:<code>https://docs.oracle.com/javase/8/docs/index.html</code></p>
+<blockquote>
+<p>Oracle has two products that implement Java Platform Standard Edition (Java SE) 8: Java SE Development Kit (JDK) 8 and Java SE Runtime Environment (JRE) 8.</p>
+<p>JDK 8 is a superset of JRE 8, and contains everything that is in JRE 8, plus tools such as the compilers and debuggers necessary for developing applets and applications. JRE 8 provides the libraries, the Java Virtual Machine (JVM), and other components to run applets and applications written in the Java programming language. Note that the JRE includes components not required by the Java SE specification, including both standard and non-standard Java components.</p>
+<p>The following conceptual diagram illustrates the components of Oracle’s Java SE products:</p>
+</blockquote>
+<p><img src="http://files.luyanan.com//img/20200507090612.png" alt="image-20200507090556779"></p>
+<h2 id="2-源码到类文件"><a href="#2-源码到类文件" class="headerlink" title="2.源码到类文件"></a>2.源码到类文件</h2><h3 id="2-1-源码"><a href="#2-1-源码" class="headerlink" title="2.1 源码"></a>2.1 源码</h3><p>准备一个<code>Person</code> 的类</p>
+<pre class=" language-java"><code class="language-java"><span class="token keyword">public</span> <span class="token keyword">class</span> <span class="token class-name">Person</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+    <span class="token keyword">private</span> String name<span class="token punctuation">;</span>
+    <span class="token keyword">private</span> <span class="token keyword">int</span> age<span class="token punctuation">;</span>
+    <span class="token keyword">private</span> <span class="token keyword">static</span> String address<span class="token punctuation">;</span>
+    <span class="token keyword">private</span> <span class="token keyword">final</span> <span class="token keyword">static</span> String hobby <span class="token operator">=</span> <span class="token string">"Programming"</span><span class="token punctuation">;</span>
+
+    <span class="token keyword">public</span> <span class="token keyword">void</span> <span class="token function">say</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+        System<span class="token punctuation">.</span>out<span class="token punctuation">.</span><span class="token function">println</span><span class="token punctuation">(</span><span class="token string">"person say..."</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+
+    <span class="token keyword">public</span> <span class="token keyword">int</span> <span class="token function">calc</span><span class="token punctuation">(</span><span class="token keyword">int</span> op1<span class="token punctuation">,</span> <span class="token keyword">int</span> op2<span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+        <span class="token keyword">return</span> op1 <span class="token operator">+</span> op2<span class="token punctuation">;</span>
+    <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+
+<span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+</code></pre>
+<blockquote>
+<p>编译:  <code>javac Person.java -&gt;Person.class</code></p>
+</blockquote>
+<h3 id="2-2-编译过程"><a href="#2-2-编译过程" class="headerlink" title="2.2 编译过程"></a>2.2 编译过程</h3><p><code>Person.java</code> -&gt; <code>语法分析器</code> -&gt; <code>tokens流</code> -&gt; <code>语法分析器</code> -&gt;  <code>语法树/抽象语法树</code> -&gt; <code>语法分析器</code> -&gt; <code>注解抽象语法树</code> -&gt;<code>字节码生成器</code> -&gt; <code>Person.class 文件</code></p>
+<h3 id="2-3-类文件-class-文件"><a href="#2-3-类文件-class-文件" class="headerlink" title="2.3   类文件(class 文件)"></a>2.3   类文件(<code>class</code> 文件)</h3><blockquote>
+<p>官网<code>The class File Format </code>:  <a target="_blank" rel="noopener" href="https://docs.oracle.com/javase/specs/jvms/se8/html/jvms-4.html">https://docs.oracle.com/javase/specs/jvms/se8/html/jvms-4.html</a></p>
+</blockquote>
+<pre class=" language-text"><code class="language-text">cafe babe 0000 0033 002c 0a00 0600 1d09
+001e 001f 0800 200a 0021 0022 0700 2307
+0024 0100 046e 616d 6501 0012 4c6a 6176
+612f 6c61 6e67 2f53 7472 696e 673b 0100
+0361 6765 0100 0149 0100 0761 6464 7265
+7373 0100 0568 6f62 6279 0100 0d43 6f6e
+7374 616e 7456 616c 7565 0800 2501 0006
+3c69 6e69 743e 0100 0328 2956 0100 0443
+6f64 6501 000f 4c69 6e65 4e75 6d62 6572
+5461 626c 6501 0012 4c6f 6361 6c56 6172
+6961 626c 6554 6162 6c65 0100 0474 6869
+7301 0010 4c63 6f6d 2f6a 766d 2f50 6572
+736f 6e3b 0100 0373 6179 0100 0463 616c
+6301 0005 2849 4929 4901 0003 6f70 3101
+0003 6f70 3201 000a 536f 7572 6365 4669
+6c65 0100 0b50 6572 736f 6e2e 6a61 7661
+0c00 0f00 1007 0026 0c00 2700 2801 000d
+......
+</code></pre>
+<p><strong><code>magic</code>(魔数):</strong></p>
+<blockquote>
+<p>The <code>magic</code> item supplies the magic number identifying the <code>class</code> file format; it has the value <code>0xCAFEBABE</code>.</p>
+</blockquote>
+<pre class=" language-text"><code class="language-text">cafe babe
+</code></pre>
+<p><strong><code>minor_version</code>,<code> major_version</code></strong></p>
+<pre class=" language-text"><code class="language-text">0000 0034 对应10进制的52，代表JDK 8中的一个版本
+</code></pre>
+<p> <strong><code>constant_pool_count</code></strong></p>
+<pre class=" language-text"><code class="language-text">0027 对应十进制27，代表常量池中27个常量
+</code></pre>
+<pre class=" language-text"><code class="language-text">ClassFile &#123;
+    u4             magic;
+    u2             minor_version;
+    u2             major_version;
+    u2             constant_pool_count;
+    cp_info        constant_pool[constant_pool_count-1];
+    u2             access_flags;
+    u2             this_class;
+    u2             super_class;
+    u2             interfaces_count;
+    u2             interfaces[interfaces_count];
+    u2             fields_count;
+    field_info     fields[fields_count];
+    u2             methods_count;
+    method_info    methods[methods_count];
+    u2             attributes_count;
+    attribute_info attributes[attributes_count];
+&#125;
+</code></pre>
+<blockquote>
+<p>.class 字节码文件</p>
+<ul>
+<li>魔数与<code>class</code> 文件版本</li>
+<li>常量池</li>
+<li>访问标识</li>
+<li>类索引、父类索引、接口索引</li>
+<li>字段表集合</li>
+<li>方法表集合</li>
+<li>属性表集合</li>
+</ul>
+</blockquote>
+<h2 id="3-类文件到虚拟机-类加载过程"><a href="#3-类文件到虚拟机-类加载过程" class="headerlink" title="3. 类文件到虚拟机(类加载过程)"></a>3. 类文件到虚拟机(类加载过程)</h2><h3 id="3-1-装载-Load"><a href="#3-1-装载-Load" class="headerlink" title="3.1 装载(Load)"></a>3.1 装载(<code>Load</code>)</h3><blockquote>
+<p>查找和导入<code>class</code>  文件</p>
+</blockquote>
+<ol>
+<li>通过一个类的全限定名获取定义此类的二进制字节流</li>
+<li>将这个字节流所代表的静态存储结构转化为方法去的运行时数据结构</li>
+<li>在<code>java</code> 堆中生成一个代表这个类的<code>java.lang.Class</code> 对象, 作为对方法区中这些数据的访问入口</li>
+</ol>
+<h3 id="3-2-链接-Link"><a href="#3-2-链接-Link" class="headerlink" title="3.2 链接(Link)"></a>3.2 链接(<code>Link</code>)</h3><h4 id="3-2-1-验证-Verify"><a href="#3-2-1-验证-Verify" class="headerlink" title="3.2.1  验证(Verify)"></a>3.2.1  验证(<code>Verify</code>)</h4><blockquote>
+<p>保证被加载类的正确性</p>
+</blockquote>
+<ul>
+<li>文件格式验证</li>
+<li>元数据验证</li>
+<li>字节码验证</li>
+<li>符号引用验证</li>
+</ul>
+<h4 id="3-2-2-准备-Prepare"><a href="#3-2-2-准备-Prepare" class="headerlink" title="3.2.2 准备(Prepare)"></a>3.2.2 准备(<code>Prepare</code>)</h4><blockquote>
+<p>为类的静态变量分配内存,并将其初始化为默认值</p>
+</blockquote>
+<h4 id="3-2-3-初始化-Initialize"><a href="#3-2-3-初始化-Initialize" class="headerlink" title="3.2.3 初始化(Initialize)"></a>3.2.3 初始化(<code>Initialize</code>)</h4><blockquote>
+<p>对类的静态变量、静态代码块执行初始化操作</p>
+</blockquote>
+<h3 id="3-4-类加载机制图解"><a href="#3-4-类加载机制图解" class="headerlink" title="3.4 类加载机制图解"></a>3.4 类加载机制图解</h3><blockquote>
+<p>使用和卸载并不算是类加载过程,只是画完整了一下</p>
+</blockquote>
+<p><img src="http://files.luyanan.com//img/20200507110042.png" alt="image-20200507110040791"></p>
+<h2 id="4-类装载器ClassLoader"><a href="#4-类装载器ClassLoader" class="headerlink" title="4. 类装载器ClassLoader"></a>4. 类装载器<code>ClassLoader</code></h2><p>在装载(<code>Load</code>) 阶段,其中第(1) 步同故宫类的全限定名获取其定义的二进制字节流,需要借助类装载器完成, 顾名思义,就是用来装载<code>Class</code>  文件的. </p>
+<ol>
+<li>通过一个类的全限定名获取定义此类的二进制字节流</li>
+</ol>
+<h3 id="4-1-分类"><a href="#4-1-分类" class="headerlink" title="4.1 分类"></a>4.1 分类</h3><ol>
+<li><code>Bootstrap ClassLoader</code> 负责加载<code>$JAVA_HOME</code> 中<code>jre/lib/rt.jar</code> 里面所有的<code>class</code> 或<code>Xbootclassoath</code> 选项指定的<code>jar</code>包,由<code>C++</code> 实现,不是<code>ClassLoader</code> 子类</li>
+<li><code>Extension ClassLoader</code> 负责加载<code>java</code>  平台中扩展功能的一些<code>jar</code>包. 包括<code>$JAVA_HOME</code> 中<code>jre/lib/*.jar</code> 或<code>-Djava.ext.dirs</code> 指定目录下的<code>jar</code>包. </li>
+<li><code>App ClassLoader</code> 负责加载<code>classpath</code> 中指定的<code>jar</code> 包以及<code>-Djava.class.path</code>  所指定目录下的类和<code>jar</code> 包</li>
+<li><code>Custom ClassLoader</code> 通过<code>java.lang.ClassLoader</code> 的子类自定义加载<code>class</code>,属于应用策划稿内需根据自身需要自定义的<code>classLoader</code>,如<code>tomcat</code>、<code>jboss</code> 都会根据<code>j2ee</code> 规范自动实现<code>classLoader</code></li>
+</ol>
+<h3 id="4-2-图解"><a href="#4-2-图解" class="headerlink" title="4.2  图解"></a>4.2  图解</h3><p><img src="http://files.luyanan.com//img/20200507113214.png" alt="image-20200507113213585"></p>
+<h3 id="4-3-加载原理"><a href="#4-3-加载原理" class="headerlink" title="4.3  加载原理"></a>4.3  加载原理</h3><p>检查某个类是否已经加载,顺序是自底向上的,从<code>Costom ClassLoader</code>到<code>Bootstrap ClassLoader</code>逐层检查,只要某个<code>ClassLoader</code> 已经加载,就视为已经加载此类,保证此类所以的<code>ClassLoader</code> 只加载一次. </p>
+<p>加载的顺序是自顶向下的,也就是由上层来逐层的尝试加载此类. </p>
+<p><strong>双亲委派模式</strong></p>
+<p><strong>定义</strong>: 如果一个类加载器在接收到加载类的请求后, 它首先不会自己去尝试去加载这个类,而是把这个请求任务委托给父类加载器去完成,依次递归, 如果父类加载器可以完成类加载任务,就成功返回,只有父类加载器无法完成此加载任务的时候,才自己去加载. </p>
+<p><strong>优势</strong>:java类随着加载它的类加载器一起具备了一种带有优先级的层次关系,比如,<code>Java</code> 中的<code>Object</code>类, 它存放在<code>rt.jar</code> 之中, 无论哪一个类加载器要加载此类, 最终都是委派给处于模型最顶端的启动类加载器进行加载,因此<code>Object</code> 类在各种类加载环境中都是同一个类. 如果不采用双亲委派模型,那么由各个类加载器自己加载的话,那么系统中就会存在多种不同的<code>Object</code> 类. </p>
+<p><strong>破坏:</strong> 可以继承<code>ClassLoader</code> 类, 然后重写 其中的<code>loadClass</code> 方法,其他方式大家可以自己了解扩展一下. </p>
+<h2 id="5-运行时数据区-Run-Time-Data-Areas"><a href="#5-运行时数据区-Run-Time-Data-Areas" class="headerlink" title="5 运行时数据区(Run-Time Data Areas)"></a>5 运行时数据区(<code>Run-Time Data Areas</code>)</h2><p>在装载阶段的第2、3步, 可以发现有运行时数据、堆、方法区等名词</p>
+<ol start="2">
+<li>将这个字节流所代表的静态存储结构转化位方法区的运行时数据结构</li>
+<li>在java堆中生成一个代表这个类的<code>java.lang.Class</code> 对象,作为对方法区中这些数据的访问入口</li>
+</ol>
+<p>说白了,就是类文件被类装载器装载进来之后,类中的内容(比如常量、变量、方法、对象等这些数据总要有个去处,也就是要存储起来, 存储的位置肯定在JVM中有对应的空间)</p>
+<h3 id="5-1-官网概况"><a href="#5-1-官网概况" class="headerlink" title="5.1 官网概况"></a>5.1 官网概况</h3><p><a target="_blank" rel="noopener" href="https://docs.oracle.com/javase/specs/jvms/se8/html/jvms-2.html#jvms-2.5">https://docs.oracle.com/javase/specs/jvms/se8/html/jvms-2.html#jvms-2.5</a></p>
+<blockquote>
+<p>The Java Virtual Machine defines various run-time data areas that are used during execution of a program. Some of these data areas are created on Java Virtual Machine start-up and are destroyed only when the Java Virtual Machine exits. Other data areas are per thread. Per-thread data areas are created when a thread is created and destroyed when the thread exits.</p>
+</blockquote>
+<h3 id="5-2-图解"><a href="#5-2-图解" class="headerlink" title="5.2  图解"></a>5.2  图解</h3><p><img src="http://files.luyanan.com//img/20200507134912.png" alt="image-20200507134911637"></p>
+<h3 id="5-3-常规理解"><a href="#5-3-常规理解" class="headerlink" title="5.3 常规理解"></a>5.3 常规理解</h3><h4 id="5-3-1-Method-Area-方法区"><a href="#5-3-1-Method-Area-方法区" class="headerlink" title="5.3.1 Method Area(方法区)"></a>5.3.1 <code>Method Area</code>(方法区)</h4><p>方法区是各个线程共享的内存区域,在虚拟机启动时候创建</p>
+<p>用于存储已被虚拟机加载的类信息、常量、静态变量、即时编译器编译后的代码等数据</p>
+<p>虽然java虚拟机规范把方法区描述为堆的一个逻辑部分, 但是它却又一个别名叫做<code>Non-Heap</code>(非堆), 目的是与Java 堆区分开来. </p>
+<p>当方法区无法满足内存分配需求的时候,将抛出<code>OutOfMemoryError</code> 异常</p>
+<blockquote>
+<p>The Java Virtual Machine has a <em>method area</em> that is shared among all Java Virtual Machine threads. The method area is analogous to the storage area for compiled code of a conventional language or analogous to the “text” segment in an operating system process. It stores per-class structures such as the run-time constant pool, field and method data, and the code for methods and constructors, including the special methods (<a target="_blank" rel="noopener" href="https://docs.oracle.com/javase/specs/jvms/se8/html/jvms-2.html#jvms-2.9">§2.9</a>) used in class and instance initialization and interface initialization.</p>
+</blockquote>
+<blockquote>
+<p><strong>If memory in the method area cannot be made available to satisfy an allocation request, the Java Virtual Machine throws an</strong> <code>OutOfMemoryError</code><strong>.</strong></p>
+</blockquote>
+<p>此时回看装载阶段的第二步: 将这个字节流所代表的静态存储结构转化为方法区的运行时数据结构</p>
+<blockquote>
+<p>如果这个时候把从<code>Class</code> 文件到装载的第1、2步合并起来理解的话, 可以画个图</p>
+</blockquote>
+<p><img src="http://files.luyanan.com//img/20200507135436.png" alt="image-20200507135435696"></p>
+<blockquote>
+<p>值得说明的是</p>
+</blockquote>
+<ol>
+<li><p>方法区在<code>JDK1.8</code>z  中就是<code>Metaspace</code>, <code>jdk1.6或7</code> 中就是<code>Perm Space</code></p>
+</li>
+<li><p><code>Run-Time Constant Pool</code></p>
+<p> <code>Class</code> 文件中除了有类的版本、字段、方法、接口描述信息外，还有一项信息就是常量池,用于存放编译时期生成的各种字面量和符号引用,这部分内容将在类加载后进入方法区的运行时常量池中存放. </p>
+<blockquote>
+<p>Each run-time constant pool is allocated from the Java Virtual Machine’s method area (§2.5.4).s</p>
+</blockquote>
+</li>
+</ol>
+<h4 id="5-3-2-Heap-堆"><a href="#5-3-2-Heap-堆" class="headerlink" title="5.3.2 Heap(堆)"></a>5.3.2 <code>Heap</code>(堆)</h4><p>java堆是java虚拟机所管理的内存中最大的一块,在虚拟机启动的时候创建, 被所有线程共享</p>
+<p>java对象实例以及数组都在堆上进行分配. </p>
+<blockquote>
+<p>The Java Virtual Machine has a <em>heap</em> that is shared among all Java Virtual Machine threads. The heap is the run-time data area from which memory for all class instances and arrays is allocated.</p>
+<p>The heap is created on virtual machine start-up.</p>
+</blockquote>
+<p>此时回看装载阶段的第三步: 在java 堆中生成一个代表这个类的<code>java.lang.Class</code> 对象,作为方法区中这些数据的入口</p>
+<p><img src="http://files.luyanan.com//img/20200507140155.png" alt="image-20200507140154830"></p>
+<h4 id="5-3-3-Java-Virtual-Machine-Stacks-java虚拟机栈"><a href="#5-3-3-Java-Virtual-Machine-Stacks-java虚拟机栈" class="headerlink" title="5.3.3  Java Virtual Machine Stacks(java虚拟机栈)"></a>5.3.3 <code> Java Virtual Machine Stacks</code>(java虚拟机栈)</h4><p>经过上面的分析,类加载机制的装载过程已经完成,后续的链接、初始化也会相应的生效. </p>
+<p>假如目前的阶段是初始化完成了,后续做啥呢? 肯定是<code>User</code>使用了, 不用的话这样折腾来折腾去有什么意义呢? 那怎样才能被使用到呢? 换句话说里面的内容怎么样才能被执行呢? 比如通过主函数<code>main</code>调用其他的方法,这种方法实际上是<code>main</code>线程执行之后调用的方法,即要想使用里面的内容,得要以线程为单位,执行相应的方法才行. </p>
+<p>那一个线程执行的状态是如何维护的呢? 一个线程可以执行多少方法? 这样的关系是如何维护的呢? </p>
+<p>虚拟机栈是一个线程执行的区域,保存着一个线程中方法的调用状态, 换句话说,一个java线程的运行状态,由一个虚拟机栈来保存,所以虚拟机栈肯定是线程私有的,独有的,随着线程的创建而创建. </p>
+<p>每一个被线程执行的方法,为该栈的栈帧,即每一个方法对应一个栈帧. </p>
+<p>调用一个方法, 就会向栈中压入一个栈帧,一个方法调用完成后,就会把该栈帧从栈中弹出. </p>
+<blockquote>
+<p>Each Java Virtual Machine thread has a private <em>Java Virtual Machine stack</em>, created at the same time as the thread. A Java Virtual Machine stack stores frames (<a target="_blank" rel="noopener" href="https://docs.oracle.com/javase/specs/jvms/se8/html/jvms-2.html#jvms-2.6">§2.6</a>). </p>
+</blockquote>
+<p><strong>画图理解栈和栈帧</strong></p>
+<p><img src="http://files.luyanan.com//img/20200507141044.png" alt="image-20200507141043336"></p>
+<h4 id="5-3-4-The-pc-Register-程序计数器"><a href="#5-3-4-The-pc-Register-程序计数器" class="headerlink" title="5.3.4  The pc Register(程序计数器)"></a>5.3.4 <code> The pc Register</code>(程序计数器)</h4><p>我们都知道一个JVM 进程中有多个线程在执行,而线程中的内容是否能够拥有执行权, 是根据CPU调度来的. </p>
+<p>假如线程A正在执行到某个地方,突然失去了CPU的执行权,切换到线程B了,然后当线程A 重新获取到CPU执行权的时候,怎么才能继续执行呢? 这就是需要在线程中维护一个变量,记录线程执行到的位置. </p>
+<p>程序计数器占用的内存很小,由于java虚拟机的多线程是通过线程轮流切换, 并分配处理器执行时间的方法来实现的,在任意时刻,一个处理器只会执行一个线程中的指令. 因此,为了线程切换后能够恢复到正确的执行位置,每条线程需要有一个独立的程序计数器(线程私有). </p>
+<p>如果线程正在执行java方法,则计数器记录的是正在执行的虚拟机字节码指令的地址, </p>
+<p>如果执行的是<code>Native</code> 方法, 则这个计数器为空. </p>
+<blockquote>
+<p>The Java Virtual Machine can support many threads of execution at once (JLS §17). Each Java Virtual Machine thread has its own pc (program counter) register. At any point, each Java Virtual Machine thread is executing the code of a single method, namely the current method (§2.6) for that thread. If that method is not native, the pc register contains the address of the Java Virtual Machine instruction currently being executed. If the method currently being executed by the thread is native, the value of the Java Virtual Machine’s pc register is undefined. The Java Virtual Machine’s pc register is wide enough to hold a returnAddress or a native pointer on the specific platform.</p>
+</blockquote>
+<h4 id="5-3-5-Native-Method-Stacks-本地方法栈"><a href="#5-3-5-Native-Method-Stacks-本地方法栈" class="headerlink" title="5.3.5  Native Method Stacks(本地方法栈)"></a>5.3.5 <code> Native Method Stacks</code>(本地方法栈)</h4><p>如果当前线程执行的方法是<code>Native</code>类型的,这些方法就会在本地方法栈中执行. </p>
+
+                
+            </div>
+            <hr/>
+
+            
+
+    <div class="reprint" id="reprint-statement">
+        
+            <div class="reprint__author">
+                <span class="reprint-meta" style="font-weight: bold;">
+                    <i class="fas fa-user">
+                        文章作者:
+                    </i>
+                </span>
+                <span class="reprint-info">
+                    <a href="/about" rel="external nofollow noreferrer">luyanan</a>
+                </span>
+            </div>
+            <div class="reprint__type">
+                <span class="reprint-meta" style="font-weight: bold;">
+                    <i class="fas fa-link">
+                        文章链接:
+                    </i>
+                </span>
+                <span class="reprint-info">
+                    <a href="https://rainsoil.github.io/2022/01/04/jvm/jvm-ru-men-zhi-lei-jia-zai-qi-he-yun-xing-shi-shu-ju-qu-1/">https://rainsoil.github.io/2022/01/04/jvm/jvm-ru-men-zhi-lei-jia-zai-qi-he-yun-xing-shi-shu-ju-qu-1/</a>
+                </span>
+            </div>
+            <div class="reprint__notice">
+                <span class="reprint-meta" style="font-weight: bold;">
+                    <i class="fas fa-copyright">
+                        版权声明:
+                    </i>
+                </span>
+                <span class="reprint-info">
+                    本博客所有文章除特別声明外，均采用
+                    <a href="https://creativecommons.org/licenses/by/4.0/deed.zh" rel="external nofollow noreferrer" target="_blank">CC BY 4.0</a>
+                    许可协议。转载请注明来源
+                    <a href="/about" target="_blank">luyanan</a>
+                    !
+                </span>
+            </div>
+        
+    </div>
+
+    <script async defer>
+      document.addEventListener("copy", function (e) {
+        let toastHTML = '<span>复制成功，请遵循本文的转载规则</span><button class="btn-flat toast-action" onclick="navToReprintStatement()" style="font-size: smaller">查看</a>';
+        M.toast({html: toastHTML})
+      });
+
+      function navToReprintStatement() {
+        $("html, body").animate({scrollTop: $("#reprint-statement").offset().top - 80}, 800);
+      }
+    </script>
+
+
+
+            <div class="tag_share" style="display: block;">
+                <div class="post-meta__tag-list" style="display: inline-block;">
+                    
+                        <div class="article-tag">
+                            <span class="chip bg-color">无标签</span>
+                        </div>
+                    
+                </div>
+                <div class="post_share" style="zoom: 80%; width: fit-content; display: inline-block; float: right; margin: -0.15rem 0;">
+                    <link rel="stylesheet" type="text/css" href="/libs/share/css/share.min.css">
+<div id="article-share">
+
+    
+    <div class="social-share" data-sites="twitter,facebook,google,qq,qzone,wechat,weibo,douban,linkedin" data-wechat-qrcode-helper="<p>微信扫一扫即可分享！</p>"></div>
+    <script src="/libs/share/js/social-share.min.js"></script>
+    
+
+    
+
+</div>
+
+                </div>
+            </div>
+            
+        </div>
+    </div>
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+<article id="prenext-posts" class="prev-next articles">
+    <div class="row article-row">
+        
+        <div class="article col s12 m6" data-aos="fade-up">
+            <div class="article-badge left-badge text-color">
+                <i class="fas fa-chevron-left"></i>&nbsp;上一篇</div>
+            <div class="card">
+                <a href="/2022/01/04/k8s/kubernetes-zhi-ru-men-pian-1/">
+                    <div class="card-image">
+                        
+                        
+                        <img src="/medias/featureimages/1.jpg" class="responsive-img" alt="Kubernetes之入门篇(1)">
+                        
+                        <span class="card-title">Kubernetes之入门篇(1)</span>
+                    </div>
+                </a>
+                <div class="card-content article-content">
+                    <div class="summary block-with-text">
+                        
+                            
+                        
+                    </div>
+                    <div class="publish-info">
+                        <span class="publish-date">
+                            <i class="far fa-clock fa-fw icon-date"></i>2022-01-04
+                        </span>
+                        <span class="publish-author">
+                            
+                            <i class="fas fa-bookmark fa-fw icon-category"></i>
+                            
+                            <a href="/categories/k8s/" class="post-category">
+                                    k8s
+                                </a>
+                            
+                            <a href="/categories/k8s/k8s/" class="post-category">
+                                    k8s
+                                </a>
+                            
+                            
+                        </span>
+                    </div>
+                </div>
+                
+            </div>
+        </div>
+        
+        
+        <div class="article col s12 m6" data-aos="fade-up">
+            <div class="article-badge right-badge text-color">
+                下一篇&nbsp;<i class="fas fa-chevron-right"></i>
+            </div>
+            <div class="card">
+                <a href="/2022/01/04/spring-boot/logback-ri-zhi-mo-ban/">
+                    <div class="card-image">
+                        
+                        
+                        <img src="/medias/featureimages/19.jpg" class="responsive-img" alt="Logback日志模板">
+                        
+                        <span class="card-title">Logback日志模板</span>
+                    </div>
+                </a>
+                <div class="card-content article-content">
+                    <div class="summary block-with-text">
+                        
+                            
+                        
+                    </div>
+                    <div class="publish-info">
+                            <span class="publish-date">
+                                <i class="far fa-clock fa-fw icon-date"></i>2022-01-04
+                            </span>
+                        <span class="publish-author">
+                            
+                            <i class="fas fa-bookmark fa-fw icon-category"></i>
+                            
+                            <a href="/categories/Spring-Boot/" class="post-category">
+                                    Spring Boot
+                                </a>
+                            
+                            <a href="/categories/Spring-Boot/Spring-Boot/" class="post-category">
+                                    Spring Boot
+                                </a>
+                            
+                            
+                        </span>
+                    </div>
+                </div>
+                
+            </div>
+        </div>
+        
+    </div>
+</article>
+
+</div>
+
+
+
+<!-- 代码块功能依赖 -->
+<script type="text/javascript" src="/libs/codeBlock/codeBlockFuction.js"></script>
+
+<!-- 代码语言 -->
+
+<script type="text/javascript" src="/libs/codeBlock/codeLang.js"></script>
+
+
+<!-- 代码块复制 -->
+
+<script type="text/javascript" src="/libs/codeBlock/codeCopy.js"></script>
+
+
+<!-- 代码块收缩 -->
+
+<script type="text/javascript" src="/libs/codeBlock/codeShrink.js"></script>
+
+
+    </div>
+    <div id="toc-aside" class="expanded col l3 hide-on-med-and-down">
+        <div class="toc-widget card" style="background-color: white;">
+            <div class="toc-title"><i class="far fa-list-alt"></i>&nbsp;&nbsp;目录</div>
+            <div id="toc-content"></div>
+        </div>
+    </div>
+</div>
+
+<!-- TOC 悬浮按钮. -->
+
+<div id="floating-toc-btn" class="hide-on-med-and-down">
+    <a class="btn-floating btn-large bg-color">
+        <i class="fas fa-list-ul"></i>
+    </a>
+</div>
+
+
+<script src="/libs/tocbot/tocbot.min.js"></script>
+<script>
+    $(function () {
+        tocbot.init({
+            tocSelector: '#toc-content',
+            contentSelector: '#articleContent',
+            headingsOffset: -($(window).height() * 0.4 - 45),
+            collapseDepth: Number('0'),
+            headingSelector: 'h2, h3, h4'
+        });
+
+        // modify the toc link href to support Chinese.
+        let i = 0;
+        let tocHeading = 'toc-heading-';
+        $('#toc-content a').each(function () {
+            $(this).attr('href', '#' + tocHeading + (++i));
+        });
+
+        // modify the heading title id to support Chinese.
+        i = 0;
+        $('#articleContent').children('h2, h3, h4').each(function () {
+            $(this).attr('id', tocHeading + (++i));
+        });
+
+        // Set scroll toc fixed.
+        let tocHeight = parseInt($(window).height() * 0.4 - 64);
+        let $tocWidget = $('.toc-widget');
+        $(window).scroll(function () {
+            let scroll = $(window).scrollTop();
+            /* add post toc fixed. */
+            if (scroll > tocHeight) {
+                $tocWidget.addClass('toc-fixed');
+            } else {
+                $tocWidget.removeClass('toc-fixed');
+            }
+        });
+
+        
+        /* 修复文章卡片 div 的宽度. */
+        let fixPostCardWidth = function (srcId, targetId) {
+            let srcDiv = $('#' + srcId);
+            if (srcDiv.length === 0) {
+                return;
+            }
+
+            let w = srcDiv.width();
+            if (w >= 450) {
+                w = w + 21;
+            } else if (w >= 350 && w < 450) {
+                w = w + 18;
+            } else if (w >= 300 && w < 350) {
+                w = w + 16;
+            } else {
+                w = w + 14;
+            }
+            $('#' + targetId).width(w);
+        };
+
+        // 切换TOC目录展开收缩的相关操作.
+        const expandedClass = 'expanded';
+        let $tocAside = $('#toc-aside');
+        let $mainContent = $('#main-content');
+        $('#floating-toc-btn .btn-floating').click(function () {
+            if ($tocAside.hasClass(expandedClass)) {
+                $tocAside.removeClass(expandedClass).hide();
+                $mainContent.removeClass('l9');
+            } else {
+                $tocAside.addClass(expandedClass).show();
+                $mainContent.addClass('l9');
+            }
+            fixPostCardWidth('artDetail', 'prenext-posts');
+        });
+        
+    });
+</script>
+
+    
+
+</main>
+
+
+
+
+    <footer class="page-footer bg-color">
+    
+        <link rel="stylesheet" href="/libs/aplayer/APlayer.min.css">
+<style>
+    .aplayer .aplayer-lrc p {
+        
+        display: none;
+        
+        font-size: 12px;
+        font-weight: 700;
+        line-height: 16px !important;
+    }
+
+    .aplayer .aplayer-lrc p.aplayer-lrc-current {
+        
+        display: none;
+        
+        font-size: 15px;
+        color: #42b983;
+    }
+
+    
+    .aplayer.aplayer-fixed.aplayer-narrow .aplayer-body {
+        left: -66px !important;
+    }
+
+    .aplayer.aplayer-fixed.aplayer-narrow .aplayer-body:hover {
+        left: 0px !important;
+    }
+
+    
+</style>
+<div class="">
+    
+    <div class="row">
+        <meting-js class="col l8 offset-l2 m10 offset-m1 s12"
+                   server="netease"
+                   type="playlist"
+                   id="503838841"
+                   fixed='true'
+                   autoplay='false'
+                   theme='#42b983'
+                   loop='all'
+                   order='random'
+                   preload='auto'
+                   volume='0.7'
+                   list-folded='true'
+        >
+        </meting-js>
+    </div>
+</div>
+
+<script src="/libs/aplayer/APlayer.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/meting@2/dist/Meting.min.js"></script>
+
+    
+
+    <div class="container row center-align"
+         style="margin-bottom: 0px !important;">
+        <div class="col s12 m8 l8 copy-right">
+            Copyright&nbsp;&copy;
+            
+                <span id="year">2019-2022</span>
+            
+            <a href="/about" target="_blank">luyanan</a>
+            |&nbsp;Powered by&nbsp;<a href="https://hexo.io/" target="_blank">Hexo</a>
+            |&nbsp;Theme&nbsp;<a href="https://github.com/blinkfox/hexo-theme-matery" target="_blank">Matery</a>
+            <br>
+            
+                &nbsp;<i class="fas fa-chart-area"></i>&nbsp;站点总字数:&nbsp;<span
+                        class="white-color">803.3k</span>
+            
+            
+            
+                
+            
+            
+                <span id="busuanzi_container_site_pv">
+                &nbsp;|&nbsp;<i class="far fa-eye"></i>&nbsp;总访问量:&nbsp;
+                    <span id="busuanzi_value_site_pv" class="white-color"></span>
+            </span>
+            
+            
+                <span id="busuanzi_container_site_uv">
+                &nbsp;|&nbsp;<i class="fas fa-users"></i>&nbsp;总访问人数:&nbsp;
+                    <span id="busuanzi_value_site_uv" class="white-color"></span>
+            </span>
+            
+            <br>
+
+            <!-- 运行天数提醒. -->
+            
+            <br>
+            
+        </div>
+        <div class="col s12 m4 l4 social-link social-statis">
+    <a href="https://github.com/rainsoil" class="tooltipped" target="_blank" data-tooltip="访问我的GitHub" data-position="top" data-delay="50">
+        <i class="fab fa-github"></i>
+    </a>
+
+
+
+    <a href="mailto:luyanan0718@163.com" class="tooltipped" target="_blank" data-tooltip="邮件联系我" data-position="top" data-delay="50">
+        <i class="fas fa-envelope-open"></i>
+    </a>
+
+
+
+
+
+
+
+    <a href="tencent://AddContact/?fromId=50&fromSubId=1&subcmd=all&uin=914596513" class="tooltipped" target="_blank" data-tooltip="QQ联系我: 914596513" data-position="top" data-delay="50">
+        <i class="fab fa-qq"></i>
+    </a>
+
+
+
+
+
+
+
+    <a href="/atom.xml" class="tooltipped" target="_blank" data-tooltip="RSS 订阅" data-position="top" data-delay="50">
+        <i class="fas fa-rss"></i>
+    </a>
+
+</div>
+    </div>
+</footer>
+
+<div class="progress-bar"></div>
+
+
+    <!-- 搜索遮罩框 -->
+<div id="searchModal" class="modal">
+    <div class="modal-content">
+        <div class="search-header">
+            <span class="title"><i class="fas fa-search"></i>&nbsp;&nbsp;搜索</span>
+            <input type="search" id="searchInput" name="s" placeholder="请输入搜索的关键字"
+                   class="search-input">
+        </div>
+        <div id="searchResult"></div>
+    </div>
+</div>
+
+<script type="text/javascript">
+$(function () {
+    var searchFunc = function (path, search_id, content_id) {
+        'use strict';
+        $.ajax({
+            url: path,
+            dataType: "xml",
+            success: function (xmlResponse) {
+                // get the contents from search data
+                var datas = $("entry", xmlResponse).map(function () {
+                    return {
+                        title: $("title", this).text(),
+                        content: $("content", this).text(),
+                        url: $("url", this).text()
+                    };
+                }).get();
+                var $input = document.getElementById(search_id);
+                var $resultContent = document.getElementById(content_id);
+                $input.addEventListener('input', function () {
+                    var str = '<ul class=\"search-result-list\">';
+                    var keywords = this.value.trim().toLowerCase().split(/[\s\-]+/);
+                    $resultContent.innerHTML = "";
+                    if (this.value.trim().length <= 0) {
+                        return;
+                    }
+                    // perform local searching
+                    datas.forEach(function (data) {
+                        var isMatch = true;
+                        var data_title = data.title.trim().toLowerCase();
+                        var data_content = data.content.trim().replace(/<[^>]+>/g, "").toLowerCase();
+                        var data_url = data.url;
+                        data_url = data_url.indexOf('/') === 0 ? data.url : '/' + data_url;
+                        var index_title = -1;
+                        var index_content = -1;
+                        var first_occur = -1;
+                        // only match artiles with not empty titles and contents
+                        if (data_title !== '' && data_content !== '') {
+                            keywords.forEach(function (keyword, i) {
+                                index_title = data_title.indexOf(keyword);
+                                index_content = data_content.indexOf(keyword);
+                                if (index_title < 0 && index_content < 0) {
+                                    isMatch = false;
+                                } else {
+                                    if (index_content < 0) {
+                                        index_content = 0;
+                                    }
+                                    if (i === 0) {
+                                        first_occur = index_content;
+                                    }
+                                }
+                            });
+                        }
+                        // show search results
+                        if (isMatch) {
+                            str += "<li><a href='" + data_url + "' class='search-result-title'>" + data_title + "</a>";
+                            var content = data.content.trim().replace(/<[^>]+>/g, "");
+                            if (first_occur >= 0) {
+                                // cut out 100 characters
+                                var start = first_occur - 20;
+                                var end = first_occur + 80;
+                                if (start < 0) {
+                                    start = 0;
+                                }
+                                if (start === 0) {
+                                    end = 100;
+                                }
+                                if (end > content.length) {
+                                    end = content.length;
+                                }
+                                var match_content = content.substr(start, end);
+                                // highlight all keywords
+                                keywords.forEach(function (keyword) {
+                                    var regS = new RegExp(keyword, "gi");
+                                    match_content = match_content.replace(regS, "<em class=\"search-keyword\">" + keyword + "</em>");
+                                });
+
+                                str += "<p class=\"search-result\">" + match_content + "...</p>"
+                            }
+                            str += "</li>";
+                        }
+                    });
+                    str += "</ul>";
+                    $resultContent.innerHTML = str;
+                });
+            }
+        });
+    };
+
+    searchFunc('/search.xml', 'searchInput', 'searchResult');
+});
+</script>
+
+    <!-- 回到顶部按钮 -->
+<div id="backTop" class="top-scroll">
+    <a class="btn-floating btn-large waves-effect waves-light" href="#!">
+        <i class="fas fa-arrow-up"></i>
+    </a>
+</div>
+
+
+    <script src="/libs/materialize/materialize.min.js"></script>
+    <script src="/libs/masonry/masonry.pkgd.min.js"></script>
+    <script src="/libs/aos/aos.js"></script>
+    <script src="/libs/scrollprogress/scrollProgress.min.js"></script>
+    <script src="/libs/lightGallery/js/lightgallery-all.min.js"></script>
+    <script src="/js/matery.js"></script>
+
+    
+
+    
+
+    <!-- 雪花特效 -->
+    
+
+    <!-- 鼠标星星特效 -->
+    
+
+    <!-- Baidu Analytics -->
+
+    <!-- Baidu Push -->
+
+<script>
+    (function () {
+        var bp = document.createElement('script');
+        var curProtocol = window.location.protocol.split(':')[0];
+        if (curProtocol === 'https') {
+            bp.src = 'https://zz.bdstatic.com/linksubmit/push.js';
+        } else {
+            bp.src = 'http://push.zhanzhang.baidu.com/push.js';
+        }
+        var s = document.getElementsByTagName("script")[0];
+        s.parentNode.insertBefore(bp, s);
+    })();
+</script>
+
+    
+    <script src="/libs/others/clicklove.js" async="async"></script>
+    
+    
+    <script async src="/libs/others/busuanzi.pure.mini.js"></script>
+    
+
+    
+
+    
+
+    <!--腾讯兔小巢-->
+    
+    
+    <script type="text/javascript" color="0,0,255"
+        pointColor="0,0,255" opacity='0.7'
+        zIndex="-1" count="99"
+        src="/libs/background/canvas-nest.js"></script>
+    
+
+    
+
+    
+
+    
+    <script src="/libs/instantpage/instantpage.js" type="module"></script>
+    
+
+</body>
+
+</html>

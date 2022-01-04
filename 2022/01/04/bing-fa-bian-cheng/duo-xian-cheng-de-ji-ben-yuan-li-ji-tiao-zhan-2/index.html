@@ -1,0 +1,2288 @@
+<!DOCTYPE HTML>
+<html lang="zh-CN">
+
+
+<head>
+    <meta charset="utf-8">
+    <meta name="keywords" content="多线程的基本原理及挑战(2), railsoil">
+    <meta name="description" content="
+2. 多线程的基本原理由一个问题引发的思考线程的合理使用能够提升程序的处理性能,主要由两个方面:
+
+第一是能够利用多核CPU以及超线程技术来实现线程的并行执行.
+第二是线程的异步化执行相比于同步执行来说,异步执行能够很好的优化程序的处理性">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="renderer" content="webkit|ie-stand|ie-comp">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="format-detection" content="telephone=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="referrer" content="no-referrer-when-downgrade">
+    <!-- Global site tag (gtag.js) - Google Analytics -->
+
+
+    <title>多线程的基本原理及挑战(2) | railsoil</title>
+    <link rel="icon" type="image/png" href="/favicon.png">
+
+    <link rel="stylesheet" type="text/css" href="/libs/awesome/css/all.min.css">
+    <link rel="stylesheet" type="text/css" href="/libs/materialize/materialize.min.css">
+    <link rel="stylesheet" type="text/css" href="/libs/aos/aos.css">
+    <link rel="stylesheet" type="text/css" href="/libs/animate/animate.min.css">
+    <link rel="stylesheet" type="text/css" href="/libs/lightGallery/css/lightgallery.min.css">
+    <link rel="stylesheet" type="text/css" href="/css/matery.css">
+    <link rel="stylesheet" type="text/css" href="/css/my.css">
+
+    <script src="/libs/jquery/jquery.min.js"></script>
+
+<meta name="generator" content="Hexo 5.4.0"><link rel="alternate" href="/atom.xml" title="railsoil" type="application/atom+xml">
+<link rel="stylesheet" href="/css/prism-tomorrow.css" type="text/css"></head>
+
+
+
+
+<body>
+    <header class="navbar-fixed">
+    <nav id="headNav" class="bg-color nav-transparent">
+        <div id="navContainer" class="nav-wrapper container">
+            <div class="brand-logo">
+                <a href="/" class="waves-effect waves-light">
+                    
+                    <img src="/medias/logo.png" class="logo-img" alt="LOGO">
+                    
+                    <span class="logo-span">railsoil</span>
+                </a>
+            </div>
+            
+
+<a href="#" data-target="mobile-nav" class="sidenav-trigger button-collapse"><i class="fas fa-bars"></i></a>
+<ul class="right nav-menu">
+  
+  <li class="hide-on-med-and-down nav-item">
+    
+    <a href="/" class="waves-effect waves-light">
+      
+      <i class="fas fa-home" style="zoom: 0.6;"></i>
+      
+      <span>首页</span>
+    </a>
+    
+  </li>
+  
+  <li class="hide-on-med-and-down nav-item">
+    
+    <a href="/tags" class="waves-effect waves-light">
+      
+      <i class="fas fa-tags" style="zoom: 0.6;"></i>
+      
+      <span>标签</span>
+    </a>
+    
+  </li>
+  
+  <li class="hide-on-med-and-down nav-item">
+    
+    <a href="/categories" class="waves-effect waves-light">
+      
+      <i class="fas fa-bookmark" style="zoom: 0.6;"></i>
+      
+      <span>分类</span>
+    </a>
+    
+  </li>
+  
+  <li class="hide-on-med-and-down nav-item">
+    
+    <a href="/archives" class="waves-effect waves-light">
+      
+      <i class="fas fa-archive" style="zoom: 0.6;"></i>
+      
+      <span>归档</span>
+    </a>
+    
+  </li>
+  
+  <li class="hide-on-med-and-down nav-item">
+    
+    <a href="/about" class="waves-effect waves-light">
+      
+      <i class="fas fa-user-circle" style="zoom: 0.6;"></i>
+      
+      <span>关于</span>
+    </a>
+    
+  </li>
+  
+  <li>
+    <a href="#searchModal" class="modal-trigger waves-effect waves-light">
+      <i id="searchIcon" class="fas fa-search" title="搜索" style="zoom: 0.85;"></i>
+    </a>
+  </li>
+</ul>
+
+
+<div id="mobile-nav" class="side-nav sidenav">
+
+    <div class="mobile-head bg-color">
+        
+        <img src="/medias/logo.png" class="logo-img circle responsive-img">
+        
+        <div class="logo-name">railsoil</div>
+        <div class="logo-desc">
+            
+            Never really desperate, only the lost of the soul.
+            
+        </div>
+    </div>
+
+    <ul class="menu-list mobile-menu-list">
+        
+        <li class="m-nav-item">
+	  
+		<a href="/" class="waves-effect waves-light">
+			
+			    <i class="fa-fw fas fa-home"></i>
+			
+			首页
+		</a>
+          
+        </li>
+        
+        <li class="m-nav-item">
+	  
+		<a href="/tags" class="waves-effect waves-light">
+			
+			    <i class="fa-fw fas fa-tags"></i>
+			
+			标签
+		</a>
+          
+        </li>
+        
+        <li class="m-nav-item">
+	  
+		<a href="/categories" class="waves-effect waves-light">
+			
+			    <i class="fa-fw fas fa-bookmark"></i>
+			
+			分类
+		</a>
+          
+        </li>
+        
+        <li class="m-nav-item">
+	  
+		<a href="/archives" class="waves-effect waves-light">
+			
+			    <i class="fa-fw fas fa-archive"></i>
+			
+			归档
+		</a>
+          
+        </li>
+        
+        <li class="m-nav-item">
+	  
+		<a href="/about" class="waves-effect waves-light">
+			
+			    <i class="fa-fw fas fa-user-circle"></i>
+			
+			关于
+		</a>
+          
+        </li>
+        
+        
+    </ul>
+</div>
+
+
+        </div>
+
+        
+    </nav>
+
+</header>
+
+    
+
+
+
+<div class="bg-cover pd-header post-cover" style="background-image: url('/medias/featureimages/19.jpg')">
+    <div class="container" style="right: 0px;left: 0px;">
+        <div class="row">
+            <div class="col s12 m12 l12">
+                <div class="brand">
+                    <h1 class="description center-align post-title">多线程的基本原理及挑战(2)</h1>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+
+<main class="post-container content">
+
+    
+    <link rel="stylesheet" href="/libs/tocbot/tocbot.css">
+<style>
+    #articleContent h1::before,
+    #articleContent h2::before,
+    #articleContent h3::before,
+    #articleContent h4::before,
+    #articleContent h5::before,
+    #articleContent h6::before {
+        display: block;
+        content: " ";
+        height: 100px;
+        margin-top: -100px;
+        visibility: hidden;
+    }
+
+    #articleContent :focus {
+        outline: none;
+    }
+
+    .toc-fixed {
+        position: fixed;
+        top: 64px;
+    }
+
+    .toc-widget {
+        width: 345px;
+        padding-left: 20px;
+    }
+
+    .toc-widget .toc-title {
+        padding: 35px 0 15px 17px;
+        font-size: 1.5rem;
+        font-weight: bold;
+        line-height: 1.5rem;
+    }
+
+    .toc-widget ol {
+        padding: 0;
+        list-style: none;
+    }
+
+    #toc-content {
+        padding-bottom: 30px;
+        overflow: auto;
+    }
+
+    #toc-content ol {
+        padding-left: 10px;
+    }
+
+    #toc-content ol li {
+        padding-left: 10px;
+    }
+
+    #toc-content .toc-link:hover {
+        color: #42b983;
+        font-weight: 700;
+        text-decoration: underline;
+    }
+
+    #toc-content .toc-link::before {
+        background-color: transparent;
+        max-height: 25px;
+
+        position: absolute;
+        right: 23.5vw;
+        display: block;
+    }
+
+    #toc-content .is-active-link {
+        color: #42b983;
+    }
+
+    #floating-toc-btn {
+        position: fixed;
+        right: 15px;
+        bottom: 76px;
+        padding-top: 15px;
+        margin-bottom: 0;
+        z-index: 998;
+    }
+
+    #floating-toc-btn .btn-floating {
+        width: 48px;
+        height: 48px;
+    }
+
+    #floating-toc-btn .btn-floating i {
+        line-height: 48px;
+        font-size: 1.4rem;
+    }
+</style>
+<div class="row">
+    <div id="main-content" class="col s12 m12 l9">
+        <!-- 文章内容详情 -->
+<div id="artDetail">
+    <div class="card">
+        <div class="card-content article-info">
+            <div class="row tag-cate">
+                <div class="col s7">
+                    
+                          <div class="article-tag">
+                            <span class="chip bg-color">无标签</span>
+                          </div>
+                    
+                </div>
+                <div class="col s5 right-align">
+                    
+                    <div class="post-cate">
+                        <i class="fas fa-bookmark fa-fw icon-category"></i>
+                        
+                            <a href="/categories/%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B/" class="post-category">
+                                并发编程
+                            </a>
+                        
+                            <a href="/categories/%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B/%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B/" class="post-category">
+                                并发编程
+                            </a>
+                        
+                    </div>
+                    
+                </div>
+            </div>
+
+            <div class="post-info">
+                
+                <div class="post-date info-break-policy">
+                    <i class="far fa-calendar-minus fa-fw"></i>发布日期:&nbsp;&nbsp;
+                    2022-01-04
+                </div>
+                
+
+                
+
+                
+                <div class="info-break-policy">
+                    <i class="far fa-file-word fa-fw"></i>文章字数:&nbsp;&nbsp;
+                    9.8k
+                </div>
+                
+
+                
+                <div class="info-break-policy">
+                    <i class="far fa-clock fa-fw"></i>阅读时长:&nbsp;&nbsp;
+                    47 分
+                </div>
+                
+
+                
+                    <div id="busuanzi_container_page_pv" class="info-break-policy">
+                        <i class="far fa-eye fa-fw"></i>阅读次数:&nbsp;&nbsp;
+                        <span id="busuanzi_value_page_pv"></span>
+                    </div>
+				
+            </div>
+        </div>
+        <hr class="clearfix">
+
+        
+
+        
+
+        <div class="card-content article-card-content">
+            <div id="articleContent">
+                <hr>
+<h1 id="2-多线程的基本原理"><a href="#2-多线程的基本原理" class="headerlink" title="2. 多线程的基本原理"></a>2. 多线程的基本原理</h1><h2 id="由一个问题引发的思考"><a href="#由一个问题引发的思考" class="headerlink" title="由一个问题引发的思考"></a>由一个问题引发的思考</h2><p>线程的合理使用能够提升程序的处理性能,主要由两个方面:</p>
+<ol>
+<li>第一是能够利用多核CPU以及超线程技术来实现线程的并行执行.</li>
+<li>第二是线程的异步化执行相比于同步执行来说,异步执行能够很好的优化程序的处理性能提升吞吐量</li>
+</ol>
+<p>同时,也带来了很多麻烦,举个简单的例子</p>
+<h3 id="多线程对于共享变量访问带来的安全性问题"><a href="#多线程对于共享变量访问带来的安全性问题" class="headerlink" title="多线程对于共享变量访问带来的安全性问题"></a>多线程对于共享变量访问带来的安全性问题</h3><p> 一个变量i 假如一个线程去访问这个变量进行修改,这个时候对于数据的修改和访问没有任何问题.但是如果多个线程对于这同一个变量进行修改,就会存在一个数据安全性问题.</p>
+<p> <img src="http://files.luyanan.com/e5df1b50-34b7-4000-8eb6-b06a0becf5bd.jpg" alt="image"></p>
+<p> 对于线程安全性,本质上是管理对于数据状态的访问,而且这个状态通常来说是共享的,可变的. 共享,是指这个数据变量可以被多个线程访问. 可变,指这个变量的值在它的生命周期内是可以改变的.</p>
+<p> 一个对象是否是线程安全,取决于它是否会被多个线程访问,以及程序中是如何使用这个对象的. 所以,如果多个线程同时访问同一个共享对象,在不需要额外的同步以及调用端代码不用做其他协调的情况下,这个共享对象的状态依然是正确的(正确性意味着这个对象的结果与我们预期的规定的结果是保持一致的),那说明这个对象是线程安全的.</p>
+<pre><code>package com.notes.concurrent.synchronizeds;
+
+
+/**
+* @author luyanan
+* @since 2019/7/17
+* &lt;p&gt;线程不安全&lt;/p&gt;
+**/
+public class UnSafeThread &#123;
+
+   private static int i = 0;
+
+
+   public static void inc() &#123;
+
+       try &#123;
+           Thread.sleep(1);
+       &#125; catch (InterruptedException e) &#123;
+           e.printStackTrace();
+       &#125;
+       i++;
+   &#125;
+
+   public static void main(String[] args) &#123;
+       for (int i = 0; i &lt; 1000; i++) &#123;
+           new Thread(() -&gt; UnSafeThread.inc()).start();
+       &#125;
+       try &#123;
+           Thread.sleep(3000);
+       &#125; catch (InterruptedException e) &#123;
+           e.printStackTrace();
+       &#125;
+       System.out.println(i);
+   &#125;
+
+&#125;
+</code></pre>
+<blockquote>
+<p>在java中如何解决由于线程并行导致的数据安全性问题呢？</p>
+</blockquote>
+<h4 id="思考如何保证线程并行的数据安全性"><a href="#思考如何保证线程并行的数据安全性" class="headerlink" title="思考如何保证线程并行的数据安全性"></a>思考如何保证线程并行的数据安全性</h4><p>我们可以思考一下,问题的本质在于共享数据存在并发访问.如果我们能够有一种方法使得线程的并行变得串行,那是不是就不存在这个问题了呢?</p>
+<p>按照大家已有的知识,最先想到的应该就是锁了把？</p>
+<p>毕竟这个场景并不陌生,我们在和数据库打交道的时候,就了解过悲观锁和乐观锁. 什么是锁? 他是处理并发的一种同步手段,而如果需要达到我们说的一个目的,那么这个锁就需要实现互斥的特性.</p>
+<p>java提供的加锁方法就是Synchronized 关键字.</p>
+<h3 id="Synchronized的基本认识"><a href="#Synchronized的基本认识" class="headerlink" title="Synchronized的基本认识"></a>Synchronized的基本认识</h3><p>在多线程并发编程中synchronized 一直是元老级角色,很多人就会称呼它为 重量级锁. 但是,锁着java Se 1.6 对synchronized 进行了各种优化之后,有些情况下它就并不那么重,java se 1.6 中为了减少获取锁和释放锁带来的性能消耗而引入的偏向锁和轻量级锁.</p>
+<h4 id="synchronized-的基本语法"><a href="#synchronized-的基本语法" class="headerlink" title="synchronized 的基本语法"></a>synchronized 的基本语法</h4><p>synchronized 有三种方式加锁,分别是:</p>
+<ol>
+<li><strong>修饰实例方法</strong>,作用于当前实例加锁,进入同步代码块前要获取当前实例的锁</li>
+<li><strong>静态方法</strong>,作用于当前类对象加锁,进入同步代码前要获得当前类对象的锁.</li>
+<li><strong>修饰代码块</strong>,指定加锁对象,对给定对象加锁,进入同步代码库前要获得给定对象的锁.</li>
+</ol>
+<p>不同的修饰类型,代码锁的控制粒度.</p>
+<h4 id="synchronized-的应用"><a href="#synchronized-的应用" class="headerlink" title="synchronized 的应用"></a>synchronized 的应用</h4><p>修改前面的案例,使用synchronized 关键字后,可以达到数据安全的效果</p>
+<pre><code>package com.notes.concurrent.synchronizeds;
+
+/**
+ * @author luyanan
+ * @since 2019/7/18
+ * &lt;p&gt;线程安全的例子&lt;/p&gt;
+ **/
+public class SafeThread &#123;
+
+
+    private static int i = 0;
+
+
+    public static void inc() &#123;
+
+        synchronized (SafeThread.class) &#123;
+            try &#123;
+                Thread.sleep(1);
+            &#125; catch (InterruptedException e) &#123;
+                e.printStackTrace();
+            &#125;
+            i++;
+        &#125;
+    &#125;
+
+    public static void main(String[] args) &#123;
+        for (int i = 0; i &lt; 1000; i++) &#123;
+            new Thread(() -&gt; SafeThread.inc()).start();
+        &#125;
+        try &#123;
+            Thread.sleep(3000);
+        &#125; catch (InterruptedException e) &#123;
+            e.printStackTrace();
+        &#125;
+
+        System.out.println(i);
+    &#125;
+
+
+&#125;
+</code></pre>
+<p>结果</p>
+<blockquote>
+<p>1000</p>
+</blockquote>
+<h3 id="思考锁是如何存储的"><a href="#思考锁是如何存储的" class="headerlink" title="思考锁是如何存储的"></a>思考锁是如何存储的</h3><p>可以思考一下,要实现多线程的互斥特性,那么这把锁需要哪些因素呢?</p>
+<ol>
+<li>锁需要有一个东西来表示,比如获得锁是什么状态.无锁是什么状态,</li>
+<li>这个状态需要对多个线程共享<br>那么我们来分析,synchronized 锁是如何存储的呢? 观察synchronized 的整个语法发现,synchronized(lock)是基于lock这个对象的生命周期俩控制锁粒度的,那是不是锁的存储和这个lock对象有关系呢?</li>
+</ol>
+<p>于是我们以对象在jvm内存中是如何存储的作为切入点,去看看对象里面有什么特性能够实现锁</p>
+<h4 id="对象在内存中的布局"><a href="#对象在内存中的布局" class="headerlink" title="对象在内存中的布局"></a>对象在内存中的布局</h4><p>在Hotspot 虚拟机中,对象在内存中的存储布局,可以分为三个区域:对象头(Header),实例数据(Instance Data), 对齐填充(Padding).<br><img src="http://files.luyanan.com/ebd891ed-a379-410a-8e66-89888ba3f471.png" alt="image"></p>
+<h4 id="探究jvm-源码实现"><a href="#探究jvm-源码实现" class="headerlink" title="探究jvm 源码实现"></a>探究jvm 源码实现</h4><p>当我们在java代码中,使用new 创建一个实例对象的时候,(hotsport虚拟机) JVM 层面实际上会创建一个instanceOopDesc 对象</p>
+<p>Hotspot 虚拟机 采用 OOP -Klass 模型 来描述java对象实例,OOP(Ordinary Object Point) 指的是普通对象指针,Klass 用来描述对象对象的具体类型.Hotspot 采用instanceOopDesc 和arrayOopDesc 来描述对象头,arrayOopDesc 对象来描述数组类型.</p>
+<p>instanceOopDesc 的定义在Hotspot 源码汇总的instanceOop.hpp 文件中.另外,arrayOopDesc的定义对应在 arrayOop.hpp</p>
+<pre><code>#ifndef SHARE_VM_OOPS_INSTANCEOOP_HPP
+#define SHARE_VM_OOPS_INSTANCEOOP_HPP
+
+#include &quot;oops/oop.hpp&quot;
+
+// An instanceOop is an instance of a Java Class
+// Evaluating &quot;new HashTable()&quot; will create an instanceOop.
+
+class instanceOopDesc : public oopDesc &#123;
+ public:
+  // aligned header size.
+  static int header_size() &#123; return sizeof(instanceOopDesc)/HeapWordSize; &#125;
+
+  // If compressed, the offset of the fields of the instance may not be aligned.
+  static int base_offset_in_bytes() &#123;
+    // offset computation code breaks if UseCompressedClassPointers
+    // only is true
+    return (UseCompressedOops &amp;&amp; UseCompressedClassPointers) ?
+             klass_gap_offset_in_bytes() :
+             sizeof(instanceOopDesc);
+  &#125;
+
+  static bool contains_field_offset(int offset, int nonstatic_field_size) &#123;
+    int base_in_bytes = base_offset_in_bytes();
+    return (offset &gt;= base_in_bytes &amp;&amp;
+            (offset-base_in_bytes) &lt; nonstatic_field_size * heapOopSize);
+  &#125;
+&#125;;
+
+#endif // SHARE_VM_OOPS_INSTANCEOOP_HPP
+</code></pre>
+<p>从instanceOopDesc 代码中可以看到 instanceOopDesc 继承自 oopDesc, oopDesc 的定义在Hotspot 源码中的oop.hpp 中</p>
+<pre><code>/*
+ * Copyright (c) 1997, 2013, Oracle and/or its affiliates. All rights reserved.
+ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+ *
+ * This code is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License version 2 only, as
+ * published by the Free Software Foundation.
+ *
+ * This code is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ * version 2 for more details (a copy is included in the LICENSE file that
+ * accompanied this code).
+ *
+ * You should have received a copy of the GNU General Public License version
+ * 2 along with this work; if not, write to the Free Software Foundation,
+ * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+ *
+ * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+ * or visit www.oracle.com if you need additional information or have any
+ * questions.
+ *
+ */
+
+#ifndef SHARE_VM_OOPS_OOP_HPP
+#define SHARE_VM_OOPS_OOP_HPP
+
+#include &quot;memory/iterator.hpp&quot;
+#include &quot;memory/memRegion.hpp&quot;
+#include &quot;memory/specialized_oop_closures.hpp&quot;
+#include &quot;oops/metadata.hpp&quot;
+#include &quot;utilities/macros.hpp&quot;
+#include &quot;utilities/top.hpp&quot;
+
+// oopDesc is the top baseclass for objects classes.  The &#123;name&#125;Desc classes describe
+// the format of Java objects so the fields can be accessed from C++.
+// oopDesc is abstract.
+// (see oopHierarchy for complete oop class hierarchy)
+//
+// no virtual functions allowed
+
+// store into oop with store check
+template &lt;class T&gt; void oop_store(T* p, oop v);
+template &lt;class T&gt; void oop_store(volatile T* p, oop v);
+
+extern bool always_do_update_barrier;
+
+// Forward declarations.
+class OopClosure;
+class ScanClosure;
+class FastScanClosure;
+class FilteringClosure;
+class BarrierSet;
+class CMSIsAliveClosure;
+
+class PSPromotionManager;
+class ParCompactionManager;
+
+class oopDesc &#123;
+  friend class VMStructs;
+ private:
+  volatile markOop  _mark;
+  union _metadata &#123;
+    Klass*      _klass;
+    narrowKlass _compressed_klass;
+  &#125; _metadata;
+
+  // Fast access to barrier set.  Must be initialized.
+  static BarrierSet* _bs;
+
+ public:
+  markOop  mark() const         &#123; return _mark; &#125;
+  markOop* mark_addr() const    &#123; return (markOop*) &amp;_mark; &#125;
+
+  void set_mark(volatile markOop m)      &#123; _mark = m;   &#125;
+
+  void    release_set_mark(markOop m);
+  markOop cas_set_mark(markOop new_mark, markOop old_mark);
+
+  // Used only to re-initialize the mark word (e.g., of promoted
+  // objects during a GC) -- requires a valid klass pointer
+  void init_mark();
+
+  Klass* klass() const;
+  Klass* klass_or_null() const volatile;
+  Klass** klass_addr();
+  narrowKlass* compressed_klass_addr();
+
+  void set_klass(Klass* k);
+
+  // For klass field compression
+  int klass_gap() const;
+  void set_klass_gap(int z);
+  // For when the klass pointer is being used as a linked list &quot;next&quot; field.
+  void set_klass_to_list_ptr(oop k);
+  oop list_ptr_from_klass();
+
+  // size of object header, aligned to platform wordSize
+  static int header_size()          &#123; return sizeof(oopDesc)/HeapWordSize; &#125;
+
+  // Returns whether this is an instance of k or an instance of a subclass of k
+  bool is_a(Klass* k)  const;
+
+  // Returns the actual oop size of the object
+  int size();
+
+  // Sometimes (for complicated concurrency-related reasons), it is useful
+  // to be able to figure out the size of an object knowing its klass.
+  int size_given_klass(Klass* klass);
+
+  // type test operations (inlined in oop.inline.h)
+  bool is_instance()           const;
+  bool is_instanceMirror()     const;
+  bool is_instanceRef()        const;
+  bool is_array()              const;
+  bool is_objArray()           const;
+  bool is_typeArray()          const;
+
+ private:
+  // field addresses in oop
+  void*     field_base(int offset)        const;
+
+  jbyte*    byte_field_addr(int offset)   const;
+  jchar*    char_field_addr(int offset)   const;
+  jboolean* bool_field_addr(int offset)   const;
+  jint*     int_field_addr(int offset)    const;
+  jshort*   short_field_addr(int offset)  const;
+  jlong*    long_field_addr(int offset)   const;
+  jfloat*   float_field_addr(int offset)  const;
+  jdouble*  double_field_addr(int offset) const;
+  Metadata** metadata_field_addr(int offset) const;
+
+ public:
+  // Need this as public for garbage collection.
+  template &lt;class T&gt; T* obj_field_addr(int offset) const;
+
+  // Needed for javaClasses
+  address*  address_field_addr(int offset) const;
+
+  static bool is_null(oop obj);
+  static bool is_null(narrowOop obj);
+  static bool is_null(Klass* obj);
+
+  // Decode an oop pointer from a narrowOop if compressed.
+  // These are overloaded for oop and narrowOop as are the other functions
+  // below so that they can be called in template functions.
+  static oop decode_heap_oop_not_null(oop v);
+  static oop decode_heap_oop_not_null(narrowOop v);
+  static oop decode_heap_oop(oop v);
+  static oop decode_heap_oop(narrowOop v);
+
+  // Encode an oop pointer to a narrow oop.  The or_null versions accept
+  // null oop pointer, others do not in order to eliminate the
+  // null checking branches.
+  static narrowOop encode_heap_oop_not_null(oop v);
+  static narrowOop encode_heap_oop(oop v);
+
+  // Load an oop out of the Java heap
+  static narrowOop load_heap_oop(narrowOop* p);
+  static oop       load_heap_oop(oop* p);
+
+  // Load an oop out of Java heap and decode it to an uncompressed oop.
+  static oop load_decode_heap_oop_not_null(narrowOop* p);
+  static oop load_decode_heap_oop_not_null(oop* p);
+  static oop load_decode_heap_oop(narrowOop* p);
+  static oop load_decode_heap_oop(oop* p);
+
+  // Store an oop into the heap.
+  static void store_heap_oop(narrowOop* p, narrowOop v);
+  static void store_heap_oop(oop* p, oop v);
+
+  // Encode oop if UseCompressedOops and store into the heap.
+  static void encode_store_heap_oop_not_null(narrowOop* p, oop v);
+  static void encode_store_heap_oop_not_null(oop* p, oop v);
+  static void encode_store_heap_oop(narrowOop* p, oop v);
+  static void encode_store_heap_oop(oop* p, oop v);
+
+  static void release_store_heap_oop(volatile narrowOop* p, narrowOop v);
+  static void release_store_heap_oop(volatile oop* p, oop v);
+
+  static void release_encode_store_heap_oop_not_null(volatile narrowOop* p, oop v);
+  static void release_encode_store_heap_oop_not_null(volatile oop* p, oop v);
+  static void release_encode_store_heap_oop(volatile narrowOop* p, oop v);
+  static void release_encode_store_heap_oop(volatile oop* p, oop v);
+
+  static oop atomic_exchange_oop(oop exchange_value, volatile HeapWord *dest);
+  static oop atomic_compare_exchange_oop(oop exchange_value,
+                                         volatile HeapWord *dest,
+                                         oop compare_value,
+                                         bool prebarrier = false);
+
+  // Access to fields in a instanceOop through these methods.
+  oop obj_field(int offset) const;
+  volatile oop obj_field_volatile(int offset) const;
+  void obj_field_put(int offset, oop value);
+  void obj_field_put_raw(int offset, oop value);
+  void obj_field_put_volatile(int offset, oop value);
+
+  Metadata* metadata_field(int offset) const;
+  void metadata_field_put(int offset, Metadata* value);
+
+  jbyte byte_field(int offset) const;
+  void byte_field_put(int offset, jbyte contents);
+
+  jchar char_field(int offset) const;
+  void char_field_put(int offset, jchar contents);
+
+  jboolean bool_field(int offset) const;
+  void bool_field_put(int offset, jboolean contents);
+
+  jint int_field(int offset) const;
+  void int_field_put(int offset, jint contents);
+
+  jshort short_field(int offset) const;
+  void short_field_put(int offset, jshort contents);
+
+  jlong long_field(int offset) const;
+  void long_field_put(int offset, jlong contents);
+
+  jfloat float_field(int offset) const;
+  void float_field_put(int offset, jfloat contents);
+
+  jdouble double_field(int offset) const;
+  void double_field_put(int offset, jdouble contents);
+
+  address address_field(int offset) const;
+  void address_field_put(int offset, address contents);
+
+  oop obj_field_acquire(int offset) const;
+  void release_obj_field_put(int offset, oop value);
+
+  jbyte byte_field_acquire(int offset) const;
+  void release_byte_field_put(int offset, jbyte contents);
+
+  jchar char_field_acquire(int offset) const;
+  void release_char_field_put(int offset, jchar contents);
+
+  jboolean bool_field_acquire(int offset) const;
+  void release_bool_field_put(int offset, jboolean contents);
+
+  jint int_field_acquire(int offset) const;
+  void release_int_field_put(int offset, jint contents);
+
+  jshort short_field_acquire(int offset) const;
+  void release_short_field_put(int offset, jshort contents);
+
+  jlong long_field_acquire(int offset) const;
+  void release_long_field_put(int offset, jlong contents);
+
+  jfloat float_field_acquire(int offset) const;
+  void release_float_field_put(int offset, jfloat contents);
+
+  jdouble double_field_acquire(int offset) const;
+  void release_double_field_put(int offset, jdouble contents);
+
+  address address_field_acquire(int offset) const;
+  void release_address_field_put(int offset, address contents);
+
+  // printing functions for VM debugging
+  void print_on(outputStream* st) const;         // First level print
+  void print_value_on(outputStream* st) const;   // Second level print.
+  void print_address_on(outputStream* st) const; // Address printing
+
+  // printing on default output stream
+  void print();
+  void print_value();
+  void print_address();
+
+  // return the print strings
+  char* print_string();
+  char* print_value_string();
+
+  // verification operations
+  void verify_on(outputStream* st);
+  void verify();
+
+  // locking operations
+  bool is_locked()   const;
+  bool is_unlocked() const;
+  bool has_bias_pattern() const;
+
+  // asserts
+  bool is_oop(bool ignore_mark_word = false) const;
+  bool is_oop_or_null(bool ignore_mark_word = false) const;
+#ifndef PRODUCT
+  bool is_unlocked_oop() const;
+#endif
+
+  // garbage collection
+  bool is_gc_marked() const;
+  // Apply &quot;MarkSweep::mark_and_push&quot; to (the address of) every non-NULL
+  // reference field in &quot;this&quot;.
+  void follow_contents(void);
+
+#if INCLUDE_ALL_GCS
+  // Parallel Scavenge
+  void push_contents(PSPromotionManager* pm);
+
+  // Parallel Old
+  void update_contents(ParCompactionManager* cm);
+
+  void follow_contents(ParCompactionManager* cm);
+#endif // INCLUDE_ALL_GCS
+
+  bool is_scavengable() const;
+
+  // Forward pointer operations for scavenge
+  bool is_forwarded() const;
+
+  void forward_to(oop p);
+  bool cas_forward_to(oop p, markOop compare);
+
+#if INCLUDE_ALL_GCS
+  // Like &quot;forward_to&quot;, but inserts the forwarding pointer atomically.
+  // Exactly one thread succeeds in inserting the forwarding pointer, and
+  // this call returns &quot;NULL&quot; for that thread; any other thread has the
+  // value of the forwarding pointer returned and does not modify &quot;this&quot;.
+  oop forward_to_atomic(oop p);
+#endif // INCLUDE_ALL_GCS
+
+  oop forwardee() const;
+
+  // Age of object during scavenge
+  uint age() const;
+  void incr_age();
+
+  // Adjust all pointers in this object to point at it&#39;s forwarded location and
+  // return the size of this oop.  This is used by the MarkSweep collector.
+  int adjust_pointers();
+
+  // mark-sweep support
+  void follow_body(int begin, int end);
+
+  // Fast access to barrier set
+  static BarrierSet* bs()            &#123; return _bs; &#125;
+  static void set_bs(BarrierSet* bs) &#123; _bs = bs; &#125;
+
+  // iterators, returns size of object
+#define OOP_ITERATE_DECL(OopClosureType, nv_suffix)                      \
+  int oop_iterate(OopClosureType* blk);                                  \
+  int oop_iterate(OopClosureType* blk, MemRegion mr);  // Only in mr.
+
+  ALL_OOP_OOP_ITERATE_CLOSURES_1(OOP_ITERATE_DECL)
+  ALL_OOP_OOP_ITERATE_CLOSURES_2(OOP_ITERATE_DECL)
+
+#if INCLUDE_ALL_GCS
+
+#define OOP_ITERATE_BACKWARDS_DECL(OopClosureType, nv_suffix)            \
+  int oop_iterate_backwards(OopClosureType* blk);
+
+  ALL_OOP_OOP_ITERATE_CLOSURES_1(OOP_ITERATE_BACKWARDS_DECL)
+  ALL_OOP_OOP_ITERATE_CLOSURES_2(OOP_ITERATE_BACKWARDS_DECL)
+#endif
+
+  int oop_iterate_no_header(OopClosure* bk);
+  int oop_iterate_no_header(OopClosure* bk, MemRegion mr);
+
+  // identity hash; returns the identity hash key (computes it if necessary)
+  // NOTE with the introduction of UseBiasedLocking that identity_hash() might reach a
+  // safepoint if called on a biased object. Calling code must be aware of that.
+  intptr_t identity_hash();
+  intptr_t slow_identity_hash();
+
+  // Alternate hashing code if string table is rehashed
+  unsigned int new_hash(jint seed);
+
+  // marks are forwarded to stack when object is locked
+  bool     has_displaced_mark() const;
+  markOop  displaced_mark() const;
+  void     set_displaced_mark(markOop m);
+
+  // for code generation
+  static int mark_offset_in_bytes()    &#123; return offset_of(oopDesc, _mark); &#125;
+  static int klass_offset_in_bytes()   &#123; return offset_of(oopDesc, _metadata._klass); &#125;
+  static int klass_gap_offset_in_bytes();
+&#125;;
+
+#endif // SHARE_VM_OOPS_OOP_HPP
+</code></pre>
+<p>在普通实例对象中, oopDesc 的定义包含两个成员,分别是 _mark和_metadata.</p>
+<p>_mark 表示对象标记,属于markOop类型,也就是接下来要讲解的Mark Work ,他记录了对象和锁的有关信息,</p>
+<p>_metadata 表示类元信息,类元信息存储的是对象指向它的类元数据(Klass)的首地址,其中 Klass 表示普通指针,_compressed_klass 表示压缩指针类型</p>
+<h4 id="MarkWord"><a href="#MarkWord" class="headerlink" title="MarkWord"></a>MarkWord</h4><p>在Hotspot 中,markOop的定义在markOop.hpp 文件中,代码如下</p>
+<pre><code>/*
+ * Copyright (c) 1997, 2012, Oracle and/or its affiliates. All rights reserved.
+ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+ *
+ * This code is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License version 2 only, as
+ * published by the Free Software Foundation.
+ *
+ * This code is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ * version 2 for more details (a copy is included in the LICENSE file that
+ * accompanied this code).
+ *
+ * You should have received a copy of the GNU General Public License version
+ * 2 along with this work; if not, write to the Free Software Foundation,
+ * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+ *
+ * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+ * or visit www.oracle.com if you need additional information or have any
+ * questions.
+ *
+ */
+
+#ifndef SHARE_VM_OOPS_MARKOOP_HPP
+#define SHARE_VM_OOPS_MARKOOP_HPP
+
+#include &quot;oops/oop.hpp&quot;
+
+// The markOop describes the header of an object.
+//
+// Note that the mark is not a real oop but just a word.
+// It is placed in the oop hierarchy for historical reasons.
+//
+// Bit-format of an object header (most significant first, big endian layout below):
+//
+//  32 bits:
+//  --------
+//             hash:25 ------------&gt;| age:4    biased_lock:1 lock:2 (normal object)
+//             JavaThread*:23 epoch:2 age:4    biased_lock:1 lock:2 (biased object)
+//             size:32 ------------------------------------------&gt;| (CMS free block)
+//             PromotedObject*:29 ----------&gt;| promo_bits:3 -----&gt;| (CMS promoted object)
+//
+//  64 bits:
+//  --------
+//  unused:25 hash:31 --&gt;| unused:1   age:4    biased_lock:1 lock:2 (normal object)
+//  JavaThread*:54 epoch:2 unused:1   age:4    biased_lock:1 lock:2 (biased object)
+//  PromotedObject*:61 ---------------------&gt;| promo_bits:3 -----&gt;| (CMS promoted object)
+//  size:64 -----------------------------------------------------&gt;| (CMS free block)
+//
+//  unused:25 hash:31 --&gt;| cms_free:1 age:4    biased_lock:1 lock:2 (COOPs &amp;&amp; normal object)
+//  JavaThread*:54 epoch:2 cms_free:1 age:4    biased_lock:1 lock:2 (COOPs &amp;&amp; biased object)
+//  narrowOop:32 unused:24 cms_free:1 unused:4 promo_bits:3 -----&gt;| (COOPs &amp;&amp; CMS promoted object)
+//  unused:21 size:35 --&gt;| cms_free:1 unused:7 ------------------&gt;| (COOPs &amp;&amp; CMS free block)
+//
+//  - hash contains the identity hash value: largest value is
+//    31 bits, see os::random().  Also, 64-bit vm&#39;s require
+//    a hash value no bigger than 32 bits because they will not
+//    properly generate a mask larger than that: see library_call.cpp
+//    and c1_CodePatterns_sparc.cpp.
+//
+//  - the biased lock pattern is used to bias a lock toward a given
+//    thread. When this pattern is set in the low three bits, the lock
+//    is either biased toward a given thread or &quot;anonymously&quot; biased,
+//    indicating that it is possible for it to be biased. When the
+//    lock is biased toward a given thread, locking and unlocking can
+//    be performed by that thread without using atomic operations.
+//    When a lock&#39;s bias is revoked, it reverts back to the normal
+//    locking scheme described below.
+//
+//    Note that we are overloading the meaning of the &quot;unlocked&quot; state
+//    of the header. Because we steal a bit from the age we can
+//    guarantee that the bias pattern will never be seen for a truly
+//    unlocked object.
+//
+//    Note also that the biased state contains the age bits normally
+//    contained in the object header. Large increases in scavenge
+//    times were seen when these bits were absent and an arbitrary age
+//    assigned to all biased objects, because they tended to consume a
+//    significant fraction of the eden semispaces and were not
+//    promoted promptly, causing an increase in the amount of copying
+//    performed. The runtime system aligns all JavaThread* pointers to
+//    a very large value (currently 128 bytes (32bVM) or 256 bytes (64bVM))
+//    to make room for the age bits &amp; the epoch bits (used in support of
+//    biased locking), and for the CMS &quot;freeness&quot; bit in the 64bVM (+COOPs).
+//
+//    [JavaThread* | epoch | age | 1 | 01]       lock is biased toward given thread
+//    [0           | epoch | age | 1 | 01]       lock is anonymously biased
+//
+//  - the two lock bits are used to describe three states: locked/unlocked and monitor.
+//
+//    [ptr             | 00]  locked             ptr points to real header on stack
+//    [header      | 0 | 01]  unlocked           regular object header
+//    [ptr             | 10]  monitor            inflated lock (header is wapped out)
+//    [ptr             | 11]  marked             used by markSweep to mark an object
+//                                               not valid at any other time
+//
+//    We assume that stack/thread pointers have the lowest two bits cleared.
+
+class BasicLock;
+class ObjectMonitor;
+class JavaThread;
+
+class markOopDesc: public oopDesc &#123;
+ private:
+  // Conversion
+  uintptr_t value() const &#123; return (uintptr_t) this; &#125;
+
+ public:
+  // Constants
+  enum &#123; age_bits                 = 4,
+         lock_bits                = 2,
+         biased_lock_bits         = 1,
+         max_hash_bits            = BitsPerWord - age_bits - lock_bits - biased_lock_bits,
+         hash_bits                = max_hash_bits &gt; 31 ? 31 : max_hash_bits,
+         cms_bits                 = LP64_ONLY(1) NOT_LP64(0),
+         epoch_bits               = 2
+  &#125;;
+
+  // The biased locking code currently requires that the age bits be
+  // contiguous to the lock bits.
+  enum &#123; lock_shift               = 0,
+         biased_lock_shift        = lock_bits,
+         age_shift                = lock_bits + biased_lock_bits,
+         cms_shift                = age_shift + age_bits,
+         hash_shift               = cms_shift + cms_bits,
+         epoch_shift              = hash_shift
+  &#125;;
+
+  enum &#123; lock_mask                = right_n_bits(lock_bits),
+         lock_mask_in_place       = lock_mask &lt;&lt; lock_shift,
+         biased_lock_mask         = right_n_bits(lock_bits + biased_lock_bits),
+         biased_lock_mask_in_place= biased_lock_mask &lt;&lt; lock_shift,
+         biased_lock_bit_in_place = 1 &lt;&lt; biased_lock_shift,
+         age_mask                 = right_n_bits(age_bits),
+         age_mask_in_place        = age_mask &lt;&lt; age_shift,
+         epoch_mask               = right_n_bits(epoch_bits),
+         epoch_mask_in_place      = epoch_mask &lt;&lt; epoch_shift,
+         cms_mask                 = right_n_bits(cms_bits),
+         cms_mask_in_place        = cms_mask &lt;&lt; cms_shift
+#ifndef _WIN64
+         ,hash_mask               = right_n_bits(hash_bits),
+         hash_mask_in_place       = (address_word)hash_mask &lt;&lt; hash_shift
+#endif
+  &#125;;
+
+  // Alignment of JavaThread pointers encoded in object header required by biased locking
+  enum &#123; biased_lock_alignment    = 2 &lt;&lt; (epoch_shift + epoch_bits)
+  &#125;;
+
+#ifdef _WIN64
+    // These values are too big for Win64
+    const static uintptr_t hash_mask = right_n_bits(hash_bits);
+    const static uintptr_t hash_mask_in_place  =
+                            (address_word)hash_mask &lt;&lt; hash_shift;
+#endif
+
+  enum &#123; locked_value             = 0,
+         unlocked_value           = 1,
+         monitor_value            = 2,
+         marked_value             = 3,
+         biased_lock_pattern      = 5
+  &#125;;
+
+  enum &#123; no_hash                  = 0 &#125;;  // no hash value assigned
+
+  enum &#123; no_hash_in_place         = (address_word)no_hash &lt;&lt; hash_shift,
+         no_lock_in_place         = unlocked_value
+  &#125;;
+
+  enum &#123; max_age                  = age_mask &#125;;
+
+  enum &#123; max_bias_epoch           = epoch_mask &#125;;
+
+  // Biased Locking accessors.
+  // These must be checked by all code which calls into the
+  // ObjectSynchronizer and other code. The biasing is not understood
+  // by the lower-level CAS-based locking code, although the runtime
+  // fixes up biased locks to be compatible with it when a bias is
+  // revoked.
+  bool has_bias_pattern() const &#123;
+    return (mask_bits(value(), biased_lock_mask_in_place) == biased_lock_pattern);
+  &#125;
+  JavaThread* biased_locker() const &#123;
+    assert(has_bias_pattern(), &quot;should not call this otherwise&quot;);
+    return (JavaThread*) ((intptr_t) (mask_bits(value(), ~(biased_lock_mask_in_place | age_mask_in_place | epoch_mask_in_place))));
+  &#125;
+  // Indicates that the mark has the bias bit set but that it has not
+  // yet been biased toward a particular thread
+  bool is_biased_anonymously() const &#123;
+    return (has_bias_pattern() &amp;&amp; (biased_locker() == NULL));
+  &#125;
+  // Indicates epoch in which this bias was acquired. If the epoch
+  // changes due to too many bias revocations occurring, the biases
+  // from the previous epochs are all considered invalid.
+  int bias_epoch() const &#123;
+    assert(has_bias_pattern(), &quot;should not call this otherwise&quot;);
+    return (mask_bits(value(), epoch_mask_in_place) &gt;&gt; epoch_shift);
+  &#125;
+  markOop set_bias_epoch(int epoch) &#123;
+    assert(has_bias_pattern(), &quot;should not call this otherwise&quot;);
+    assert((epoch &amp; (~epoch_mask)) == 0, &quot;epoch overflow&quot;);
+    return markOop(mask_bits(value(), ~epoch_mask_in_place) | (epoch &lt;&lt; epoch_shift));
+  &#125;
+  markOop incr_bias_epoch() &#123;
+    return set_bias_epoch((1 + bias_epoch()) &amp; epoch_mask);
+  &#125;
+  // Prototype mark for initialization
+  static markOop biased_locking_prototype() &#123;
+    return markOop( biased_lock_pattern );
+  &#125;
+
+  // lock accessors (note that these assume lock_shift == 0)
+  bool is_locked()   const &#123;
+    return (mask_bits(value(), lock_mask_in_place) != unlocked_value);
+  &#125;
+  bool is_unlocked() const &#123;
+    return (mask_bits(value(), biased_lock_mask_in_place) == unlocked_value);
+  &#125;
+  bool is_marked()   const &#123;
+    return (mask_bits(value(), lock_mask_in_place) == marked_value);
+  &#125;
+  bool is_neutral()  const &#123; return (mask_bits(value(), biased_lock_mask_in_place) == unlocked_value); &#125;
+
+  // Special temporary state of the markOop while being inflated.
+  // Code that looks at mark outside a lock need to take this into account.
+  bool is_being_inflated() const &#123; return (value() == 0); &#125;
+
+  // Distinguished markword value - used when inflating over
+  // an existing stacklock.  0 indicates the markword is &quot;BUSY&quot;.
+  // Lockword mutators that use a LD...CAS idiom should always
+  // check for and avoid overwriting a 0 value installed by some
+  // other thread.  (They should spin or block instead.  The 0 value
+  // is transient and *should* be short-lived).
+  static markOop INFLATING() &#123; return (markOop) 0; &#125;    // inflate-in-progress
+
+  // Should this header be preserved during GC?
+  inline bool must_be_preserved(oop obj_containing_mark) const;
+  inline bool must_be_preserved_with_bias(oop obj_containing_mark) const;
+
+  // Should this header (including its age bits) be preserved in the
+  // case of a promotion failure during scavenge?
+  // Note that we special case this situation. We want to avoid
+  // calling BiasedLocking::preserve_marks()/restore_marks() (which
+  // decrease the number of mark words that need to be preserved
+  // during GC) during each scavenge. During scavenges in which there
+  // is no promotion failure, we actually don&#39;t need to call the above
+  // routines at all, since we don&#39;t mutate and re-initialize the
+  // marks of promoted objects using init_mark(). However, during
+  // scavenges which result in promotion failure, we do re-initialize
+  // the mark words of objects, meaning that we should have called
+  // these mark word preservation routines. Currently there&#39;s no good
+  // place in which to call them in any of the scavengers (although
+  // guarded by appropriate locks we could make one), but the
+  // observation is that promotion failures are quite rare and
+  // reducing the number of mark words preserved during them isn&#39;t a
+  // high priority.
+  inline bool must_be_preserved_for_promotion_failure(oop obj_containing_mark) const;
+  inline bool must_be_preserved_with_bias_for_promotion_failure(oop obj_containing_mark) const;
+
+  // Should this header be preserved during a scavenge where CMS is
+  // the old generation?
+  // (This is basically the same body as must_be_preserved_for_promotion_failure(),
+  // but takes the Klass* as argument instead)
+  inline bool must_be_preserved_for_cms_scavenge(Klass* klass_of_obj_containing_mark) const;
+  inline bool must_be_preserved_with_bias_for_cms_scavenge(Klass* klass_of_obj_containing_mark) const;
+
+  // WARNING: The following routines are used EXCLUSIVELY by
+  // synchronization functions. They are not really gc safe.
+  // They must get updated if markOop layout get changed.
+  markOop set_unlocked() const &#123;
+    return markOop(value() | unlocked_value);
+  &#125;
+  bool has_locker() const &#123;
+    return ((value() &amp; lock_mask_in_place) == locked_value);
+  &#125;
+  BasicLock* locker() const &#123;
+    assert(has_locker(), &quot;check&quot;);
+    return (BasicLock*) value();
+  &#125;
+  bool has_monitor() const &#123;
+    return ((value() &amp; monitor_value) != 0);
+  &#125;
+  ObjectMonitor* monitor() const &#123;
+    assert(has_monitor(), &quot;check&quot;);
+    // Use xor instead of &amp;~ to provide one extra tag-bit check.
+    return (ObjectMonitor*) (value() ^ monitor_value);
+  &#125;
+  bool has_displaced_mark_helper() const &#123;
+    return ((value() &amp; unlocked_value) == 0);
+  &#125;
+  markOop displaced_mark_helper() const &#123;
+    assert(has_displaced_mark_helper(), &quot;check&quot;);
+    intptr_t ptr = (value() &amp; ~monitor_value);
+    return *(markOop*)ptr;
+  &#125;
+  void set_displaced_mark_helper(markOop m) const &#123;
+    assert(has_displaced_mark_helper(), &quot;check&quot;);
+    intptr_t ptr = (value() &amp; ~monitor_value);
+    *(markOop*)ptr = m;
+  &#125;
+  markOop copy_set_hash(intptr_t hash) const &#123;
+    intptr_t tmp = value() &amp; (~hash_mask_in_place);
+    tmp |= ((hash &amp; hash_mask) &lt;&lt; hash_shift);
+    return (markOop)tmp;
+  &#125;
+  // it is only used to be stored into BasicLock as the
+  // indicator that the lock is using heavyweight monitor
+  static markOop unused_mark() &#123;
+    return (markOop) marked_value;
+  &#125;
+  // the following two functions create the markOop to be
+  // stored into object header, it encodes monitor info
+  static markOop encode(BasicLock* lock) &#123;
+    return (markOop) lock;
+  &#125;
+  static markOop encode(ObjectMonitor* monitor) &#123;
+    intptr_t tmp = (intptr_t) monitor;
+    return (markOop) (tmp | monitor_value);
+  &#125;
+  static markOop encode(JavaThread* thread, uint age, int bias_epoch) &#123;
+    intptr_t tmp = (intptr_t) thread;
+    assert(UseBiasedLocking &amp;&amp; ((tmp &amp; (epoch_mask_in_place | age_mask_in_place | biased_lock_mask_in_place)) == 0), &quot;misaligned JavaThread pointer&quot;);
+    assert(age &lt;= max_age, &quot;age too large&quot;);
+    assert(bias_epoch &lt;= max_bias_epoch, &quot;bias epoch too large&quot;);
+    return (markOop) (tmp | (bias_epoch &lt;&lt; epoch_shift) | (age &lt;&lt; age_shift) | biased_lock_pattern);
+  &#125;
+
+  // used to encode pointers during GC
+  markOop clear_lock_bits() &#123; return markOop(value() &amp; ~lock_mask_in_place); &#125;
+
+  // age operations
+  markOop set_marked()   &#123; return markOop((value() &amp; ~lock_mask_in_place) | marked_value); &#125;
+  markOop set_unmarked() &#123; return markOop((value() &amp; ~lock_mask_in_place) | unlocked_value); &#125;
+
+  uint    age()               const &#123; return mask_bits(value() &gt;&gt; age_shift, age_mask); &#125;
+  markOop set_age(uint v) const &#123;
+    assert((v &amp; ~age_mask) == 0, &quot;shouldn&#39;t overflow age field&quot;);
+    return markOop((value() &amp; ~age_mask_in_place) | (((uintptr_t)v &amp; age_mask) &lt;&lt; age_shift));
+  &#125;
+  markOop incr_age()          const &#123; return age() == max_age ? markOop(this) : set_age(age() + 1); &#125;
+
+  // hash operations
+  intptr_t hash() const &#123;
+    return mask_bits(value() &gt;&gt; hash_shift, hash_mask);
+  &#125;
+
+  bool has_no_hash() const &#123;
+    return hash() == no_hash;
+  &#125;
+
+  // Prototype mark for initialization
+  static markOop prototype() &#123;
+    return markOop( no_hash_in_place | no_lock_in_place );
+  &#125;
+
+  // Helper function for restoration of unmarked mark oops during GC
+  static inline markOop prototype_for_object(oop obj);
+
+  // Debugging
+  void print_on(outputStream* st) const;
+
+  // Prepare address of oop for placement into mark
+  inline static markOop encode_pointer_as_mark(void* p) &#123; return markOop(p)-&gt;set_marked(); &#125;
+
+  // Recover address of oop from encoded form used in mark
+  inline void* decode_pointer() &#123; if (UseBiasedLocking &amp;&amp; has_bias_pattern()) return NULL; return clear_lock_bits(); &#125;
+
+  // These markOops indicate cms free chunk blocks and not objects.
+  // In 64 bit, the markOop is set to distinguish them from oops.
+  // These are defined in 32 bit mode for vmStructs.
+  const static uintptr_t cms_free_chunk_pattern  = 0x1;
+
+  // Constants for the size field.
+  enum &#123; size_shift                = cms_shift + cms_bits,
+         size_bits                 = 35    // need for compressed oops 32G
+       &#125;;
+  // These values are too big for Win64
+  const static uintptr_t size_mask = LP64_ONLY(right_n_bits(size_bits))
+                                     NOT_LP64(0);
+  const static uintptr_t size_mask_in_place =
+                                     (address_word)size_mask &lt;&lt; size_shift;
+
+#ifdef _LP64
+  static markOop cms_free_prototype() &#123;
+    return markOop(((intptr_t)prototype() &amp; ~cms_mask_in_place) |
+                   ((cms_free_chunk_pattern &amp; cms_mask) &lt;&lt; cms_shift));
+  &#125;
+  uintptr_t cms_encoding() const &#123;
+    return mask_bits(value() &gt;&gt; cms_shift, cms_mask);
+  &#125;
+  bool is_cms_free_chunk() const &#123;
+    return is_neutral() &amp;&amp;
+           (cms_encoding() &amp; cms_free_chunk_pattern) == cms_free_chunk_pattern;
+  &#125;
+
+  size_t get_size() const       &#123; return (size_t)(value() &gt;&gt; size_shift); &#125;
+  static markOop set_size_and_free(size_t size) &#123;
+    assert((size &amp; ~size_mask) == 0, &quot;shouldn&#39;t overflow size field&quot;);
+    return markOop(((intptr_t)cms_free_prototype() &amp; ~size_mask_in_place) |
+                   (((intptr_t)size &amp; size_mask) &lt;&lt; size_shift));
+  &#125;
+#endif // _LP64
+&#125;;
+
+#endif // SHARE_VM_OOPS_MARKOOP_HPP
+</code></pre>
+<p>Mark word 记录了对象和锁有关的信息,当某个对象被synchronized 关键字当成同步锁时,那么围绕这个锁的一系列操作都和Mark Word 有关系. Mark Word 在32虚拟机的长度是 32bit,在64位虚拟机的长度是64bit.</p>
+<p>Mark Word 可能变化为存储以上五种情况<br><img src="http://files.luyanan.com/b5636cdc-9a38-49ee-8f13-7683ba2a5863.jpg" alt="image"></p>
+<h4 id="为什么每个对象都可以实现锁"><a href="#为什么每个对象都可以实现锁" class="headerlink" title="为什么每个对象都可以实现锁?"></a>为什么每个对象都可以实现锁?</h4><ol>
+<li><p>首先,java中的每个对象都派生自Object类,而每个java Object 在JVM 内部都有一个 native 的C++ 对象 oop/oopDesc 进行对应.</p>
+</li>
+<li><p>在线程获取锁的时候,实际上就是获取一个监视器对象(minitor),monitor 可以认为是一个同步对象,所有的java 对象天生到monitor .在hotspot 源码中 markOop.hpp源码中,可以看到下面这段代码</p>
+<pre><code>ObjectMonitor* monitor() const &#123;
+ assert(has_monitor(), &quot;check&quot;);
+ // Use xor instead of &amp;~ to provide one extra tag-bit check.
+ return (ObjectMonitor*) (value() ^ monitor_value);
+&#125;
+</code></pre>
+</li>
+</ol>
+<p>多个线程访问同步代码块,相当于去争抢对象监视器,修改对象中的锁标识,上面的代码汇总objectMonitor 这个对象和线程争抢锁的逻辑有密切的关系。</p>
+<h3 id="synchronized-锁的升级"><a href="#synchronized-锁的升级" class="headerlink" title="synchronized 锁的升级"></a>synchronized 锁的升级</h3><p>在分析 synchronized 时,提高了偏向锁,轻量级锁,重量级锁.在分析这几种锁的区别的时候,我们先来思考一个问题, 使用锁能够实现数据的安全性,但是会带来性能的下降. 不使用锁能够基于线程并行提升程序性能,但是却不能保证线程安全性. 这两者之间似乎是没办法达到既能满足性能也能满足安全性的要求.</p>
+<p>hotspot 虚拟机的作者经过调查发现, 大部分情况下,加锁的代码不仅仅不存在多线程竞争,而且总是由同一个线程多次获得.所以基于这样一个概率,synchronized 在JDK1.6之后做了一些优化, 为了减少获得锁和释放锁带来的性能开销,引入了偏向锁,轻量级锁的概念. 因为大家会发现在synchronized 中,锁存在四种状态. 分别为无锁,偏向锁,轻量级锁,重量级锁;锁的状态根据竞争激烈的程序 从低到高不断升级.</p>
+<h4 id="偏向锁的基本原理"><a href="#偏向锁的基本原理" class="headerlink" title="偏向锁的基本原理"></a>偏向锁的基本原理</h4><p>前面说过,大部分情况下,锁不仅仅不存在多线程竞争,而是总是由同一个线程多次获得,为了让线程获得锁的代价更低就引入了偏向锁的概念. 怎么理解偏向锁呢?</p>
+<p>当一个线程访问了加了同步锁的代码块时,会在对象头汇总存储当前线程的ID,后续这个线程进入和退出这段加了同步锁的代码块的时候,不需要再次加锁和释放锁.,而是直接比较对象头里面是否存储了指向当前线程的偏向锁.如果相等表示偏向锁是偏向于当前线程,就不需要再尝试获得锁了.</p>
+<h5 id="偏向锁的获取逻辑"><a href="#偏向锁的获取逻辑" class="headerlink" title="偏向锁的获取逻辑"></a>偏向锁的获取逻辑</h5><ol>
+<li>首先获取锁对象的MarkWord ,判断是否处于可偏向状态(biased_lock =1 且 ThreadId 为空)</li>
+<li>如果是可偏向状态,则通过CAS 操作,把当前线程的ID 写入到 MarkWord <ol>
+<li>如果cas成功,那么markword 就会变成这样,表示已经获得了锁对象的偏向锁,接着执行同步代码块</li>
+<li>如果cas失败,说明有其他线程已经获得了偏向锁,正宗情况说明当前锁存在竞争,需要撤销已获得偏向锁的线程,并且把他持有的锁升级为轻量级锁(这个操作需要等到全局安全点,也就是没有线程在执行的字节码) 才能执行.</li>
+</ol>
+</li>
+<li>如果是已偏向状态,需要检查markword 中存储的ThreadID 是否等于当前线程的Thread ID<ol>
+<li>如果相等,不需要再次获得锁,可以直接执行同步代码块.</li>
+<li>如果不相等,说明当前锁偏向于其他线程,需要撤销偏向锁并升级到轻量级锁.</li>
+</ol>
+</li>
+</ol>
+<h5 id="偏向锁的撤销"><a href="#偏向锁的撤销" class="headerlink" title="偏向锁的撤销"></a>偏向锁的撤销</h5><p>偏向锁的撤销并不是把对象恢复到无锁可偏向状态(因为偏向锁并不存在锁释放的概念),而是在获得偏向锁的过程中,发现cas 失败也就是存在线程竞争的时候,直接把被偏向的锁的对象升级到了被加了轻量级锁的状态.</p>
+<p>对原持有偏向锁多线程进行撤销时,原获得偏向锁的线程存在两种情况:</p>
+<ol>
+<li>原获得偏向锁的线程如果已经退出了临界区,也就是同步代码块执行完了,那么这个时候就会把对象头设置成无锁状态并且争抢锁的线程可以基于CAS 重新偏向前线程.</li>
+<li>如果原获得偏向锁的线程的同步代码块还没有执行完,处于临界区之内,这个时候会把原获得偏向锁的线程升级为轻量级锁后继续执行同步代码块.</li>
+</ol>
+<p>在我们的应用开发中,绝大部分情况下一定会存在2个以上的线程竞争,那么如果开启偏向锁,反而会提升获取锁的资源消耗.所以可以通过jvm参数 UseBiasedLocking 来设置开启或者关闭偏向锁.</p>
+<p><img src="http://files.luyanan.com/c2eaeea8-426e-4155-896c-88fcbeb1dba3.jpg" alt="image"></p>
+<h4 id="轻量级锁的基本原理"><a href="#轻量级锁的基本原理" class="headerlink" title="轻量级锁的基本原理"></a>轻量级锁的基本原理</h4><h5 id="轻量级锁的加锁和解锁逻辑"><a href="#轻量级锁的加锁和解锁逻辑" class="headerlink" title="轻量级锁的加锁和解锁逻辑"></a>轻量级锁的加锁和解锁逻辑</h5><p>锁升级为轻量级之后,对象的MarkWord 也会进行相应的变化.升级为轻量级锁的过程:</p>
+<ol>
+<li>线程在自己的栈帧中创建锁记录LockRecore</li>
+<li>将锁对象的对象头中的 MarkWord 复制到线程的刚创建的锁记录中.</li>
+<li>将锁记录中的Owner 指针指向锁对象。</li>
+<li>将锁对象的对象头的MarkWord 替换为指向锁记录的指针.</li>
+</ol>
+<p><img src="http://files.luyanan.com/670ce5b3-c30e-4edb-9323-72ee5b22203c.jpg" alt="image"></p>
+<p><img src="http://files.luyanan.com/27044d51-a076-4f4b-bd6d-c27d3912b3a5.jpg" alt="image"></p>
+<h5 id="自旋锁"><a href="#自旋锁" class="headerlink" title="自旋锁"></a>自旋锁</h5><p>轻量级锁在加锁过程中用到了自旋锁</p>
+<p>所谓自旋,就是指当有另外一个线程来竞争锁的时候,这个线程会在原地循环等待,而不是把该线程阻塞,知道那个获得锁的线程释放锁之后,这个线程就可以马上获得锁. 注意,锁在原地循环的时候,会消耗cpu,就相当于执行一个什么也没有的for循环.</p>
+<p>所以,轻量级锁适用于那些同步代码块执行的很快的场景,这样,线程原地等待很短的时间就能够获得锁了.</p>
+<p>自旋锁的使用,其实也是有一定的概率背景的,在大部分同步代码块执行的时间都是很短的,所在通过看似无意义的循环反而能够提升锁的性能.</p>
+<p>但是自旋必须要有一定的条件控制,否则如果一个线程执行同步代码块的时间很长,那么这个线程不断的循环反而会消耗CPU 资源.默认情况下自旋的次数是10次.可以通过 preBlockSpin 来修改</p>
+<p>在JDK1.6之后,引入了自适应自旋锁,自适用意味着自旋的次数不是固定的,而是根据前一次在同一个锁上自旋的时间以及锁的拥有者的状态来决定的.</p>
+<p>如果在同一个锁对象上,自旋等待刚刚成功获得过锁,并且持有锁的线程正在运行,那么虚拟机就会认为这次自旋也很有可能再次成功,进而它将允许自旋等待持续相对更长的时间. 如果对于这个锁,自旋很少成功获得过,那在以后尝试获取这个锁的时候将可能省略掉自旋的过程,直接阻塞线程,避免浪费处理器资源.</p>
+<h5 id="轻量级锁的解锁"><a href="#轻量级锁的解锁" class="headerlink" title="轻量级锁的解锁"></a>轻量级锁的解锁</h5><p>轻量级锁的锁释放逻辑其实就是获得锁的逆向逻辑,通过CAS 操作把线程栈帧中的LockRecord 替换回到锁对象的MarkWord 中,如果成功表示没有竞争,如果失败,表示当前锁存在竞争,那么轻量级锁就会膨胀为重量级锁。</p>
+<p>流程图分析<br><img src="http://files.luyanan.com/30884cf9-017e-488b-9f3d-cfa2cc13540d.jpg" alt="image"></p>
+<h4 id="重量级锁的基本原理"><a href="#重量级锁的基本原理" class="headerlink" title="重量级锁的基本原理"></a>重量级锁的基本原理</h4><p>当轻量级锁膨胀为重量级锁的时候,意味着线程只能被挂起阻塞来等待被唤醒了.</p>
+<p>重量级锁的monitor</p>
+<pre><code>package com.notes.concurrent.synchronizeds;
+
+/**
+ * @author luyanan
+ * @since 2019/7/18
+ * &lt;p&gt;重量级锁&lt;/p&gt;
+ **/
+public class HeavyweightThread &#123;
+
+
+    public static void main(String[] args) &#123;
+
+        synchronized (HeavyweightThread.class) &#123;
+            test();
+        &#125;
+    &#125;
+
+    public static void test() &#123;
+        System.out.println(&quot;打印&quot;);
+    &#125;
+
+
+&#125;
+</code></pre>
+<p>运行以后通过javap 工具查看生成的class 文件信息分析synchronzied 关键字的实现细节</p>
+<blockquote>
+<p>javap -v /d/workspace/lyn/lyn-project/notes/java/javaNotes/concurrent-notes/target/classes/com/notes/concurrent/synchronizeds/HeavyweightThread.class</p>
+</blockquote>
+<pre><code>Classfile /D:/workspace/lyn/lyn-project/notes/java/javaNotes/concurrent-notes/ta                                                                                                                                  rget/classes/com/notes/concurrent/synchronizeds/HeavyweightThread.class
+  Last modified 2019-7-18; size 795 bytes
+  MD5 checksum 4bfd6f95270bf0aad230cbdd4243efac
+  Compiled from &quot;HeavyweightThread.java&quot;
+public class com.notes.concurrent.synchronizeds.HeavyweightThread
+  minor version: 0
+  major version: 52
+  flags: ACC_PUBLIC, ACC_SUPER
+Constant pool:
+   #1 = Methodref          #7.#26         // java/lang/Object.&quot;&lt;init&gt;&quot;:()V
+   #2 = Class              #27            // com/notes/concurrent/synchronizeds/                                                                                                                                  HeavyweightThread
+   #3 = Methodref          #2.#28         // com/notes/concurrent/synchronizeds/                                                                                                                                  HeavyweightThread.test:()V
+   #4 = Fieldref           #29.#30        // java/lang/System.out:Ljava/io/Print                                                                                                                                  Stream;
+   #5 = String             #31            // ▒▒ӡ
+   #6 = Methodref          #32.#33        // java/io/PrintStream.println:(Ljava/                                                                                                                                  lang/String;)V
+   #7 = Class              #34            // java/lang/Object
+   #8 = Utf8               &lt;init&gt;
+   #9 = Utf8               ()V
+  #10 = Utf8               Code
+  #11 = Utf8               LineNumberTable
+  #12 = Utf8               LocalVariableTable
+  #13 = Utf8               this
+  #14 = Utf8               Lcom/notes/concurrent/synchronizeds/HeavyweightThread                                                                                                                                  ;
+  #15 = Utf8               main
+  #16 = Utf8               ([Ljava/lang/String;)V
+  #17 = Utf8               args
+  #18 = Utf8               [Ljava/lang/String;
+  #19 = Utf8               StackMapTable
+  #20 = Class              #18            // &quot;[Ljava/lang/String;&quot;
+  #21 = Class              #34            // java/lang/Object
+  #22 = Class              #35            // java/lang/Throwable
+  #23 = Utf8               test
+  #24 = Utf8               SourceFile
+  #25 = Utf8               HeavyweightThread.java
+  #26 = NameAndType        #8:#9          // &quot;&lt;init&gt;&quot;:()V
+  #27 = Utf8               com/notes/concurrent/synchronizeds/HeavyweightThread
+  #28 = NameAndType        #23:#9         // test:()V
+  #29 = Class              #36            // java/lang/System
+  #30 = NameAndType        #37:#38        // out:Ljava/io/PrintStream;
+  #31 = Utf8               ▒▒ӡ
+  #32 = Class              #39            // java/io/PrintStream
+  #33 = NameAndType        #40:#41        // println:(Ljava/lang/String;)V
+  #34 = Utf8               java/lang/Object
+  #35 = Utf8               java/lang/Throwable
+  #36 = Utf8               java/lang/System
+  #37 = Utf8               out
+  #38 = Utf8               Ljava/io/PrintStream;
+  #39 = Utf8               java/io/PrintStream
+  #40 = Utf8               println
+  #41 = Utf8               (Ljava/lang/String;)V
+&#123;
+  public com.notes.concurrent.synchronizeds.HeavyweightThread();
+    descriptor: ()V
+    flags: ACC_PUBLIC
+    Code:
+      stack=1, locals=1, args_size=1
+         0: aload_0
+         1: invokespecial #1                  // Method java/lang/Object.&quot;&lt;init&gt;                                                                                                                                  &quot;:()V
+         4: return
+      LineNumberTable:
+        line 8: 0
+      LocalVariableTable:
+        Start  Length  Slot  Name   Signature
+            0       5     0  this   Lcom/notes/concurrent/synchronizeds/Heavywei                                                                                                                                  ghtThread;
+
+  public static void main(java.lang.String[]);
+    descriptor: ([Ljava/lang/String;)V
+    flags: ACC_PUBLIC, ACC_STATIC
+    Code:
+      stack=2, locals=3, args_size=1
+         0: ldc           #2                  // class com/notes/concurrent/sync                                                                                                                                  hronizeds/HeavyweightThread
+         2: dup
+         3: astore_1
+         4: monitorenter
+         5: invokestatic  #3                  // Method test:()V
+         8: aload_1
+         9: monitorexit
+        10: goto          18
+        13: astore_2
+        14: aload_1
+        15: monitorexit
+        16: aload_2
+        17: athrow
+        18: return
+      Exception table:
+         from    to  target type
+             5    10    13   any
+            13    16    13   any
+      LineNumberTable:
+        line 13: 0
+        line 14: 5
+        line 15: 8
+        line 16: 18
+      LocalVariableTable:
+        Start  Length  Slot  Name   Signature
+            0      19     0  args   [Ljava/lang/String;
+      StackMapTable: number_of_entries = 2
+        frame_type = 255 /* full_frame */
+          offset_delta = 13
+          locals = [ class &quot;[Ljava/lang/String;&quot;, class java/lang/Object ]
+          stack = [ class java/lang/Throwable ]
+        frame_type = 250 /* chop */
+          offset_delta = 4
+
+  public static void test();
+    descriptor: ()V
+    flags: ACC_PUBLIC, ACC_STATIC
+    Code:
+      stack=2, locals=0, args_size=0
+         0: getstatic     #4                  // Field java/lang/System.out:Ljav                                                                                                                                  a/io/PrintStream;
+         3: ldc           #5                  // String ▒▒ӡ
+         5: invokevirtual #6                  // Method java/io/PrintStream.prin                                                                                                                                  tln:(Ljava/lang/String;)V
+         8: return
+      LineNumberTable:
+        line 19: 0
+        line 20: 8
+&#125;
+SourceFile: &quot;HeavyweightThread.java&quot;
+</code></pre>
+<p>加了同步代码块之后,在字节码中会看到一个</p>
+<p>monitorenter 和monitorexit</p>
+<p>每一个java对象都会与一个监视器monitor 关联,我们可以把他理解成一把锁,当一个线程想要执行一段被synchronized 修饰的同步方法或者代码块时,该线程得先获取到synchronized 修饰的对象对应的monitor .</p>
+<p>monitorenter 表示去获取一个对象的监视器,monitorexit 表示释放monitor 监视器的所有权,使得其他被阻塞的线程可以尝试去获得这个监视器.</p>
+<p>monitor 依赖操作系统的MutexLock(互斥锁)来实现的,线程被阻塞后便进入到内核(Linux)调度任务,这个会导致系统在用户态和内核态之间来回切换,严重影响锁的性能.</p>
+<p><strong>重量级锁的加锁的基本流程</strong><br><img src="http://files.luyanan.com/73e18db6-f38a-46af-a18a-bd162c12931e.jpg" alt="image"></p>
+<p>任意线程对Object(Object由synchronized保护)的访问,首先要先获得Object的监视器.如果获取失败,线程进入同步队列,线程状态变为Blocked. 当访问Object 进程(获得了锁的线程) 释放了锁,则该释放操作唤醒阻塞在同步队列中的线程,使其重新尝试对监视器的获取.</p>
+<h5 id="回顾线程的竞争机制"><a href="#回顾线程的竞争机制" class="headerlink" title="回顾线程的竞争机制"></a>回顾线程的竞争机制</h5><p>再来回顾一下线程的竞争机制对于锁升级这块的基本流程,方便大家更好的理解</p>
+<p>加入有这样一个同步代码块,存在Thread#1,Thread#2等多个线程</p>
+<pre><code>synchronized(lock)&#123;
+    // do Something 
+&#125;
+</code></pre>
+<p>情况一: 只有Thread#1 会进入临界区</p>
+<p>情况二: Thread#1和Thread#2 交替进入临界区,竞争不激烈</p>
+<p>情况三: Thread#1/Thread#2/Thread#3… 同时进入临界区,竞争激烈</p>
+<h4 id="偏向锁"><a href="#偏向锁" class="headerlink" title="偏向锁"></a>偏向锁</h4><p>此时当Thread#1 进入临界区时,JVM会将lockObject 对象头Mark Word 的锁标志位设置”01”,同时会用CAS操作把Thread#1的线程ID 记录到Mark Word 中,此时进入偏向模式.所谓偏向,指的是这个锁会偏向于Thread#1,若接下来没有其他线程进入临界区,则Thread#1 再出入临界区无需再执行任何的同步操作,也就是说,若只有Thread#1 会进入临界区,实际上只有Thread#1 初次进入临界区时需要执行CAS 操作,以后再出入临界区都不会有同步操作带来的开销.</p>
+<h4 id="轻量级锁"><a href="#轻量级锁" class="headerlink" title="轻量级锁"></a>轻量级锁</h4><p>偏向锁的场景太多理想化,更多的时候是Thread#2 也会尝试进入临界区,如果Thread#2 也进入临界区但是Thread#! 还没有执行完同步代码块的时候,会暂停Thread#1 并且升级到轻量级锁.Thread#2 通过自旋再次尝试以轻量级锁的方式来获得锁.</p>
+<h4 id="重量级锁"><a href="#重量级锁" class="headerlink" title="重量级锁"></a>重量级锁</h4><p>如果Thread#1和Thread#2正常交替执行,那么轻量级锁基本能够满足锁的需求.但是Thread#1和Thread#2 同时进入临界区,那么轻量级锁就会膨胀成重量级锁,意味着Thread#1 线程获得了重量级锁的情况下,Thread#2 就会被阻塞.</p>
+<h2 id="Synchronized-结合java-Object-对象中的wait-notify-notifyAll"><a href="#Synchronized-结合java-Object-对象中的wait-notify-notifyAll" class="headerlink" title="Synchronized 结合java Object 对象中的wait,notify,notifyAll"></a>Synchronized 结合java Object 对象中的wait,notify,notifyAll</h2><p>前面讲到我们再将synchroized 的时候,发现被阻塞的线程什么时候被唤醒,取决于获得锁的线程什么时候执行完同步块并且释放锁.那么怎么做到显示控制呢? 我们就需要借助一个信号机制:在Object对象中,提供了wait/nofity/nofityAll，可以用于控制线程的状态.</p>
+<h3 id="wait-nofity-nofityAll的基本概念"><a href="#wait-nofity-nofityAll的基本概念" class="headerlink" title="wait/nofity/nofityAll的基本概念"></a>wait/nofity/nofityAll的基本概念</h3><p><strong>wait</strong>:表示持有对象锁的线程A 准备释放对象锁权限,释放CPU资源并进入等待状态.<br><strong>notify</strong>:表示持有对象锁的线程A 准备释放对象锁权限,通知jvm唤醒某个竞争该线程锁的线程X. 线程A synchronized代码执行结束并且释放了锁之后,线程x 直接获得锁权限,其他竞争线程继续等待(即使线程X同步完毕,释放对象锁,其他竞争线程仍然等待,直至有新的 notify/notifyAll被调用)</p>
+<p><strong>notifyAll</strong>: notifyAll和noify的区别在于,notifyAll会唤醒所有竞争同一个对象锁的所有线程,当已经获得锁的线程A 释放锁之后,所有被唤醒的线程都有可能获得对象锁权限.</p>
+<p>需要注意的是:三个方法都必须在synchronized 同步关键字所限定的作用域中,否则会报java.lang.IllegalMonitorStateException,意思是没有同步方法.所以线程对象锁的状态是不确定的,不能调用这些方法.</p>
+<p>另外,通过同步机制来确保线程从wait方法返回时能够感知到notify线程对变量做出的改变.</p>
+<h4 id="wait-notify的基本使用"><a href="#wait-notify的基本使用" class="headerlink" title="wait/notify的基本使用"></a>wait/notify的基本使用</h4><pre><code>package com.notes.concurrent.synchronizeds;
+
+/**
+ * @author luyanan
+ * @since 2019/7/19
+ * &lt;p&gt;&lt;/p&gt;
+ **/
+public class ThreadA extends Thread &#123;
+
+    private Object lock;
+
+
+    public ThreadA(Object lock) &#123;
+        this.lock = lock;
+    &#125;
+
+
+    @Override
+    public void run() &#123;
+
+        synchronized (lock) &#123;
+            System.out.println(&quot;start ThreadA&quot;);
+
+            try &#123;
+                // 实现线程的阻塞
+                lock.wait();
+            &#125; catch (InterruptedException e) &#123;
+                e.printStackTrace();
+            &#125;
+            System.out.println(&quot;end ThreadA&quot;);
+        &#125;
+    &#125;
+&#125;
+</code></pre>
+<pre><code>package com.notes.concurrent.synchronizeds;
+
+/**
+ * @author luyanan
+ * @since 2019/7/19
+ * &lt;p&gt;&lt;/p&gt;
+ **/
+public class ThreadB extends Thread &#123;
+
+    private Object lock;
+
+
+    public ThreadB(Object lock) &#123;
+        this.lock = lock;
+    &#125;
+
+    @Override
+    public void run() &#123;
+
+        synchronized (lock) &#123;
+            System.out.println(&quot;start ThreadB&quot;);
+
+            // 唤醒被阻塞的线程
+            lock.notify();
+            System.out.println(&quot;end ThreadB&quot;);
+        &#125;
+
+
+    &#125;
+&#125;
+</code></pre>
+<pre><code>package com.notes.concurrent.synchronizeds;
+
+import javax.tools.Diagnostic;
+
+/**
+ * @author luyanan
+ * @since 2019/7/19
+ * &lt;p&gt;&lt;/p&gt;
+ **/
+public class WaitNotifyDemo &#123;
+
+    public static void main(String[] args) &#123;
+        Object lock = new Object();
+        ThreadA threadA = new ThreadA(lock);
+        threadA.start();
+        ThreadB threadB = new ThreadB(lock);
+        threadB.start();
+    &#125;
+
+&#125;
+</code></pre>
+<p>结果</p>
+<pre><code>start ThreadA
+start ThreadB
+end ThreadB
+end ThreadA
+</code></pre>
+<h4 id="wait-notify的基本原理"><a href="#wait-notify的基本原理" class="headerlink" title="wait/notify的基本原理"></a>wait/notify的基本原理</h4><h5 id="wait-notify的基本原理-1"><a href="#wait-notify的基本原理-1" class="headerlink" title="wait/notify的基本原理"></a>wait/notify的基本原理</h5><p><img src="http://files.luyanan.com/73e18db6-f38a-46af-a18a-bd162c12931e.jpg" alt="image"></p>
+
+                
+            </div>
+            <hr/>
+
+            
+
+    <div class="reprint" id="reprint-statement">
+        
+            <div class="reprint__author">
+                <span class="reprint-meta" style="font-weight: bold;">
+                    <i class="fas fa-user">
+                        文章作者:
+                    </i>
+                </span>
+                <span class="reprint-info">
+                    <a href="/about" rel="external nofollow noreferrer">luyanan</a>
+                </span>
+            </div>
+            <div class="reprint__type">
+                <span class="reprint-meta" style="font-weight: bold;">
+                    <i class="fas fa-link">
+                        文章链接:
+                    </i>
+                </span>
+                <span class="reprint-info">
+                    <a href="https://rainsoil.github.io/2022/01/04/bing-fa-bian-cheng/duo-xian-cheng-de-ji-ben-yuan-li-ji-tiao-zhan-2/">https://rainsoil.github.io/2022/01/04/bing-fa-bian-cheng/duo-xian-cheng-de-ji-ben-yuan-li-ji-tiao-zhan-2/</a>
+                </span>
+            </div>
+            <div class="reprint__notice">
+                <span class="reprint-meta" style="font-weight: bold;">
+                    <i class="fas fa-copyright">
+                        版权声明:
+                    </i>
+                </span>
+                <span class="reprint-info">
+                    本博客所有文章除特別声明外，均采用
+                    <a href="https://creativecommons.org/licenses/by/4.0/deed.zh" rel="external nofollow noreferrer" target="_blank">CC BY 4.0</a>
+                    许可协议。转载请注明来源
+                    <a href="/about" target="_blank">luyanan</a>
+                    !
+                </span>
+            </div>
+        
+    </div>
+
+    <script async defer>
+      document.addEventListener("copy", function (e) {
+        let toastHTML = '<span>复制成功，请遵循本文的转载规则</span><button class="btn-flat toast-action" onclick="navToReprintStatement()" style="font-size: smaller">查看</a>';
+        M.toast({html: toastHTML})
+      });
+
+      function navToReprintStatement() {
+        $("html, body").animate({scrollTop: $("#reprint-statement").offset().top - 80}, 800);
+      }
+    </script>
+
+
+
+            <div class="tag_share" style="display: block;">
+                <div class="post-meta__tag-list" style="display: inline-block;">
+                    
+                        <div class="article-tag">
+                            <span class="chip bg-color">无标签</span>
+                        </div>
+                    
+                </div>
+                <div class="post_share" style="zoom: 80%; width: fit-content; display: inline-block; float: right; margin: -0.15rem 0;">
+                    <link rel="stylesheet" type="text/css" href="/libs/share/css/share.min.css">
+<div id="article-share">
+
+    
+    <div class="social-share" data-sites="twitter,facebook,google,qq,qzone,wechat,weibo,douban,linkedin" data-wechat-qrcode-helper="<p>微信扫一扫即可分享！</p>"></div>
+    <script src="/libs/share/js/social-share.min.js"></script>
+    
+
+    
+
+</div>
+
+                </div>
+            </div>
+            
+        </div>
+    </div>
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+<article id="prenext-posts" class="prev-next articles">
+    <div class="row article-row">
+        
+        <div class="article col s12 m6" data-aos="fade-up">
+            <div class="article-badge left-badge text-color">
+                <i class="fas fa-chevron-left"></i>&nbsp;上一篇</div>
+            <div class="card">
+                <a href="/2022/01/04/bing-fa-bian-cheng/chang-jian-de-bing-fa-gong-ju-de-shi-yong-he-yuan-li-5/">
+                    <div class="card-image">
+                        
+                        
+                        <img src="/medias/featureimages/14.jpg" class="responsive-img" alt="常见的并发工具的使用和原理(5)">
+                        
+                        <span class="card-title">常见的并发工具的使用和原理(5)</span>
+                    </div>
+                </a>
+                <div class="card-content article-content">
+                    <div class="summary block-with-text">
+                        
+                            
+                        
+                    </div>
+                    <div class="publish-info">
+                        <span class="publish-date">
+                            <i class="far fa-clock fa-fw icon-date"></i>2022-01-04
+                        </span>
+                        <span class="publish-author">
+                            
+                            <i class="fas fa-bookmark fa-fw icon-category"></i>
+                            
+                            <a href="/categories/%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B/" class="post-category">
+                                    并发编程
+                                </a>
+                            
+                            <a href="/categories/%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B/%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B/" class="post-category">
+                                    并发编程
+                                </a>
+                            
+                            
+                        </span>
+                    </div>
+                </div>
+                
+            </div>
+        </div>
+        
+        
+        <div class="article col s12 m6" data-aos="fade-up">
+            <div class="article-badge right-badge text-color">
+                下一篇&nbsp;<i class="fas fa-chevron-right"></i>
+            </div>
+            <div class="card">
+                <a href="/2022/01/04/gong-ju/jsonpath-de-jie-shao/">
+                    <div class="card-image">
+                        
+                        
+                        <img src="/medias/featureimages/1.jpg" class="responsive-img" alt="jsonpath的介绍">
+                        
+                        <span class="card-title">jsonpath的介绍</span>
+                    </div>
+                </a>
+                <div class="card-content article-content">
+                    <div class="summary block-with-text">
+                        
+                            
+                        
+                    </div>
+                    <div class="publish-info">
+                            <span class="publish-date">
+                                <i class="far fa-clock fa-fw icon-date"></i>2022-01-04
+                            </span>
+                        <span class="publish-author">
+                            
+                            <i class="fas fa-bookmark fa-fw icon-category"></i>
+                            
+                            <a href="/categories/%E5%B7%A5%E5%85%B7/" class="post-category">
+                                    工具
+                                </a>
+                            
+                            <a href="/categories/%E5%B7%A5%E5%85%B7/%E5%B7%A5%E5%85%B7/" class="post-category">
+                                    工具
+                                </a>
+                            
+                            
+                        </span>
+                    </div>
+                </div>
+                
+            </div>
+        </div>
+        
+    </div>
+</article>
+
+</div>
+
+
+
+<!-- 代码块功能依赖 -->
+<script type="text/javascript" src="/libs/codeBlock/codeBlockFuction.js"></script>
+
+<!-- 代码语言 -->
+
+<script type="text/javascript" src="/libs/codeBlock/codeLang.js"></script>
+
+
+<!-- 代码块复制 -->
+
+<script type="text/javascript" src="/libs/codeBlock/codeCopy.js"></script>
+
+
+<!-- 代码块收缩 -->
+
+<script type="text/javascript" src="/libs/codeBlock/codeShrink.js"></script>
+
+
+    </div>
+    <div id="toc-aside" class="expanded col l3 hide-on-med-and-down">
+        <div class="toc-widget card" style="background-color: white;">
+            <div class="toc-title"><i class="far fa-list-alt"></i>&nbsp;&nbsp;目录</div>
+            <div id="toc-content"></div>
+        </div>
+    </div>
+</div>
+
+<!-- TOC 悬浮按钮. -->
+
+<div id="floating-toc-btn" class="hide-on-med-and-down">
+    <a class="btn-floating btn-large bg-color">
+        <i class="fas fa-list-ul"></i>
+    </a>
+</div>
+
+
+<script src="/libs/tocbot/tocbot.min.js"></script>
+<script>
+    $(function () {
+        tocbot.init({
+            tocSelector: '#toc-content',
+            contentSelector: '#articleContent',
+            headingsOffset: -($(window).height() * 0.4 - 45),
+            collapseDepth: Number('0'),
+            headingSelector: 'h2, h3, h4'
+        });
+
+        // modify the toc link href to support Chinese.
+        let i = 0;
+        let tocHeading = 'toc-heading-';
+        $('#toc-content a').each(function () {
+            $(this).attr('href', '#' + tocHeading + (++i));
+        });
+
+        // modify the heading title id to support Chinese.
+        i = 0;
+        $('#articleContent').children('h2, h3, h4').each(function () {
+            $(this).attr('id', tocHeading + (++i));
+        });
+
+        // Set scroll toc fixed.
+        let tocHeight = parseInt($(window).height() * 0.4 - 64);
+        let $tocWidget = $('.toc-widget');
+        $(window).scroll(function () {
+            let scroll = $(window).scrollTop();
+            /* add post toc fixed. */
+            if (scroll > tocHeight) {
+                $tocWidget.addClass('toc-fixed');
+            } else {
+                $tocWidget.removeClass('toc-fixed');
+            }
+        });
+
+        
+        /* 修复文章卡片 div 的宽度. */
+        let fixPostCardWidth = function (srcId, targetId) {
+            let srcDiv = $('#' + srcId);
+            if (srcDiv.length === 0) {
+                return;
+            }
+
+            let w = srcDiv.width();
+            if (w >= 450) {
+                w = w + 21;
+            } else if (w >= 350 && w < 450) {
+                w = w + 18;
+            } else if (w >= 300 && w < 350) {
+                w = w + 16;
+            } else {
+                w = w + 14;
+            }
+            $('#' + targetId).width(w);
+        };
+
+        // 切换TOC目录展开收缩的相关操作.
+        const expandedClass = 'expanded';
+        let $tocAside = $('#toc-aside');
+        let $mainContent = $('#main-content');
+        $('#floating-toc-btn .btn-floating').click(function () {
+            if ($tocAside.hasClass(expandedClass)) {
+                $tocAside.removeClass(expandedClass).hide();
+                $mainContent.removeClass('l9');
+            } else {
+                $tocAside.addClass(expandedClass).show();
+                $mainContent.addClass('l9');
+            }
+            fixPostCardWidth('artDetail', 'prenext-posts');
+        });
+        
+    });
+</script>
+
+    
+
+</main>
+
+
+
+
+    <footer class="page-footer bg-color">
+    
+        <link rel="stylesheet" href="/libs/aplayer/APlayer.min.css">
+<style>
+    .aplayer .aplayer-lrc p {
+        
+        display: none;
+        
+        font-size: 12px;
+        font-weight: 700;
+        line-height: 16px !important;
+    }
+
+    .aplayer .aplayer-lrc p.aplayer-lrc-current {
+        
+        display: none;
+        
+        font-size: 15px;
+        color: #42b983;
+    }
+
+    
+    .aplayer.aplayer-fixed.aplayer-narrow .aplayer-body {
+        left: -66px !important;
+    }
+
+    .aplayer.aplayer-fixed.aplayer-narrow .aplayer-body:hover {
+        left: 0px !important;
+    }
+
+    
+</style>
+<div class="">
+    
+    <div class="row">
+        <meting-js class="col l8 offset-l2 m10 offset-m1 s12"
+                   server="netease"
+                   type="playlist"
+                   id="503838841"
+                   fixed='true'
+                   autoplay='false'
+                   theme='#42b983'
+                   loop='all'
+                   order='random'
+                   preload='auto'
+                   volume='0.7'
+                   list-folded='true'
+        >
+        </meting-js>
+    </div>
+</div>
+
+<script src="/libs/aplayer/APlayer.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/meting@2/dist/Meting.min.js"></script>
+
+    
+
+    <div class="container row center-align"
+         style="margin-bottom: 0px !important;">
+        <div class="col s12 m8 l8 copy-right">
+            Copyright&nbsp;&copy;
+            
+                <span id="year">2019-2022</span>
+            
+            <a href="/about" target="_blank">luyanan</a>
+            |&nbsp;Powered by&nbsp;<a href="https://hexo.io/" target="_blank">Hexo</a>
+            |&nbsp;Theme&nbsp;<a href="https://github.com/blinkfox/hexo-theme-matery" target="_blank">Matery</a>
+            <br>
+            
+                &nbsp;<i class="fas fa-chart-area"></i>&nbsp;站点总字数:&nbsp;<span
+                        class="white-color">803.3k</span>
+            
+            
+            
+                
+            
+            
+                <span id="busuanzi_container_site_pv">
+                &nbsp;|&nbsp;<i class="far fa-eye"></i>&nbsp;总访问量:&nbsp;
+                    <span id="busuanzi_value_site_pv" class="white-color"></span>
+            </span>
+            
+            
+                <span id="busuanzi_container_site_uv">
+                &nbsp;|&nbsp;<i class="fas fa-users"></i>&nbsp;总访问人数:&nbsp;
+                    <span id="busuanzi_value_site_uv" class="white-color"></span>
+            </span>
+            
+            <br>
+
+            <!-- 运行天数提醒. -->
+            
+            <br>
+            
+        </div>
+        <div class="col s12 m4 l4 social-link social-statis">
+    <a href="https://github.com/rainsoil" class="tooltipped" target="_blank" data-tooltip="访问我的GitHub" data-position="top" data-delay="50">
+        <i class="fab fa-github"></i>
+    </a>
+
+
+
+    <a href="mailto:luyanan0718@163.com" class="tooltipped" target="_blank" data-tooltip="邮件联系我" data-position="top" data-delay="50">
+        <i class="fas fa-envelope-open"></i>
+    </a>
+
+
+
+
+
+
+
+    <a href="tencent://AddContact/?fromId=50&fromSubId=1&subcmd=all&uin=914596513" class="tooltipped" target="_blank" data-tooltip="QQ联系我: 914596513" data-position="top" data-delay="50">
+        <i class="fab fa-qq"></i>
+    </a>
+
+
+
+
+
+
+
+    <a href="/atom.xml" class="tooltipped" target="_blank" data-tooltip="RSS 订阅" data-position="top" data-delay="50">
+        <i class="fas fa-rss"></i>
+    </a>
+
+</div>
+    </div>
+</footer>
+
+<div class="progress-bar"></div>
+
+
+    <!-- 搜索遮罩框 -->
+<div id="searchModal" class="modal">
+    <div class="modal-content">
+        <div class="search-header">
+            <span class="title"><i class="fas fa-search"></i>&nbsp;&nbsp;搜索</span>
+            <input type="search" id="searchInput" name="s" placeholder="请输入搜索的关键字"
+                   class="search-input">
+        </div>
+        <div id="searchResult"></div>
+    </div>
+</div>
+
+<script type="text/javascript">
+$(function () {
+    var searchFunc = function (path, search_id, content_id) {
+        'use strict';
+        $.ajax({
+            url: path,
+            dataType: "xml",
+            success: function (xmlResponse) {
+                // get the contents from search data
+                var datas = $("entry", xmlResponse).map(function () {
+                    return {
+                        title: $("title", this).text(),
+                        content: $("content", this).text(),
+                        url: $("url", this).text()
+                    };
+                }).get();
+                var $input = document.getElementById(search_id);
+                var $resultContent = document.getElementById(content_id);
+                $input.addEventListener('input', function () {
+                    var str = '<ul class=\"search-result-list\">';
+                    var keywords = this.value.trim().toLowerCase().split(/[\s\-]+/);
+                    $resultContent.innerHTML = "";
+                    if (this.value.trim().length <= 0) {
+                        return;
+                    }
+                    // perform local searching
+                    datas.forEach(function (data) {
+                        var isMatch = true;
+                        var data_title = data.title.trim().toLowerCase();
+                        var data_content = data.content.trim().replace(/<[^>]+>/g, "").toLowerCase();
+                        var data_url = data.url;
+                        data_url = data_url.indexOf('/') === 0 ? data.url : '/' + data_url;
+                        var index_title = -1;
+                        var index_content = -1;
+                        var first_occur = -1;
+                        // only match artiles with not empty titles and contents
+                        if (data_title !== '' && data_content !== '') {
+                            keywords.forEach(function (keyword, i) {
+                                index_title = data_title.indexOf(keyword);
+                                index_content = data_content.indexOf(keyword);
+                                if (index_title < 0 && index_content < 0) {
+                                    isMatch = false;
+                                } else {
+                                    if (index_content < 0) {
+                                        index_content = 0;
+                                    }
+                                    if (i === 0) {
+                                        first_occur = index_content;
+                                    }
+                                }
+                            });
+                        }
+                        // show search results
+                        if (isMatch) {
+                            str += "<li><a href='" + data_url + "' class='search-result-title'>" + data_title + "</a>";
+                            var content = data.content.trim().replace(/<[^>]+>/g, "");
+                            if (first_occur >= 0) {
+                                // cut out 100 characters
+                                var start = first_occur - 20;
+                                var end = first_occur + 80;
+                                if (start < 0) {
+                                    start = 0;
+                                }
+                                if (start === 0) {
+                                    end = 100;
+                                }
+                                if (end > content.length) {
+                                    end = content.length;
+                                }
+                                var match_content = content.substr(start, end);
+                                // highlight all keywords
+                                keywords.forEach(function (keyword) {
+                                    var regS = new RegExp(keyword, "gi");
+                                    match_content = match_content.replace(regS, "<em class=\"search-keyword\">" + keyword + "</em>");
+                                });
+
+                                str += "<p class=\"search-result\">" + match_content + "...</p>"
+                            }
+                            str += "</li>";
+                        }
+                    });
+                    str += "</ul>";
+                    $resultContent.innerHTML = str;
+                });
+            }
+        });
+    };
+
+    searchFunc('/search.xml', 'searchInput', 'searchResult');
+});
+</script>
+
+    <!-- 回到顶部按钮 -->
+<div id="backTop" class="top-scroll">
+    <a class="btn-floating btn-large waves-effect waves-light" href="#!">
+        <i class="fas fa-arrow-up"></i>
+    </a>
+</div>
+
+
+    <script src="/libs/materialize/materialize.min.js"></script>
+    <script src="/libs/masonry/masonry.pkgd.min.js"></script>
+    <script src="/libs/aos/aos.js"></script>
+    <script src="/libs/scrollprogress/scrollProgress.min.js"></script>
+    <script src="/libs/lightGallery/js/lightgallery-all.min.js"></script>
+    <script src="/js/matery.js"></script>
+
+    
+
+    
+
+    <!-- 雪花特效 -->
+    
+
+    <!-- 鼠标星星特效 -->
+    
+
+    <!-- Baidu Analytics -->
+
+    <!-- Baidu Push -->
+
+<script>
+    (function () {
+        var bp = document.createElement('script');
+        var curProtocol = window.location.protocol.split(':')[0];
+        if (curProtocol === 'https') {
+            bp.src = 'https://zz.bdstatic.com/linksubmit/push.js';
+        } else {
+            bp.src = 'http://push.zhanzhang.baidu.com/push.js';
+        }
+        var s = document.getElementsByTagName("script")[0];
+        s.parentNode.insertBefore(bp, s);
+    })();
+</script>
+
+    
+    <script src="/libs/others/clicklove.js" async="async"></script>
+    
+    
+    <script async src="/libs/others/busuanzi.pure.mini.js"></script>
+    
+
+    
+
+    
+
+    <!--腾讯兔小巢-->
+    
+    
+    <script type="text/javascript" color="0,0,255"
+        pointColor="0,0,255" opacity='0.7'
+        zIndex="-1" count="99"
+        src="/libs/background/canvas-nest.js"></script>
+    
+
+    
+
+    
+
+    
+    <script src="/libs/instantpage/instantpage.js" type="module"></script>
+    
+
+</body>
+
+</html>

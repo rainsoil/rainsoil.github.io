@@ -1,0 +1,1330 @@
+<!DOCTYPE HTML>
+<html lang="zh-CN">
+
+
+<head>
+    <meta charset="utf-8">
+    <meta name="keywords" content="Mybatis与Spring整合分析(4), railsoil">
+    <meta name="description" content="4. Mybatis于Spring 整合分析
+与 Spring 整合分析http://www.mybatis.org/spring/zh/index.html这里我们以传统的Spring为例,因为配置更加直观,在Spring中使用配置注册是">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="renderer" content="webkit|ie-stand|ie-comp">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="format-detection" content="telephone=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="referrer" content="no-referrer-when-downgrade">
+    <!-- Global site tag (gtag.js) - Google Analytics -->
+
+
+    <title>Mybatis与Spring整合分析(4) | railsoil</title>
+    <link rel="icon" type="image/png" href="/favicon.png">
+
+    <link rel="stylesheet" type="text/css" href="/libs/awesome/css/all.min.css">
+    <link rel="stylesheet" type="text/css" href="/libs/materialize/materialize.min.css">
+    <link rel="stylesheet" type="text/css" href="/libs/aos/aos.css">
+    <link rel="stylesheet" type="text/css" href="/libs/animate/animate.min.css">
+    <link rel="stylesheet" type="text/css" href="/libs/lightGallery/css/lightgallery.min.css">
+    <link rel="stylesheet" type="text/css" href="/css/matery.css">
+    <link rel="stylesheet" type="text/css" href="/css/my.css">
+
+    <script src="/libs/jquery/jquery.min.js"></script>
+
+<meta name="generator" content="Hexo 5.4.0"><link rel="alternate" href="/atom.xml" title="railsoil" type="application/atom+xml">
+<link rel="stylesheet" href="/css/prism-tomorrow.css" type="text/css"></head>
+
+
+
+
+<body>
+    <header class="navbar-fixed">
+    <nav id="headNav" class="bg-color nav-transparent">
+        <div id="navContainer" class="nav-wrapper container">
+            <div class="brand-logo">
+                <a href="/" class="waves-effect waves-light">
+                    
+                    <img src="/medias/logo.png" class="logo-img" alt="LOGO">
+                    
+                    <span class="logo-span">railsoil</span>
+                </a>
+            </div>
+            
+
+<a href="#" data-target="mobile-nav" class="sidenav-trigger button-collapse"><i class="fas fa-bars"></i></a>
+<ul class="right nav-menu">
+  
+  <li class="hide-on-med-and-down nav-item">
+    
+    <a href="/" class="waves-effect waves-light">
+      
+      <i class="fas fa-home" style="zoom: 0.6;"></i>
+      
+      <span>首页</span>
+    </a>
+    
+  </li>
+  
+  <li class="hide-on-med-and-down nav-item">
+    
+    <a href="/tags" class="waves-effect waves-light">
+      
+      <i class="fas fa-tags" style="zoom: 0.6;"></i>
+      
+      <span>标签</span>
+    </a>
+    
+  </li>
+  
+  <li class="hide-on-med-and-down nav-item">
+    
+    <a href="/categories" class="waves-effect waves-light">
+      
+      <i class="fas fa-bookmark" style="zoom: 0.6;"></i>
+      
+      <span>分类</span>
+    </a>
+    
+  </li>
+  
+  <li class="hide-on-med-and-down nav-item">
+    
+    <a href="/archives" class="waves-effect waves-light">
+      
+      <i class="fas fa-archive" style="zoom: 0.6;"></i>
+      
+      <span>归档</span>
+    </a>
+    
+  </li>
+  
+  <li class="hide-on-med-and-down nav-item">
+    
+    <a href="/about" class="waves-effect waves-light">
+      
+      <i class="fas fa-user-circle" style="zoom: 0.6;"></i>
+      
+      <span>关于</span>
+    </a>
+    
+  </li>
+  
+  <li>
+    <a href="#searchModal" class="modal-trigger waves-effect waves-light">
+      <i id="searchIcon" class="fas fa-search" title="搜索" style="zoom: 0.85;"></i>
+    </a>
+  </li>
+</ul>
+
+
+<div id="mobile-nav" class="side-nav sidenav">
+
+    <div class="mobile-head bg-color">
+        
+        <img src="/medias/logo.png" class="logo-img circle responsive-img">
+        
+        <div class="logo-name">railsoil</div>
+        <div class="logo-desc">
+            
+            Never really desperate, only the lost of the soul.
+            
+        </div>
+    </div>
+
+    <ul class="menu-list mobile-menu-list">
+        
+        <li class="m-nav-item">
+	  
+		<a href="/" class="waves-effect waves-light">
+			
+			    <i class="fa-fw fas fa-home"></i>
+			
+			首页
+		</a>
+          
+        </li>
+        
+        <li class="m-nav-item">
+	  
+		<a href="/tags" class="waves-effect waves-light">
+			
+			    <i class="fa-fw fas fa-tags"></i>
+			
+			标签
+		</a>
+          
+        </li>
+        
+        <li class="m-nav-item">
+	  
+		<a href="/categories" class="waves-effect waves-light">
+			
+			    <i class="fa-fw fas fa-bookmark"></i>
+			
+			分类
+		</a>
+          
+        </li>
+        
+        <li class="m-nav-item">
+	  
+		<a href="/archives" class="waves-effect waves-light">
+			
+			    <i class="fa-fw fas fa-archive"></i>
+			
+			归档
+		</a>
+          
+        </li>
+        
+        <li class="m-nav-item">
+	  
+		<a href="/about" class="waves-effect waves-light">
+			
+			    <i class="fa-fw fas fa-user-circle"></i>
+			
+			关于
+		</a>
+          
+        </li>
+        
+        
+    </ul>
+</div>
+
+
+        </div>
+
+        
+    </nav>
+
+</header>
+
+    
+
+
+
+<div class="bg-cover pd-header post-cover" style="background-image: url('/medias/featureimages/15.jpg')">
+    <div class="container" style="right: 0px;left: 0px;">
+        <div class="row">
+            <div class="col s12 m12 l12">
+                <div class="brand">
+                    <h1 class="description center-align post-title">Mybatis与Spring整合分析(4)</h1>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+
+<main class="post-container content">
+
+    
+    <link rel="stylesheet" href="/libs/tocbot/tocbot.css">
+<style>
+    #articleContent h1::before,
+    #articleContent h2::before,
+    #articleContent h3::before,
+    #articleContent h4::before,
+    #articleContent h5::before,
+    #articleContent h6::before {
+        display: block;
+        content: " ";
+        height: 100px;
+        margin-top: -100px;
+        visibility: hidden;
+    }
+
+    #articleContent :focus {
+        outline: none;
+    }
+
+    .toc-fixed {
+        position: fixed;
+        top: 64px;
+    }
+
+    .toc-widget {
+        width: 345px;
+        padding-left: 20px;
+    }
+
+    .toc-widget .toc-title {
+        padding: 35px 0 15px 17px;
+        font-size: 1.5rem;
+        font-weight: bold;
+        line-height: 1.5rem;
+    }
+
+    .toc-widget ol {
+        padding: 0;
+        list-style: none;
+    }
+
+    #toc-content {
+        padding-bottom: 30px;
+        overflow: auto;
+    }
+
+    #toc-content ol {
+        padding-left: 10px;
+    }
+
+    #toc-content ol li {
+        padding-left: 10px;
+    }
+
+    #toc-content .toc-link:hover {
+        color: #42b983;
+        font-weight: 700;
+        text-decoration: underline;
+    }
+
+    #toc-content .toc-link::before {
+        background-color: transparent;
+        max-height: 25px;
+
+        position: absolute;
+        right: 23.5vw;
+        display: block;
+    }
+
+    #toc-content .is-active-link {
+        color: #42b983;
+    }
+
+    #floating-toc-btn {
+        position: fixed;
+        right: 15px;
+        bottom: 76px;
+        padding-top: 15px;
+        margin-bottom: 0;
+        z-index: 998;
+    }
+
+    #floating-toc-btn .btn-floating {
+        width: 48px;
+        height: 48px;
+    }
+
+    #floating-toc-btn .btn-floating i {
+        line-height: 48px;
+        font-size: 1.4rem;
+    }
+</style>
+<div class="row">
+    <div id="main-content" class="col s12 m12 l9">
+        <!-- 文章内容详情 -->
+<div id="artDetail">
+    <div class="card">
+        <div class="card-content article-info">
+            <div class="row tag-cate">
+                <div class="col s7">
+                    
+                          <div class="article-tag">
+                            <span class="chip bg-color">无标签</span>
+                          </div>
+                    
+                </div>
+                <div class="col s5 right-align">
+                    
+                    <div class="post-cate">
+                        <i class="fas fa-bookmark fa-fw icon-category"></i>
+                        
+                            <a href="/categories/mybatis/" class="post-category">
+                                mybatis
+                            </a>
+                        
+                            <a href="/categories/mybatis/mybatis/" class="post-category">
+                                mybatis
+                            </a>
+                        
+                    </div>
+                    
+                </div>
+            </div>
+
+            <div class="post-info">
+                
+                <div class="post-date info-break-policy">
+                    <i class="far fa-calendar-minus fa-fw"></i>发布日期:&nbsp;&nbsp;
+                    2022-01-04
+                </div>
+                
+
+                
+
+                
+                <div class="info-break-policy">
+                    <i class="far fa-file-word fa-fw"></i>文章字数:&nbsp;&nbsp;
+                    3.4k
+                </div>
+                
+
+                
+                <div class="info-break-policy">
+                    <i class="far fa-clock fa-fw"></i>阅读时长:&nbsp;&nbsp;
+                    13 分
+                </div>
+                
+
+                
+                    <div id="busuanzi_container_page_pv" class="info-break-policy">
+                        <i class="far fa-eye fa-fw"></i>阅读次数:&nbsp;&nbsp;
+                        <span id="busuanzi_value_page_pv"></span>
+                    </div>
+				
+            </div>
+        </div>
+        <hr class="clearfix">
+
+        
+
+        
+
+        <div class="card-content article-card-content">
+            <div id="articleContent">
+                <h1 id="4-Mybatis于Spring-整合分析"><a href="#4-Mybatis于Spring-整合分析" class="headerlink" title="4. Mybatis于Spring 整合分析"></a>4. Mybatis于Spring 整合分析</h1><hr>
+<h4 id="与-Spring-整合分析"><a href="#与-Spring-整合分析" class="headerlink" title="与 Spring 整合分析"></a>与 Spring 整合分析</h4><p><a target="_blank" rel="noopener" href="http://www.mybatis.org/spring/zh/index.html">http://www.mybatis.org/spring/zh/index.html</a><br>这里我们以传统的Spring为例,因为配置更加直观,在Spring中使用配置注册是一样的.</p>
+<p>在前面,我们基于编程式的工程已经弄清楚了Mybatis的工作流程,核心模块和底层原理。编程式的工作,也就是Mybatis的原声API 里面有三个核心对象: SqlSessionFacyory,SqlSession,MapperProxy.</p>
+<p>大部分我们不会在项目中单独使用Mybatis的工程,而是继承到Spring、中使用,但是却没有看到这三个对象在代理中出现.我们都是直接注入了一个Mapper接口,调用它的方法.</p>
+<p>所以有几个关键的对象,我们要弄清楚:</p>
+<ol>
+<li>SqlSessionFactory 是什么时候创建的?</li>
+<li>SqlSession 去哪里了?为什么不用他来getMapper ？</li>
+<li>为什么@Autowired 注入一个接口,在使用的时候却变成了代理对象?在IOC 的容器中我们注入的是什么?注入的时候发生了什么事情?<h4 id="关键配置"><a href="#关键配置" class="headerlink" title="关键配置"></a>关键配置</h4></li>
+</ol>
+<p>我们先看一下把Mybatis集成到Spring 要做的几件事情。</p>
+<p>为了让大家看起来更加直观,我们使用传统的XML 配置给大家做讲解,当然使用配置类@Configuration 效果是一样的,对于Spring来说只是解析的方式的差异.</p>
+<p>除了Mybatis的依赖之外,我们还需要在pom.xml 里面加入Mybatis和Spring整合的jar(注意版本:mybatis 的版本和 mybatis-spring 的版本有兼容关系)</p>
+<pre class=" language-xml"><code class="language-xml"><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>dependency</span><span class="token punctuation">></span></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>groupId</span><span class="token punctuation">></span></span>org.mybatis<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>groupId</span><span class="token punctuation">></span></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>artifactId</span><span class="token punctuation">></span></span>mybatis-spring<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>artifactId</span><span class="token punctuation">></span></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>version</span><span class="token punctuation">></span></span>2.0.0<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>version</span><span class="token punctuation">></span></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>dependency</span><span class="token punctuation">></span></span>
+</code></pre>
+<p>然后在Spring的ApplicationContext.xml里面配置SqlSessionFactoryBean,它是用来帮助我们创建会话的,其中还要指定全局配置文件和Mapper映射器文件的路径.</p>
+<pre class=" language-xml"><code class="language-xml"><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>bean</span> <span class="token attr-name">id</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>sqlSessionFactory<span class="token punctuation">"</span></span> <span class="token attr-name">class</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>org.mybatis.spring.SqlSessionFactoryBean<span class="token punctuation">"</span></span><span class="token punctuation">></span></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>property</span> <span class="token attr-name">name</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>configLocation<span class="token punctuation">"</span></span> <span class="token attr-name">value</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>classpath:mybatis-config.xml<span class="token punctuation">"</span></span><span class="token punctuation">></span></span><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>property</span><span class="token punctuation">></span></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>property</span> <span class="token attr-name">name</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>mapperLocations<span class="token punctuation">"</span></span> <span class="token attr-name">value</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>classpath:mapper/*.xml<span class="token punctuation">"</span></span><span class="token punctuation">></span></span><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>property</span><span class="token punctuation">></span></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>property</span> <span class="token attr-name">name</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>dataSource<span class="token punctuation">"</span></span> <span class="token attr-name">ref</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>dataSource<span class="token punctuation">"</span></span><span class="token punctuation">/></span></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>bean</span><span class="token punctuation">></span></span>
+</code></pre>
+<p>然后在appcalitionContext.xml 配置需要扫描Mapper接口的路径</p>
+<p>在Mybatis中有几种配置方式.一种是配置一个MapperScannerConfigurer</p>
+<pre class=" language-xml"><code class="language-xml"><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>bean</span> <span class="token attr-name">id</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>mapperScanner<span class="token punctuation">"</span></span> <span class="token attr-name">class</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>org.mybatis.spring.mapper.MapperScannerConfigurer<span class="token punctuation">"</span></span><span class="token punctuation">></span></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>property</span> <span class="token attr-name">name</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>basePackage<span class="token punctuation">"</span></span> <span class="token attr-name">value</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>com.crud.dao<span class="token punctuation">"</span></span><span class="token punctuation">/></span></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>bean</span><span class="token punctuation">></span></span>
+</code></pre>
+<p>另一种是配置一个<scan>标签</p>
+<pre class=" language-xml"><code class="language-xml"><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span><span class="token namespace">mybatis-spring:</span>scan</span> <span class="token attr-name">base-package</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>com.crud.dao<span class="token punctuation">"</span></span><span class="token punctuation">/></span></span>
+</code></pre>
+<p>还有一种是直接用@MapperScan 注解,比如我们在Spring Boot的主启动类上 添加上一个注解</p>
+<pre class=" language-java"><code class="language-java"><span class="token annotation punctuation">@SpringBootApplication</span>
+<span class="token annotation punctuation">@MapperScan</span><span class="token punctuation">(</span><span class="token string">"com.crud.dao"</span><span class="token punctuation">)</span>
+<span class="token keyword">public</span> <span class="token keyword">class</span> <span class="token class-name">MybaitsApp</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+<span class="token keyword">public</span> <span class="token keyword">static</span> <span class="token keyword">void</span> <span class="token function">main</span><span class="token punctuation">(</span>String<span class="token punctuation">[</span><span class="token punctuation">]</span> args<span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+SpringApplication<span class="token punctuation">.</span><span class="token function">run</span><span class="token punctuation">(</span>MybaitsApp<span class="token punctuation">.</span><span class="token keyword">class</span><span class="token punctuation">,</span> args<span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+<span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+</code></pre>
+<p>这三种方式的实现效果是一样的.</p>
+<h3 id="1-创建会话工厂"><a href="#1-创建会话工厂" class="headerlink" title="1. 创建会话工厂"></a>1. 创建会话工厂</h3><p>Spring对Mybatis的对象进行了管理,但是并不会直接替换Mybatis的核心对象,也就是意味着: Mybatis包里的 SqlSessionFactory,SqlSession,MapperProxy 这些都会用到,而mybatis-spring.jar 里面的类只是做了一些包装和桥梁的工作.</p>
+<p>所以 第一步,我们看一下在Spring中,工厂类是怎么创建的?</p>
+<p>我们在Spring的配置文件里面配置了一个SqlSessionFactoryBean,我们来看一下这个类<br><img src="http://files.luyanan.com/47afadcb-a962-477e-add9-13d6cb117cce.jpg" alt="image"></p>
+<p>它实现了InitialzingBean接口,所以要实现afterPropertiesSet() 方法,这个方法会在Bean属性值设置完成 的时候调用.</p>
+<p>另外它实现了FactoryBean 接口,所以它初始化的时候,实际上是调用getObject() 方法,它里面调用的也是afterPropertiesSet() 方法.</p>
+<p>在afterPropertiesSet() 方法里面</p>
+<p>第一步是一些标签属性的检查,接下来是调用 buildSqlSessionFactory() 方法.</p>
+<p>然后定义了一个Configuration, 叫做targetConfiguration </p>
+<p>426行,判断Configuration 对象是否存在,也就是是否已经解析过,如果已经有对象,那就覆盖一下属性.</p>
+<p>433行,如果Configuration 不存在,但是配置了 configLocation属性,就会根据mybatis-config.xml 的文件路径,构建一个xmlConfiuration对象.</p>
+<p>436行,否则,Configuration 对象不存在,configLocation 路径也没有,只能使用默认的属性去构建给configurationProperties 赋值.</p>
+<p>  后面就是基于当前factory 对象里面的已有的属性,对targetConfiguration 对象里面的属性赋值.</p>
+<pre class=" language-java"><code class="language-java">Optional<span class="token punctuation">.</span><span class="token function">ofNullable</span><span class="token punctuation">(</span><span class="token keyword">this</span><span class="token punctuation">.</span>objectFactory<span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">ifPresent</span><span class="token punctuation">(</span>targetConfiguration<span class="token operator">:</span><span class="token operator">:</span>setObjectFactory<span class="token punctuation">)</span><span class="token punctuation">;</span>
+</code></pre>
+<p>这个方法是JAVA8里面判空的方法,如果不为空的话,就会调用对象里面的对象的方法,做赋值的处理。</p>
+<p>在498行,如果xmlConfigurationBuilder 不为空,也就是上面的第二种情况了,调用了xmlConfigurationBuilder.parse()去解析配置文件,最终会返回解析好的Configuration 对象.</p>
+<p>在第507行,如果没有明确的指定事务工厂,默认使用SpringManagedTransactionFactory,它创建的SpringManagedTransaction 也有getConnection 和close 方法.</p>
+<pre class=" language-xml"><code class="language-xml"><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>property</span> <span class="token attr-name">name</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>transactionFactory<span class="token punctuation">"</span></span> <span class="token attr-name">value</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span><span class="token punctuation">"</span></span> <span class="token punctuation">/></span></span>
+</code></pre>
+<p>在502行,调用 xmlMapperBuilder.parse(),这个步骤我们之前了解过,它的作用的把接口和对用的MapperProxyFactory 注册到MapperRegistry 中.</p>
+<p>最后调用的是sqlSessionFactoryBuilder.build()  返回了一个 DefaultSqlSessionFactory.</p>
+<p>OK.我们在这里完成了编程式的案例中的第一步,根据配置文件获取工厂类,它是单例的,会在后来用来创建SqlSession </p>
+<p>用到的Spring 扩展点总结</p>
+<table>
+<thead>
+<tr>
+<th>接口</th>
+<th>方法</th>
+<th>作用</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>FactoryBean</td>
+<td>getObject()</td>
+<td>返回由FactoryBean创建的Bean实例</td>
+</tr>
+<tr>
+<td>InitializingBean</td>
+<td>afterPropertiesSet()</td>
+<td>bean 属性初始化完成后添加操作</td>
+</tr>
+<tr>
+<td>BeanDefinitionRegistryPostProicessor</td>
+<td>postProcessBeanDefinitionRegistry()</td>
+<td>注入BeanFinition时添加操作.</td>
+</tr>
+</tbody></table>
+<h3 id="2-创建SqlSession"><a href="#2-创建SqlSession" class="headerlink" title="2.  创建SqlSession"></a>2.  创建SqlSession</h3><h4 id="Q1-可以直接使用DefaultSqlSession吗？"><a href="#Q1-可以直接使用DefaultSqlSession吗？" class="headerlink" title="Q1: 可以直接使用DefaultSqlSession吗？"></a>Q1: 可以直接使用DefaultSqlSession吗？</h4><p> 我们现在已经有了一个DefaultSqpSessionFactory,按照编程式的开发过程,我们接下来就会创建一个SqlSession的实现类,但是在Spring中,我们不是直接使用DefaultSqlSession的,而是对她进行了一个封装,这个SqlSession的实现类就是SqlSessionTemplate.这个跟spring封装其他的组件也是一样的.比如jdbcTemplate,RedisTemplate等等,也是Spring跟Mybatis最关键的类.</p>
+<p> 为什么不用DefaultSqlSession? 它是线程不安全的,注意查看类的注解?</p>
+<pre><code>Note that this class is not Thread-Safe. 而 SqlSessionTemplate 
+</code></pre>
+<p> 而SqlSessionTemplate 是线程安全的.</p>
+<pre><code>* Thread safe, Spring managed, &#123;@code SqlSession&#125; that works with Spring
+</code></pre>
+<p>回顾一下SqlSession的生命周期</p>
+<table>
+<thead>
+<tr>
+<th>对象</th>
+<th>生命周期</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>SqlSessionFactoryBuilder</td>
+<td>方法局部(method)</td>
+</tr>
+<tr>
+<td>SqlSessionFactory(单例)</td>
+<td>应用级别(application)</td>
+</tr>
+<tr>
+<td>SqlSession</td>
+<td>请求和操作(request/method)</td>
+</tr>
+<tr>
+<td>Mapper</td>
+<td>方法(method)</td>
+</tr>
+</tbody></table>
+<p>在编程式开发中,SqlSession在每次请求的时候创建一个,但是Spring里面只有一个SqlSessionTenplate(默认是单例),多个线程同时调用的时候是怎么保证线程安全的？</p>
+<p>思考: 为什么SqlSessionTemplate 是线程安全的?</p>
+<p>思考:在编程式开发中,有什么方式可以保证SqlSession的线程安全?</p>
+<p>SqlSessionTemplate 里面有DefaultSqlSession的所有方法: selectOne(),selectList(),insert(),update(),delete(),不过它都是通过一个代理对象实现的,这个代理对象在构造方法里面通过一个代理类创建.</p>
+<pre class=" language-java"><code class="language-java"><span class="token keyword">this</span><span class="token punctuation">.</span>sqlSessionProxy <span class="token operator">=</span> <span class="token punctuation">(</span>SqlSession<span class="token punctuation">)</span> <span class="token function">newProxyInstance</span><span class="token punctuation">(</span>
+SqlSessionFactory<span class="token punctuation">.</span><span class="token keyword">class</span><span class="token punctuation">.</span><span class="token function">getClassLoader</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">,</span>
+<span class="token keyword">new</span> <span class="token class-name">Class</span><span class="token punctuation">[</span><span class="token punctuation">]</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span> SqlSession<span class="token punctuation">.</span><span class="token keyword">class</span> <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span><span class="token punctuation">,</span>
+<span class="token keyword">new</span> <span class="token class-name">SqlSessionInterceptor</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+</code></pre>
+<p>所有的方法都会先走到内部类SqlSessionTenplate 的invoke() 方法.</p>
+<pre class=" language-java"><code class="language-java"><span class="token keyword">public</span> Object <span class="token function">invoke</span><span class="token punctuation">(</span>Object proxy<span class="token punctuation">,</span> Method method<span class="token punctuation">,</span> Object<span class="token punctuation">[</span><span class="token punctuation">]</span> args<span class="token punctuation">)</span> <span class="token keyword">throws</span> Throwable <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+SqlSession sqlSession <span class="token operator">=</span> <span class="token function">getSqlSession</span><span class="token punctuation">(</span>
+SqlSessionTemplate<span class="token punctuation">.</span><span class="token keyword">this</span><span class="token punctuation">.</span>sqlSessionFactory<span class="token punctuation">,</span>
+SqlSessionTemplate<span class="token punctuation">.</span><span class="token keyword">this</span><span class="token punctuation">.</span>executorType<span class="token punctuation">,</span>
+SqlSessionTemplate<span class="token punctuation">.</span><span class="token keyword">this</span><span class="token punctuation">.</span>exceptionTranslator<span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token keyword">try</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+Object result <span class="token operator">=</span> method<span class="token punctuation">.</span><span class="token function">invoke</span><span class="token punctuation">(</span>sqlSession<span class="token punctuation">,</span> args<span class="token punctuation">)</span><span class="token punctuation">;</span>
+</code></pre>
+<p> 首先会使用工厂类,执行器类型,异常解析器创建一个SqlSession,然后调用SqlSession的实现类,实际上就是在这里调用了DefaultSqlSession的方法.</p>
+<h4 id="Q2-怎么拿到一个SqlSessionTenplate"><a href="#Q2-怎么拿到一个SqlSessionTenplate" class="headerlink" title="Q2:怎么拿到一个SqlSessionTenplate?"></a>Q2:怎么拿到一个SqlSessionTenplate?</h4><p> 我们直到在Spring中会使用SqlSessionTemplate 替换DefaultSqlSession.那么接下来看一下怎么在DAO层拿到一个SqlSessionTemplate</p>
+<p>  不知道用过Hibernate 的同学还记不记得?如果不使用注入的方式,我们在DAO层注入一个HibernateTemplate的一种方法是什么?</p>
+<p>– 让我们DAO的实现类去继承HibernateDaoSupport</p>
+<p>Mybatis 也一样,它提供了一个SqlSessionSupport,里面持有了一个SqlSessionSupport,里面持有了一个SqlSessionTemplate 对象,并且提供了一个getSqlSession() 方法,让我们获取一个SqlSessionTemplate</p>
+<pre class=" language-java"><code class="language-java"><span class="token keyword">public</span> <span class="token keyword">abstract</span> <span class="token keyword">class</span> <span class="token class-name">SqlSessionDaoSupport</span> <span class="token keyword">extends</span> <span class="token class-name">DaoSupport</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+<span class="token keyword">private</span> SqlSessionTemplate sqlSessionTemplate<span class="token punctuation">;</span>
+<span class="token keyword">public</span> SqlSession <span class="token function">getSqlSession</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+<span class="token keyword">return</span> <span class="token keyword">this</span><span class="token punctuation">.</span>sqlSessionTemplate<span class="token punctuation">;</span>
+<span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+前面和后面省略…………
+</code></pre>
+<p> 也就是说让我们的DAO 层的实现去继承SqlSessionDaoSupport, 就可以获得SqlSessionTemplate,然后在里面封装SqlSessionTemplate 方法.</p>
+<p> 当然,为了减少重复的代码,我们通常不会让我们的实现类去直接继承SqlSessionDaoSupport, 而是先创建一个BaseDao 去继承SqlSessionDaoSupport, 在BaseDao 里面封装对数据库的操作,包括 selectOne(),selectList(),insert(),update(),delete()等这些方法,子类就可以直接调用.</p>
+<pre class=" language-java"><code class="language-java"><span class="token keyword">public</span> <span class="token keyword">class</span> <span class="token class-name">BaseDao</span> <span class="token keyword">extends</span> <span class="token class-name">SqlSessionDaoSupport</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+<span class="token comment" spellcheck="true">//使用 sqlSessionFactory</span>
+<span class="token annotation punctuation">@Autowired</span>
+<span class="token keyword">private</span> SqlSessionFactory sqlSessionFactory<span class="token punctuation">;</span>
+<span class="token annotation punctuation">@Autowired</span>
+<span class="token keyword">public</span> <span class="token keyword">void</span> <span class="token function">setSqlSessionFactory</span><span class="token punctuation">(</span>SqlSessionFactory sqlSessionFactory<span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+<span class="token keyword">super</span><span class="token punctuation">.</span><span class="token function">setSqlSessionFactory</span><span class="token punctuation">(</span>sqlSessionFactory<span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+<span class="token keyword">public</span> Object <span class="token function">selectOne</span><span class="token punctuation">(</span>String statement<span class="token punctuation">,</span> Object parameter<span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+<span class="token keyword">return</span> <span class="token function">getSqlSession</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">selectOne</span><span class="token punctuation">(</span>statement<span class="token punctuation">,</span> parameter<span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+后面省略…………
+</code></pre>
+<p> 然后让我们的实现类去继承BaseDao,并且实现我们的Dao接口,这里就是我们 Mapper接口，实现类上需要加上@Repositor注解</p>
+<p> 在实现类的方法里面,我们可以直接调用父类(BaseDao)封装的selectOne() 方法,那么它最终会调用 sqlSessionTemplate的 selectOne() 方法.</p>
+<pre class=" language-java"><code class="language-java"><span class="token annotation punctuation">@Repository</span>
+<span class="token keyword">public</span> <span class="token keyword">class</span> <span class="token class-name">EmployeeDaoImpl</span> <span class="token keyword">extends</span> <span class="token class-name">BaseDao</span> <span class="token keyword">implements</span> <span class="token class-name">EmployeeMapper</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+<span class="token annotation punctuation">@Override</span>
+<span class="token keyword">public</span> Employee <span class="token function">selectByPrimaryKey</span><span class="token punctuation">(</span>Integer empId<span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+Employee emp <span class="token operator">=</span> <span class="token punctuation">(</span>Employee<span class="token punctuation">)</span>
+<span class="token keyword">this</span><span class="token punctuation">.</span><span class="token function">selectOne</span><span class="token punctuation">(</span><span class="token string">"com.crud.dao.EmployeeMapper.selectByPrimaryKey"</span><span class="token punctuation">,</span>empId<span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token keyword">return</span> emp<span class="token punctuation">;</span>
+<span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+后面省略…………
+</code></pre>
+<p> 然后在需要的地方,比如service层,注入我们的实现类,调用实现类的方法就行了,</p>
+<pre class=" language-java"><code class="language-java"><span class="token annotation punctuation">@Autowired</span>
+EmployeeDaoImpl employeeDao<span class="token punctuation">;</span>
+<span class="token annotation punctuation">@Test</span>
+<span class="token keyword">public</span> <span class="token keyword">void</span> <span class="token function">EmployeeDaoSupportTest</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+System<span class="token punctuation">.</span>out<span class="token punctuation">.</span><span class="token function">println</span><span class="token punctuation">(</span>employeeDao<span class="token punctuation">.</span><span class="token function">selectByPrimaryKey</span><span class="token punctuation">(</span><span class="token number">1</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+</code></pre>
+<p> 最终会调用到DefaultSqlSession 的方法</p>
+<h4 id="Q3-有没有更好的拿到SqlSessionTemplate-的方法"><a href="#Q3-有没有更好的拿到SqlSessionTemplate-的方法" class="headerlink" title="Q3: 有没有更好的拿到SqlSessionTemplate 的方法?"></a>Q3: 有没有更好的拿到SqlSessionTemplate 的方法?</h4><p>这么做有一个问题,我们的每一个DAO 层的接口,如果要拿到一个SqlSesionTemplate 去操作数据库,都要创建实现一个实现类,加上@Repository 注解,j继承BaseDao 这个工作量也不小.</p>
+<p>另外一个,我们去直接调用selectOne 方法,还是出现了Statement ID的硬编码,MapperProxy 我们这里根本没用上.</p>
+<p>我们可以通过什么方式,不创建任何的实现类,就可以Mapper注入到别的地方使用,并且可以拿到SqlSessionTemplate 操作数据库.</p>
+<p>这样也确实我们在Spring中的用法. 那么我们就需要弄清楚,我们只是注入了一个接口,在对象实例化的时候,是怎么拿到SqlSessionTemplate的? 当我们调用方法的时候,还是不是用的MapperProxy ？</p>
+<h3 id="3-接口扫描注册"><a href="#3-接口扫描注册" class="headerlink" title="3. 接口扫描注册"></a>3. 接口扫描注册</h3><p>在Service层可以使用@Autowired 自动注入的Mapper接口,需要保存到BeanFactory (比如XmlWebApplicationContext) 中,也就是说接口肯定在Spring启动的时候被扫描注册过了.</p>
+<ol>
+<li>什么时候扫描的?</li>
+<li>注册的时候,注册的是什么?这个决定了我们拿到的是什么实际对象?<br>回顾一下,我们在 applicationContext.xml 里面配置了一个MapperScannerConfigurer.</li>
+</ol>
+<p>MapperScannerConfigurer 实现了BeanDefinitionRegistryPostProcesser 接口,BeanDefinitionRegistryProcessor是BeanFactoryPostProcessor的子类,可以通过编码的方式修改,新增或者删除某些bean的定义。<br><img src="http://files.luyanan.com/076e53b4-cc47-4824-a960-87823be614ee.jpg" alt="image"></p>
+<p>我们只需要重写postProcessBeanDefinitionRegistry 方法,在这里面操作Bean就可以了.</p>
+<p>在这个方法中,scanner.scan() 方法是ClassPathBeanDefinitionScanner中的,而它的子类ClassPathMapperScanner 覆盖了doScan() 方法,而在doScan() 方法中调用了 processBeanDefinitions:</p>
+<pre class=" language-java"><code class="language-java"><span class="token keyword">public</span> Set<span class="token operator">&lt;</span>BeanDefinitionHolder<span class="token operator">></span> <span class="token function">doScan</span><span class="token punctuation">(</span>String<span class="token punctuation">.</span><span class="token punctuation">.</span><span class="token punctuation">.</span> basePackages<span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+Set<span class="token operator">&lt;</span>BeanDefinitionHolder<span class="token operator">></span> beanDefinitions <span class="token operator">=</span> <span class="token keyword">super</span><span class="token punctuation">.</span><span class="token function">doScan</span><span class="token punctuation">(</span>basePackages<span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token keyword">if</span> <span class="token punctuation">(</span>beanDefinitions<span class="token punctuation">.</span><span class="token function">isEmpty</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+LOGGER<span class="token punctuation">.</span><span class="token function">warn</span><span class="token punctuation">(</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">-</span><span class="token operator">></span> <span class="token string">"No MyBatis mapper was found in '"</span> <span class="token operator">+</span> Arrays<span class="token punctuation">.</span><span class="token function">toString</span><span class="token punctuation">(</span>basePackages<span class="token punctuation">)</span> <span class="token operator">+</span>
+<span class="token string">"' package. Please check your configuration."</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span> <span class="token keyword">else</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+<span class="token function">processBeanDefinitions</span><span class="token punctuation">(</span>beanDefinitions<span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+<span class="token keyword">return</span> beanDefinitions<span class="token punctuation">;</span>
+<span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+</code></pre>
+<p>它先调用父类的soScan() 扫描所有的接口。</p>
+<p>processBeanDefinitions 方法里面,在注册beanDefinitions 的时候,BeanClass被改为MapperFactoryBean</p>
+<pre class=" language-java"><code class="language-java"><span class="token keyword">private</span> <span class="token keyword">void</span> <span class="token function">processBeanDefinitions</span><span class="token punctuation">(</span>Set<span class="token operator">&lt;</span>BeanDefinitionHolder<span class="token operator">></span> beanDefinitions<span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+GenericBeanDefinition definition<span class="token punctuation">;</span>
+<span class="token keyword">for</span> <span class="token punctuation">(</span>BeanDefinitionHolder holder <span class="token operator">:</span> beanDefinitions<span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+definition <span class="token operator">=</span> <span class="token punctuation">(</span>GenericBeanDefinition<span class="token punctuation">)</span> holder<span class="token punctuation">.</span><span class="token function">getBeanDefinition</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+String beanClassName <span class="token operator">=</span> definition<span class="token punctuation">.</span><span class="token function">getBeanClassName</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+LOGGER<span class="token punctuation">.</span><span class="token function">debug</span><span class="token punctuation">(</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">-</span><span class="token operator">></span> <span class="token string">"Creating MapperFactoryBean with name '"</span> <span class="token operator">+</span> holder<span class="token punctuation">.</span><span class="token function">getBeanName</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+<span class="token operator">+</span> <span class="token string">"' and '"</span> <span class="token operator">+</span> beanClassName <span class="token operator">+</span> <span class="token string">"' mapperInterface"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token comment" spellcheck="true">// the mapper interface is the original class of the bean</span>
+<span class="token comment" spellcheck="true">// but, the actual class of the bean is MapperFactoryBean</span>
+definition<span class="token punctuation">.</span><span class="token function">getConstructorArgumentValues</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">addGenericArgumentValue</span><span class="token punctuation">(</span>beanClassName<span class="token punctuation">)</span><span class="token punctuation">;</span> <span class="token comment" spellcheck="true">//</span>
+issue #<span class="token number">59</span>
+definition<span class="token punctuation">.</span><span class="token function">setBeanClass</span><span class="token punctuation">(</span><span class="token keyword">this</span><span class="token punctuation">.</span>mapperFactoryBean<span class="token punctuation">.</span><span class="token function">getClass</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+</code></pre>
+<p>问题: 为什么要把BeanClass  修改成MapperFactoryBean,这个类有什么用？</p>
+<p>MapperFactoryBean 继承了SqlSessionDaoSupport,可以拿到sqlSessionTemplate</p>
+<h3 id="4-接口注入使用"><a href="#4-接口注入使用" class="headerlink" title="4. 接口注入使用"></a>4. 接口注入使用</h3><p>我们使用Mapper 的时候,只需要在加了service 注解的类里面使用@Autowired 注入Mapper接口就可以了.</p>
+<pre class=" language-java"><code class="language-java"><span class="token annotation punctuation">@Service</span>
+<span class="token keyword">public</span> <span class="token keyword">class</span> <span class="token class-name">EmployeeService</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+<span class="token annotation punctuation">@Autowired</span>
+EmployeeMapper employeeMapper<span class="token punctuation">;</span>
+<span class="token keyword">public</span> List<span class="token operator">&lt;</span>Employee<span class="token operator">></span> <span class="token function">getAll</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+<span class="token keyword">return</span> employeeMapper<span class="token punctuation">.</span><span class="token function">selectByMap</span><span class="token punctuation">(</span>null<span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+<span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+</code></pre>
+<p>Spring在启动的时候需要取实例化EmployeeService</p>
+<p>EmployeeService 依赖了EmployeeMapper 接口(是EmployeeService 的一个属性)</p>
+<p>Spring会根据Mapper的名字从BeanFactory 中获取它的BeanDefinition ,再从BeanDefinition 中获取BeanClass,EmployeeMapper 对应的BeanClass 是MapperFactoryBean.</p>
+<p>接下来就是创建MapperFactoryBean,因为实现了FactoryBean 接口,同样是调用getObject() 方法</p>
+<pre class=" language-java"><code class="language-java"><span class="token comment" spellcheck="true">// MapperFactoryBean.java</span>
+<span class="token keyword">public</span> T <span class="token function">getObject</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token keyword">throws</span> Exception <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+<span class="token keyword">return</span> <span class="token function">getSqlSession</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">getMapper</span><span class="token punctuation">(</span><span class="token keyword">this</span><span class="token punctuation">.</span>mapperInterface<span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+</code></pre>
+<p>因为MapperFactoryBean 继承了SqlSessionDaoSupport,所以这个 getSqlSession() 方法是调用父类的方法,返回SqlSessionTemplate</p>
+<pre class=" language-java"><code class="language-java"><span class="token comment" spellcheck="true">// SqlSessionDaoSupport.java</span>
+<span class="token keyword">public</span> SqlSession <span class="token function">getSqlSession</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+<span class="token keyword">return</span> <span class="token keyword">this</span><span class="token punctuation">.</span>sqlSessionTemplate<span class="token punctuation">;</span>
+<span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+</code></pre>
+<p>第二步, SqlSessionTemplate 的getMapper() 方法,里面又有两个方法。</p>
+<pre class=" language-java"><code class="language-java"><span class="token comment" spellcheck="true">// SqlSessionTemplate.java</span>
+<span class="token keyword">public</span> <span class="token operator">&lt;</span>T<span class="token operator">></span> T <span class="token function">getMapper</span><span class="token punctuation">(</span>Class<span class="token operator">&lt;</span>T<span class="token operator">></span> type<span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+<span class="token keyword">return</span> <span class="token function">getConfiguration</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">getMapper</span><span class="token punctuation">(</span>type<span class="token punctuation">,</span> <span class="token keyword">this</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+</code></pre>
+<p>第一步: SqlSessionoTemplate的 getConfiguration() 方法</p>
+<pre class=" language-java"><code class="language-java"><span class="token comment" spellcheck="true">// SqlSessionTemplate.java</span>
+<span class="token keyword">public</span> Configuration <span class="token function">getConfiguration</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+<span class="token keyword">return</span> <span class="token keyword">this</span><span class="token punctuation">.</span>sqlSessionFactory<span class="token punctuation">.</span><span class="token function">getConfiguration</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+</code></pre>
+<p>进入方法,通过 DefaultSqlSessionFactory ,返回全部配置Configuration</p>
+<pre class=" language-java"><code class="language-java"><span class="token comment" spellcheck="true">// DefaultSqlSessionFactory.java</span>
+<span class="token keyword">public</span> Configuration <span class="token function">getConfiguration</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+<span class="token keyword">return</span> configuration<span class="token punctuation">;</span>
+<span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+</code></pre>
+<p>第二步: Configuration的 getMapper() 方法</p>
+<pre class=" language-java"><code class="language-java"><span class="token comment" spellcheck="true">// Configuration.java</span>
+<span class="token keyword">public</span> <span class="token operator">&lt;</span>T<span class="token operator">></span> T <span class="token function">getMapper</span><span class="token punctuation">(</span>Class<span class="token operator">&lt;</span>T<span class="token operator">></span> type<span class="token punctuation">,</span> SqlSession sqlSession<span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+<span class="token keyword">return</span> mapperRegistry<span class="token punctuation">.</span><span class="token function">getMapper</span><span class="token punctuation">(</span>type<span class="token punctuation">,</span> sqlSession<span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+</code></pre>
+<p>这一步我们很熟悉,跟编程式里面的 getMapper() 一样,通过工厂类MapperProxyFactory 获取一个MapperProxy 代理对象</p>
+<p>也就是说我们注入Service 里面的接口,实际上还是一个MapperProxy 对象,所以最后调用Mapper 的接口的方法,也就是执行了 MapperProxy.invoke() 方法,后面的流程就跟编程式里面一模一样了.</p>
+<p>总结:</p>
+<table>
+<thead>
+<tr>
+<th>对象</th>
+<th>生命周期</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>SqlSessionTemplate</td>
+<td>spring中SqlSession的替代品,是线程安全的,通过代理模式调用DefaultSqlSession的方法,</td>
+</tr>
+<tr>
+<td>SqlSessionInterceptor(内部类)</td>
+<td>代理对象,用来代理DefaultSqlSession,在SqlSessioonTemplate  中使用</td>
+</tr>
+<tr>
+<td>SqlSessionDapSupport</td>
+<td>用于获取SqlSessionTemplate,只要继承它就可以了</td>
+</tr>
+<tr>
+<td>MapperFactoryBean</td>
+<td>注册到IOC容器中替换接口类,继承了SqlSessionDaoSupport 用来获取SqlSessionTemplate,因为注入接口的时候,就会调用它的getObject 方法</td>
+</tr>
+<tr>
+<td>SqlSessionHolder</td>
+<td>控制SqlSession和事务</td>
+</tr>
+</tbody></table>
+
+                
+            </div>
+            <hr/>
+
+            
+
+    <div class="reprint" id="reprint-statement">
+        
+            <div class="reprint__author">
+                <span class="reprint-meta" style="font-weight: bold;">
+                    <i class="fas fa-user">
+                        文章作者:
+                    </i>
+                </span>
+                <span class="reprint-info">
+                    <a href="/about" rel="external nofollow noreferrer">luyanan</a>
+                </span>
+            </div>
+            <div class="reprint__type">
+                <span class="reprint-meta" style="font-weight: bold;">
+                    <i class="fas fa-link">
+                        文章链接:
+                    </i>
+                </span>
+                <span class="reprint-info">
+                    <a href="https://rainsoil.github.io/2022/01/04/mybatis/mybatis-yu-spring-zheng-he-fen-xi-4/">https://rainsoil.github.io/2022/01/04/mybatis/mybatis-yu-spring-zheng-he-fen-xi-4/</a>
+                </span>
+            </div>
+            <div class="reprint__notice">
+                <span class="reprint-meta" style="font-weight: bold;">
+                    <i class="fas fa-copyright">
+                        版权声明:
+                    </i>
+                </span>
+                <span class="reprint-info">
+                    本博客所有文章除特別声明外，均采用
+                    <a href="https://creativecommons.org/licenses/by/4.0/deed.zh" rel="external nofollow noreferrer" target="_blank">CC BY 4.0</a>
+                    许可协议。转载请注明来源
+                    <a href="/about" target="_blank">luyanan</a>
+                    !
+                </span>
+            </div>
+        
+    </div>
+
+    <script async defer>
+      document.addEventListener("copy", function (e) {
+        let toastHTML = '<span>复制成功，请遵循本文的转载规则</span><button class="btn-flat toast-action" onclick="navToReprintStatement()" style="font-size: smaller">查看</a>';
+        M.toast({html: toastHTML})
+      });
+
+      function navToReprintStatement() {
+        $("html, body").animate({scrollTop: $("#reprint-statement").offset().top - 80}, 800);
+      }
+    </script>
+
+
+
+            <div class="tag_share" style="display: block;">
+                <div class="post-meta__tag-list" style="display: inline-block;">
+                    
+                        <div class="article-tag">
+                            <span class="chip bg-color">无标签</span>
+                        </div>
+                    
+                </div>
+                <div class="post_share" style="zoom: 80%; width: fit-content; display: inline-block; float: right; margin: -0.15rem 0;">
+                    <link rel="stylesheet" type="text/css" href="/libs/share/css/share.min.css">
+<div id="article-share">
+
+    
+    <div class="social-share" data-sites="twitter,facebook,google,qq,qzone,wechat,weibo,douban,linkedin" data-wechat-qrcode-helper="<p>微信扫一扫即可分享！</p>"></div>
+    <script src="/libs/share/js/social-share.min.js"></script>
+    
+
+    
+
+</div>
+
+                </div>
+            </div>
+            
+        </div>
+    </div>
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+<article id="prenext-posts" class="prev-next articles">
+    <div class="row article-row">
+        
+        <div class="article col s12 m6" data-aos="fade-up">
+            <div class="article-badge left-badge text-color">
+                <i class="fas fa-chevron-left"></i>&nbsp;上一篇</div>
+            <div class="card">
+                <a href="/2022/01/04/linux/linux-ming-ling-da-quan/">
+                    <div class="card-image">
+                        
+                        
+                        <img src="/medias/featureimages/20.jpg" class="responsive-img" alt="linux 命令大全">
+                        
+                        <span class="card-title">linux 命令大全</span>
+                    </div>
+                </a>
+                <div class="card-content article-content">
+                    <div class="summary block-with-text">
+                        
+                            
+                        
+                    </div>
+                    <div class="publish-info">
+                        <span class="publish-date">
+                            <i class="far fa-clock fa-fw icon-date"></i>2022-01-04
+                        </span>
+                        <span class="publish-author">
+                            
+                            <i class="fas fa-bookmark fa-fw icon-category"></i>
+                            
+                            <a href="/categories/linux/" class="post-category">
+                                    linux
+                                </a>
+                            
+                            <a href="/categories/linux/linux/" class="post-category">
+                                    linux
+                                </a>
+                            
+                            
+                        </span>
+                    </div>
+                </div>
+                
+            </div>
+        </div>
+        
+        
+        <div class="article col s12 m6" data-aos="fade-up">
+            <div class="article-badge right-badge text-color">
+                下一篇&nbsp;<i class="fas fa-chevron-right"></i>
+            </div>
+            <div class="card">
+                <a href="/2022/01/04/mysql/mysql-jia-gou-2/">
+                    <div class="card-image">
+                        
+                        
+                        <img src="/medias/featureimages/15.jpg" class="responsive-img" alt="MySQL架构(2)">
+                        
+                        <span class="card-title">MySQL架构(2)</span>
+                    </div>
+                </a>
+                <div class="card-content article-content">
+                    <div class="summary block-with-text">
+                        
+                            
+                        
+                    </div>
+                    <div class="publish-info">
+                            <span class="publish-date">
+                                <i class="far fa-clock fa-fw icon-date"></i>2022-01-04
+                            </span>
+                        <span class="publish-author">
+                            
+                            <i class="fas fa-bookmark fa-fw icon-category"></i>
+                            
+                            <a href="/categories/mysql/" class="post-category">
+                                    mysql
+                                </a>
+                            
+                            <a href="/categories/mysql/mysql/" class="post-category">
+                                    mysql
+                                </a>
+                            
+                            
+                        </span>
+                    </div>
+                </div>
+                
+            </div>
+        </div>
+        
+    </div>
+</article>
+
+</div>
+
+
+
+<!-- 代码块功能依赖 -->
+<script type="text/javascript" src="/libs/codeBlock/codeBlockFuction.js"></script>
+
+<!-- 代码语言 -->
+
+<script type="text/javascript" src="/libs/codeBlock/codeLang.js"></script>
+
+
+<!-- 代码块复制 -->
+
+<script type="text/javascript" src="/libs/codeBlock/codeCopy.js"></script>
+
+
+<!-- 代码块收缩 -->
+
+<script type="text/javascript" src="/libs/codeBlock/codeShrink.js"></script>
+
+
+    </div>
+    <div id="toc-aside" class="expanded col l3 hide-on-med-and-down">
+        <div class="toc-widget card" style="background-color: white;">
+            <div class="toc-title"><i class="far fa-list-alt"></i>&nbsp;&nbsp;目录</div>
+            <div id="toc-content"></div>
+        </div>
+    </div>
+</div>
+
+<!-- TOC 悬浮按钮. -->
+
+<div id="floating-toc-btn" class="hide-on-med-and-down">
+    <a class="btn-floating btn-large bg-color">
+        <i class="fas fa-list-ul"></i>
+    </a>
+</div>
+
+
+<script src="/libs/tocbot/tocbot.min.js"></script>
+<script>
+    $(function () {
+        tocbot.init({
+            tocSelector: '#toc-content',
+            contentSelector: '#articleContent',
+            headingsOffset: -($(window).height() * 0.4 - 45),
+            collapseDepth: Number('0'),
+            headingSelector: 'h2, h3, h4'
+        });
+
+        // modify the toc link href to support Chinese.
+        let i = 0;
+        let tocHeading = 'toc-heading-';
+        $('#toc-content a').each(function () {
+            $(this).attr('href', '#' + tocHeading + (++i));
+        });
+
+        // modify the heading title id to support Chinese.
+        i = 0;
+        $('#articleContent').children('h2, h3, h4').each(function () {
+            $(this).attr('id', tocHeading + (++i));
+        });
+
+        // Set scroll toc fixed.
+        let tocHeight = parseInt($(window).height() * 0.4 - 64);
+        let $tocWidget = $('.toc-widget');
+        $(window).scroll(function () {
+            let scroll = $(window).scrollTop();
+            /* add post toc fixed. */
+            if (scroll > tocHeight) {
+                $tocWidget.addClass('toc-fixed');
+            } else {
+                $tocWidget.removeClass('toc-fixed');
+            }
+        });
+
+        
+        /* 修复文章卡片 div 的宽度. */
+        let fixPostCardWidth = function (srcId, targetId) {
+            let srcDiv = $('#' + srcId);
+            if (srcDiv.length === 0) {
+                return;
+            }
+
+            let w = srcDiv.width();
+            if (w >= 450) {
+                w = w + 21;
+            } else if (w >= 350 && w < 450) {
+                w = w + 18;
+            } else if (w >= 300 && w < 350) {
+                w = w + 16;
+            } else {
+                w = w + 14;
+            }
+            $('#' + targetId).width(w);
+        };
+
+        // 切换TOC目录展开收缩的相关操作.
+        const expandedClass = 'expanded';
+        let $tocAside = $('#toc-aside');
+        let $mainContent = $('#main-content');
+        $('#floating-toc-btn .btn-floating').click(function () {
+            if ($tocAside.hasClass(expandedClass)) {
+                $tocAside.removeClass(expandedClass).hide();
+                $mainContent.removeClass('l9');
+            } else {
+                $tocAside.addClass(expandedClass).show();
+                $mainContent.addClass('l9');
+            }
+            fixPostCardWidth('artDetail', 'prenext-posts');
+        });
+        
+    });
+</script>
+
+    
+
+</main>
+
+
+
+
+    <footer class="page-footer bg-color">
+    
+        <link rel="stylesheet" href="/libs/aplayer/APlayer.min.css">
+<style>
+    .aplayer .aplayer-lrc p {
+        
+        display: none;
+        
+        font-size: 12px;
+        font-weight: 700;
+        line-height: 16px !important;
+    }
+
+    .aplayer .aplayer-lrc p.aplayer-lrc-current {
+        
+        display: none;
+        
+        font-size: 15px;
+        color: #42b983;
+    }
+
+    
+    .aplayer.aplayer-fixed.aplayer-narrow .aplayer-body {
+        left: -66px !important;
+    }
+
+    .aplayer.aplayer-fixed.aplayer-narrow .aplayer-body:hover {
+        left: 0px !important;
+    }
+
+    
+</style>
+<div class="">
+    
+    <div class="row">
+        <meting-js class="col l8 offset-l2 m10 offset-m1 s12"
+                   server="netease"
+                   type="playlist"
+                   id="503838841"
+                   fixed='true'
+                   autoplay='false'
+                   theme='#42b983'
+                   loop='all'
+                   order='random'
+                   preload='auto'
+                   volume='0.7'
+                   list-folded='true'
+        >
+        </meting-js>
+    </div>
+</div>
+
+<script src="/libs/aplayer/APlayer.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/meting@2/dist/Meting.min.js"></script>
+
+    
+
+    <div class="container row center-align"
+         style="margin-bottom: 0px !important;">
+        <div class="col s12 m8 l8 copy-right">
+            Copyright&nbsp;&copy;
+            
+                <span id="year">2019-2022</span>
+            
+            <a href="/about" target="_blank">luyanan</a>
+            |&nbsp;Powered by&nbsp;<a href="https://hexo.io/" target="_blank">Hexo</a>
+            |&nbsp;Theme&nbsp;<a href="https://github.com/blinkfox/hexo-theme-matery" target="_blank">Matery</a>
+            <br>
+            
+                &nbsp;<i class="fas fa-chart-area"></i>&nbsp;站点总字数:&nbsp;<span
+                        class="white-color">803.3k</span>
+            
+            
+            
+                
+            
+            
+                <span id="busuanzi_container_site_pv">
+                &nbsp;|&nbsp;<i class="far fa-eye"></i>&nbsp;总访问量:&nbsp;
+                    <span id="busuanzi_value_site_pv" class="white-color"></span>
+            </span>
+            
+            
+                <span id="busuanzi_container_site_uv">
+                &nbsp;|&nbsp;<i class="fas fa-users"></i>&nbsp;总访问人数:&nbsp;
+                    <span id="busuanzi_value_site_uv" class="white-color"></span>
+            </span>
+            
+            <br>
+
+            <!-- 运行天数提醒. -->
+            
+            <br>
+            
+        </div>
+        <div class="col s12 m4 l4 social-link social-statis">
+    <a href="https://github.com/rainsoil" class="tooltipped" target="_blank" data-tooltip="访问我的GitHub" data-position="top" data-delay="50">
+        <i class="fab fa-github"></i>
+    </a>
+
+
+
+    <a href="mailto:luyanan0718@163.com" class="tooltipped" target="_blank" data-tooltip="邮件联系我" data-position="top" data-delay="50">
+        <i class="fas fa-envelope-open"></i>
+    </a>
+
+
+
+
+
+
+
+    <a href="tencent://AddContact/?fromId=50&fromSubId=1&subcmd=all&uin=914596513" class="tooltipped" target="_blank" data-tooltip="QQ联系我: 914596513" data-position="top" data-delay="50">
+        <i class="fab fa-qq"></i>
+    </a>
+
+
+
+
+
+
+
+    <a href="/atom.xml" class="tooltipped" target="_blank" data-tooltip="RSS 订阅" data-position="top" data-delay="50">
+        <i class="fas fa-rss"></i>
+    </a>
+
+</div>
+    </div>
+</footer>
+
+<div class="progress-bar"></div>
+
+
+    <!-- 搜索遮罩框 -->
+<div id="searchModal" class="modal">
+    <div class="modal-content">
+        <div class="search-header">
+            <span class="title"><i class="fas fa-search"></i>&nbsp;&nbsp;搜索</span>
+            <input type="search" id="searchInput" name="s" placeholder="请输入搜索的关键字"
+                   class="search-input">
+        </div>
+        <div id="searchResult"></div>
+    </div>
+</div>
+
+<script type="text/javascript">
+$(function () {
+    var searchFunc = function (path, search_id, content_id) {
+        'use strict';
+        $.ajax({
+            url: path,
+            dataType: "xml",
+            success: function (xmlResponse) {
+                // get the contents from search data
+                var datas = $("entry", xmlResponse).map(function () {
+                    return {
+                        title: $("title", this).text(),
+                        content: $("content", this).text(),
+                        url: $("url", this).text()
+                    };
+                }).get();
+                var $input = document.getElementById(search_id);
+                var $resultContent = document.getElementById(content_id);
+                $input.addEventListener('input', function () {
+                    var str = '<ul class=\"search-result-list\">';
+                    var keywords = this.value.trim().toLowerCase().split(/[\s\-]+/);
+                    $resultContent.innerHTML = "";
+                    if (this.value.trim().length <= 0) {
+                        return;
+                    }
+                    // perform local searching
+                    datas.forEach(function (data) {
+                        var isMatch = true;
+                        var data_title = data.title.trim().toLowerCase();
+                        var data_content = data.content.trim().replace(/<[^>]+>/g, "").toLowerCase();
+                        var data_url = data.url;
+                        data_url = data_url.indexOf('/') === 0 ? data.url : '/' + data_url;
+                        var index_title = -1;
+                        var index_content = -1;
+                        var first_occur = -1;
+                        // only match artiles with not empty titles and contents
+                        if (data_title !== '' && data_content !== '') {
+                            keywords.forEach(function (keyword, i) {
+                                index_title = data_title.indexOf(keyword);
+                                index_content = data_content.indexOf(keyword);
+                                if (index_title < 0 && index_content < 0) {
+                                    isMatch = false;
+                                } else {
+                                    if (index_content < 0) {
+                                        index_content = 0;
+                                    }
+                                    if (i === 0) {
+                                        first_occur = index_content;
+                                    }
+                                }
+                            });
+                        }
+                        // show search results
+                        if (isMatch) {
+                            str += "<li><a href='" + data_url + "' class='search-result-title'>" + data_title + "</a>";
+                            var content = data.content.trim().replace(/<[^>]+>/g, "");
+                            if (first_occur >= 0) {
+                                // cut out 100 characters
+                                var start = first_occur - 20;
+                                var end = first_occur + 80;
+                                if (start < 0) {
+                                    start = 0;
+                                }
+                                if (start === 0) {
+                                    end = 100;
+                                }
+                                if (end > content.length) {
+                                    end = content.length;
+                                }
+                                var match_content = content.substr(start, end);
+                                // highlight all keywords
+                                keywords.forEach(function (keyword) {
+                                    var regS = new RegExp(keyword, "gi");
+                                    match_content = match_content.replace(regS, "<em class=\"search-keyword\">" + keyword + "</em>");
+                                });
+
+                                str += "<p class=\"search-result\">" + match_content + "...</p>"
+                            }
+                            str += "</li>";
+                        }
+                    });
+                    str += "</ul>";
+                    $resultContent.innerHTML = str;
+                });
+            }
+        });
+    };
+
+    searchFunc('/search.xml', 'searchInput', 'searchResult');
+});
+</script>
+
+    <!-- 回到顶部按钮 -->
+<div id="backTop" class="top-scroll">
+    <a class="btn-floating btn-large waves-effect waves-light" href="#!">
+        <i class="fas fa-arrow-up"></i>
+    </a>
+</div>
+
+
+    <script src="/libs/materialize/materialize.min.js"></script>
+    <script src="/libs/masonry/masonry.pkgd.min.js"></script>
+    <script src="/libs/aos/aos.js"></script>
+    <script src="/libs/scrollprogress/scrollProgress.min.js"></script>
+    <script src="/libs/lightGallery/js/lightgallery-all.min.js"></script>
+    <script src="/js/matery.js"></script>
+
+    
+
+    
+
+    <!-- 雪花特效 -->
+    
+
+    <!-- 鼠标星星特效 -->
+    
+
+    <!-- Baidu Analytics -->
+
+    <!-- Baidu Push -->
+
+<script>
+    (function () {
+        var bp = document.createElement('script');
+        var curProtocol = window.location.protocol.split(':')[0];
+        if (curProtocol === 'https') {
+            bp.src = 'https://zz.bdstatic.com/linksubmit/push.js';
+        } else {
+            bp.src = 'http://push.zhanzhang.baidu.com/push.js';
+        }
+        var s = document.getElementsByTagName("script")[0];
+        s.parentNode.insertBefore(bp, s);
+    })();
+</script>
+
+    
+    <script src="/libs/others/clicklove.js" async="async"></script>
+    
+    
+    <script async src="/libs/others/busuanzi.pure.mini.js"></script>
+    
+
+    
+
+    
+
+    <!--腾讯兔小巢-->
+    
+    
+    <script type="text/javascript" color="0,0,255"
+        pointColor="0,0,255" opacity='0.7'
+        zIndex="-1" count="99"
+        src="/libs/background/canvas-nest.js"></script>
+    
+
+    
+
+    
+
+    
+    <script src="/libs/instantpage/instantpage.js" type="module"></script>
+    
+
+</body>
+
+</html>

@@ -1,0 +1,519 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+  <title>railsoil</title>
+  
+  <subtitle>railsoil知识库</subtitle>
+  <link href="https://rainsoil.github.io/atom.xml" rel="self"/>
+  
+  <link href="https://rainsoil.github.io/"/>
+  <updated>2022-01-04T02:42:07.309Z</updated>
+  <id>https://rainsoil.github.io/</id>
+  
+  <author>
+    <name>luyanan</name>
+    
+  </author>
+  
+  <generator uri="https://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>mysql主从实现原理</title>
+    <link href="https://rainsoil.github.io/2022/01/04/mian-shi-ti/mysql-zhu-cong-shi-xian-yuan-li/"/>
+    <id>https://rainsoil.github.io/2022/01/04/mian-shi-ti/mysql-zhu-cong-shi-xian-yuan-li/</id>
+    <published>2022-01-04T02:42:07.309Z</published>
+    <updated>2022-01-04T02:42:07.309Z</updated>
+    
+    
+      
+      
+        
+        
+    <summary type="html">&lt;h1 id=&quot;mysql主从实现原理&quot;&gt;&lt;a href=&quot;#mysql主从实现原理&quot; class=&quot;headerlink&quot; title=&quot;mysql主从实现原理&quot;&gt;&lt;/a&gt;mysql主从实现原理&lt;/h1&gt;&lt;h2 id=&quot;1、什么是mysql主从同步？&quot;&gt;&lt;a</summary>
+        
+      
+    
+    
+    
+    <category term="面试题" scheme="https://rainsoil.github.io/categories/%E9%9D%A2%E8%AF%95%E9%A2%98/"/>
+    
+    <category term="面试题" scheme="https://rainsoil.github.io/categories/%E9%9D%A2%E8%AF%95%E9%A2%98/%E9%9D%A2%E8%AF%95%E9%A2%98/"/>
+    
+    
+  </entry>
+  
+  <entry>
+    <title>计算机系统知识</title>
+    <link href="https://rainsoil.github.io/2022/01/04/ruan-kao-shu-ju-ku/ji-suan-ji-xi-tong-zhi-shi/"/>
+    <id>https://rainsoil.github.io/2022/01/04/ruan-kao-shu-ju-ku/ji-suan-ji-xi-tong-zhi-shi/</id>
+    <published>2022-01-04T02:42:07.309Z</published>
+    <updated>2022-01-04T02:42:07.309Z</updated>
+    
+    
+      
+      
+        
+        
+    <summary type="html">&lt;h1 id=&quot;计算机系统基础&quot;&gt;&lt;a href=&quot;#计算机系统基础&quot; class=&quot;headerlink&quot; title=&quot;计算机系统基础&quot;&gt;&lt;/a&gt;计算机系统基础&lt;/h1&gt;&lt;h2 id=&quot;1-计算机硬件组成&quot;&gt;&lt;a href=&quot;#1-计算机硬件组成&quot;</summary>
+        
+      
+    
+    
+    
+    <category term="软考-数据库" scheme="https://rainsoil.github.io/categories/%E8%BD%AF%E8%80%83-%E6%95%B0%E6%8D%AE%E5%BA%93/"/>
+    
+    <category term="软考-数据库" scheme="https://rainsoil.github.io/categories/%E8%BD%AF%E8%80%83-%E6%95%B0%E6%8D%AE%E5%BA%93/%E8%BD%AF%E8%80%83-%E6%95%B0%E6%8D%AE%E5%BA%93/"/>
+    
+    
+  </entry>
+  
+  <entry>
+    <title>类加载器</title>
+    <link href="https://rainsoil.github.io/2022/01/04/mian-shi-ti/lei-jia-zai-qi/"/>
+    <id>https://rainsoil.github.io/2022/01/04/mian-shi-ti/lei-jia-zai-qi/</id>
+    <published>2022-01-04T02:42:07.309Z</published>
+    <updated>2022-01-04T02:42:07.309Z</updated>
+    
+    
+      
+      
+        
+        
+    <summary type="html">&lt;h1 id=&quot;类加载器&quot;&gt;&lt;a href=&quot;#类加载器&quot; class=&quot;headerlink&quot; title=&quot;类加载器&quot;&gt;&lt;/a&gt;类加载器&lt;/h1&gt;&lt;h2 id=&quot;1-Java类加载器&quot;&gt;&lt;a href=&quot;#1-Java类加载器&quot; class=&quot;headerlink&quot;</summary>
+        
+      
+    
+    
+    
+    <category term="面试题" scheme="https://rainsoil.github.io/categories/%E9%9D%A2%E8%AF%95%E9%A2%98/"/>
+    
+    <category term="面试题" scheme="https://rainsoil.github.io/categories/%E9%9D%A2%E8%AF%95%E9%A2%98/%E9%9D%A2%E8%AF%95%E9%A2%98/"/>
+    
+    
+  </entry>
+  
+  <entry>
+    <title>待解决面试题</title>
+    <link href="https://rainsoil.github.io/2022/01/04/mian-shi-ti/dai-jie-jue-mian-shi-ti/"/>
+    <id>https://rainsoil.github.io/2022/01/04/mian-shi-ti/dai-jie-jue-mian-shi-ti/</id>
+    <published>2022-01-04T02:42:07.309Z</published>
+    <updated>2022-01-04T02:42:07.309Z</updated>
+    
+    
+      
+      
+        
+        
+    <summary type="html">&lt;p&gt;hash</summary>
+        
+      
+    
+    
+    
+    <category term="面试题" scheme="https://rainsoil.github.io/categories/%E9%9D%A2%E8%AF%95%E9%A2%98/"/>
+    
+    <category term="面试题" scheme="https://rainsoil.github.io/categories/%E9%9D%A2%E8%AF%95%E9%A2%98/%E9%9D%A2%E8%AF%95%E9%A2%98/"/>
+    
+    
+  </entry>
+  
+  <entry>
+    <title>常见多线程面试题</title>
+    <link href="https://rainsoil.github.io/2022/01/04/mian-shi-ti/chang-jian-duo-xian-cheng-mian-shi-ti/"/>
+    <id>https://rainsoil.github.io/2022/01/04/mian-shi-ti/chang-jian-duo-xian-cheng-mian-shi-ti/</id>
+    <published>2022-01-04T02:42:07.309Z</published>
+    <updated>2022-01-04T02:42:07.309Z</updated>
+    
+    
+      
+      
+        
+        
+    <summary type="html">&lt;h2 id=&quot;1-启动一个线程是调用-run-方法还是-start-方法？&quot;&gt;&lt;a href=&quot;#1-启动一个线程是调用-run-方法还是-start-方法？&quot; class=&quot;headerlink&quot; title=&quot;1.启动一个线程是调用 run() 方法还是 start()</summary>
+        
+      
+    
+    
+    
+    <category term="面试题" scheme="https://rainsoil.github.io/categories/%E9%9D%A2%E8%AF%95%E9%A2%98/"/>
+    
+    <category term="面试题" scheme="https://rainsoil.github.io/categories/%E9%9D%A2%E8%AF%95%E9%A2%98/%E9%9D%A2%E8%AF%95%E9%A2%98/"/>
+    
+    
+  </entry>
+  
+  <entry>
+    <title>乐观锁和悲观锁</title>
+    <link href="https://rainsoil.github.io/2022/01/04/mian-shi-ti/le-guan-suo-he-bei-guan-suo/"/>
+    <id>https://rainsoil.github.io/2022/01/04/mian-shi-ti/le-guan-suo-he-bei-guan-suo/</id>
+    <published>2022-01-04T02:42:07.309Z</published>
+    <updated>2022-01-04T02:42:07.309Z</updated>
+    
+    
+      
+      
+        
+        
+    <summary type="html">&lt;h1 id=&quot;锁机制&quot;&gt;&lt;a href=&quot;#锁机制&quot; class=&quot;headerlink&quot;</summary>
+        
+      
+    
+    
+    
+    <category term="面试题" scheme="https://rainsoil.github.io/categories/%E9%9D%A2%E8%AF%95%E9%A2%98/"/>
+    
+    <category term="面试题" scheme="https://rainsoil.github.io/categories/%E9%9D%A2%E8%AF%95%E9%A2%98/%E9%9D%A2%E8%AF%95%E9%A2%98/"/>
+    
+    
+  </entry>
+  
+  <entry>
+    <title>【Redis】缓存穿透，缓存雪崩，缓存击穿</title>
+    <link href="https://rainsoil.github.io/2022/01/04/mian-shi-ti/redis-huan-cun-chuan-tou-huan-cun-xue-beng-huan-cun-ji-chuan/"/>
+    <id>https://rainsoil.github.io/2022/01/04/mian-shi-ti/redis-huan-cun-chuan-tou-huan-cun-xue-beng-huan-cun-ji-chuan/</id>
+    <published>2022-01-04T02:42:07.309Z</published>
+    <updated>2022-01-04T02:42:07.309Z</updated>
+    
+    
+      
+      
+        
+        
+    <summary type="html">&lt;h1 id=&quot;Redis-缓存穿透，缓存雪崩，缓存击穿&quot;&gt;&lt;a href=&quot;#Redis-缓存穿透，缓存雪崩，缓存击穿&quot; class=&quot;headerlink&quot;</summary>
+        
+      
+    
+    
+    
+    <category term="面试题" scheme="https://rainsoil.github.io/categories/%E9%9D%A2%E8%AF%95%E9%A2%98/"/>
+    
+    <category term="面试题" scheme="https://rainsoil.github.io/categories/%E9%9D%A2%E8%AF%95%E9%A2%98/%E9%9D%A2%E8%AF%95%E9%A2%98/"/>
+    
+    
+  </entry>
+  
+  <entry>
+    <title>spring的事务隔离级别和事务传播行为</title>
+    <link href="https://rainsoil.github.io/2022/01/04/mian-shi-ti/spring-de-shi-wu-ge-chi-ji-bie-he-shi-wu-chuan-bo-xing-wei/"/>
+    <id>https://rainsoil.github.io/2022/01/04/mian-shi-ti/spring-de-shi-wu-ge-chi-ji-bie-he-shi-wu-chuan-bo-xing-wei/</id>
+    <published>2022-01-04T02:42:07.309Z</published>
+    <updated>2022-01-04T02:42:07.309Z</updated>
+    
+    
+      
+      
+        
+        
+    <summary type="html">&lt;h2 id=&quot;spring的事务隔离级别和事务传播行为&quot;&gt;&lt;a href=&quot;#spring的事务隔离级别和事务传播行为&quot; class=&quot;headerlink&quot;</summary>
+        
+      
+    
+    
+    
+    <category term="面试题" scheme="https://rainsoil.github.io/categories/%E9%9D%A2%E8%AF%95%E9%A2%98/"/>
+    
+    <category term="面试题" scheme="https://rainsoil.github.io/categories/%E9%9D%A2%E8%AF%95%E9%A2%98/%E9%9D%A2%E8%AF%95%E9%A2%98/"/>
+    
+    
+  </entry>
+  
+  <entry>
+    <title>线程池与ThreadPoolExecutor类浅析</title>
+    <link href="https://rainsoil.github.io/2022/01/04/mian-shi-ti/xian-cheng-chi-yu-threadpoolexecutor-lei-qian-xi/"/>
+    <id>https://rainsoil.github.io/2022/01/04/mian-shi-ti/xian-cheng-chi-yu-threadpoolexecutor-lei-qian-xi/</id>
+    <published>2022-01-04T02:42:07.309Z</published>
+    <updated>2022-01-04T02:42:07.309Z</updated>
+    
+    
+      
+      
+        
+        
+    <summary type="html">&lt;h1 id=&quot;线程池与ThreadPoolExecutor类浅析&quot;&gt;&lt;a href=&quot;#线程池与ThreadPoolExecutor类浅析&quot; class=&quot;headerlink&quot;</summary>
+        
+      
+    
+    
+    
+    <category term="面试题" scheme="https://rainsoil.github.io/categories/%E9%9D%A2%E8%AF%95%E9%A2%98/"/>
+    
+    <category term="面试题" scheme="https://rainsoil.github.io/categories/%E9%9D%A2%E8%AF%95%E9%A2%98/%E9%9D%A2%E8%AF%95%E9%A2%98/"/>
+    
+    
+  </entry>
+  
+  <entry>
+    <title>String、StringBuffer和StringBuilder的区别</title>
+    <link href="https://rainsoil.github.io/2022/01/04/mian-shi-ti/string-stringbuffer-he-stringbuilder-de-qu-bie/"/>
+    <id>https://rainsoil.github.io/2022/01/04/mian-shi-ti/string-stringbuffer-he-stringbuilder-de-qu-bie/</id>
+    <published>2022-01-04T02:42:07.309Z</published>
+    <updated>2022-01-04T02:42:07.309Z</updated>
+    
+    
+      
+      
+        
+        
+    <summary type="html">&lt;h1 id=&quot;String、StringBuffer和StringBuilder的区别&quot;&gt;&lt;a href=&quot;#String、StringBuffer和StringBuilder的区别&quot; class=&quot;headerlink&quot;</summary>
+        
+      
+    
+    
+    
+    <category term="面试题" scheme="https://rainsoil.github.io/categories/%E9%9D%A2%E8%AF%95%E9%A2%98/"/>
+    
+    <category term="面试题" scheme="https://rainsoil.github.io/categories/%E9%9D%A2%E8%AF%95%E9%A2%98/%E9%9D%A2%E8%AF%95%E9%A2%98/"/>
+    
+    
+  </entry>
+  
+  <entry>
+    <title>MySql查询性能优化</title>
+    <link href="https://rainsoil.github.io/2022/01/04/mian-shi-ti/mysql-cha-xun-xing-neng-you-hua/"/>
+    <id>https://rainsoil.github.io/2022/01/04/mian-shi-ti/mysql-cha-xun-xing-neng-you-hua/</id>
+    <published>2022-01-04T02:42:07.309Z</published>
+    <updated>2022-01-04T02:42:07.309Z</updated>
+    
+    
+      
+      
+        
+        
+    <summary type="html">&lt;h1 id=&quot;MySql查询性能优化&quot;&gt;&lt;a href=&quot;#MySql查询性能优化&quot; class=&quot;headerlink&quot; title=&quot;MySql查询性能优化&quot;&gt;&lt;/a&gt;MySql查询性能优化&lt;/h1&gt;&lt;h2 id=&quot;避免向数据库请求不需要的数据&quot;&gt;&lt;a</summary>
+        
+      
+    
+    
+    
+    <category term="面试题" scheme="https://rainsoil.github.io/categories/%E9%9D%A2%E8%AF%95%E9%A2%98/"/>
+    
+    <category term="面试题" scheme="https://rainsoil.github.io/categories/%E9%9D%A2%E8%AF%95%E9%A2%98/%E9%9D%A2%E8%AF%95%E9%A2%98/"/>
+    
+    
+  </entry>
+  
+  <entry>
+    <title>MySQL索引原理和实现</title>
+    <link href="https://rainsoil.github.io/2022/01/04/mian-shi-ti/mysql-suo-yin-yuan-li-he-shi-xian/"/>
+    <id>https://rainsoil.github.io/2022/01/04/mian-shi-ti/mysql-suo-yin-yuan-li-he-shi-xian/</id>
+    <published>2022-01-04T02:42:07.309Z</published>
+    <updated>2022-01-04T02:42:07.309Z</updated>
+    
+    
+      
+      
+        
+        
+    <summary type="html">&lt;h2 id=&quot;MySQL索引原理和实现&quot;&gt;&lt;a href=&quot;#MySQL索引原理和实现&quot; class=&quot;headerlink&quot;</summary>
+        
+      
+    
+    
+    
+    <category term="面试题" scheme="https://rainsoil.github.io/categories/%E9%9D%A2%E8%AF%95%E9%A2%98/"/>
+    
+    <category term="面试题" scheme="https://rainsoil.github.io/categories/%E9%9D%A2%E8%AF%95%E9%A2%98/%E9%9D%A2%E8%AF%95%E9%A2%98/"/>
+    
+    
+  </entry>
+  
+  <entry>
+    <title>Java之synchronized和Lock的区别</title>
+    <link href="https://rainsoil.github.io/2022/01/04/mian-shi-ti/java-zhi-synchronized-he-lock-de-qu-bie/"/>
+    <id>https://rainsoil.github.io/2022/01/04/mian-shi-ti/java-zhi-synchronized-he-lock-de-qu-bie/</id>
+    <published>2022-01-04T02:42:07.309Z</published>
+    <updated>2022-01-04T02:42:07.309Z</updated>
+    
+    
+      
+      
+        
+        
+    <summary type="html">&lt;h1 id=&quot;Java之synchronized和Lock的区别&quot;&gt;&lt;a href=&quot;#Java之synchronized和Lock的区别&quot; class=&quot;headerlink&quot;</summary>
+        
+      
+    
+    
+    
+    <category term="面试题" scheme="https://rainsoil.github.io/categories/%E9%9D%A2%E8%AF%95%E9%A2%98/"/>
+    
+    <category term="面试题" scheme="https://rainsoil.github.io/categories/%E9%9D%A2%E8%AF%95%E9%A2%98/%E9%9D%A2%E8%AF%95%E9%A2%98/"/>
+    
+    
+  </entry>
+  
+  <entry>
+    <title>HashMap跟Hashtable有什么区别</title>
+    <link href="https://rainsoil.github.io/2022/01/04/mian-shi-ti/hashmap-gen-hashtable-you-shi-me-qu-bie/"/>
+    <id>https://rainsoil.github.io/2022/01/04/mian-shi-ti/hashmap-gen-hashtable-you-shi-me-qu-bie/</id>
+    <published>2022-01-04T02:42:07.309Z</published>
+    <updated>2022-01-04T02:42:07.309Z</updated>
+    
+    
+      
+      
+        
+        
+    <summary type="html">&lt;h1 id=&quot;HashMap跟Hashtable有什么区别&quot;&gt;&lt;a href=&quot;#HashMap跟Hashtable有什么区别&quot; class=&quot;headerlink&quot;</summary>
+        
+      
+    
+    
+    
+    <category term="面试题" scheme="https://rainsoil.github.io/categories/%E9%9D%A2%E8%AF%95%E9%A2%98/"/>
+    
+    <category term="面试题" scheme="https://rainsoil.github.io/categories/%E9%9D%A2%E8%AF%95%E9%A2%98/%E9%9D%A2%E8%AF%95%E9%A2%98/"/>
+    
+    
+  </entry>
+  
+  <entry>
+    <title>程序设计语言基础知识</title>
+    <link href="https://rainsoil.github.io/2022/01/04/ruan-kao-shu-ju-ku/cheng-xu-she-ji-yu-yan-ji-chu-zhi-shi/"/>
+    <id>https://rainsoil.github.io/2022/01/04/ruan-kao-shu-ju-ku/cheng-xu-she-ji-yu-yan-ji-chu-zhi-shi/</id>
+    <published>2022-01-04T02:42:07.305Z</published>
+    <updated>2022-01-04T02:42:07.305Z</updated>
+    
+    
+      
+      
+        
+        
+    <summary type="html">&lt;h1 id=&quot;程序设计语言基础知识&quot;&gt;&lt;a href=&quot;#程序设计语言基础知识&quot; class=&quot;headerlink&quot; title=&quot;程序设计语言基础知识&quot;&gt;&lt;/a&gt;程序设计语言基础知识&lt;/h1&gt;&lt;h2 id=&quot;1-程序设计语言概述&quot;&gt;&lt;a</summary>
+        
+      
+    
+    
+    
+    <category term="软考-数据库" scheme="https://rainsoil.github.io/categories/%E8%BD%AF%E8%80%83-%E6%95%B0%E6%8D%AE%E5%BA%93/"/>
+    
+    <category term="软考-数据库" scheme="https://rainsoil.github.io/categories/%E8%BD%AF%E8%80%83-%E6%95%B0%E6%8D%AE%E5%BA%93/%E8%BD%AF%E8%80%83-%E6%95%B0%E6%8D%AE%E5%BA%93/"/>
+    
+    
+  </entry>
+  
+  <entry>
+    <title>数据结构与算法</title>
+    <link href="https://rainsoil.github.io/2022/01/04/ruan-kao-shu-ju-ku/shu-ju-jie-gou-yu-suan-fa/"/>
+    <id>https://rainsoil.github.io/2022/01/04/ruan-kao-shu-ju-ku/shu-ju-jie-gou-yu-suan-fa/</id>
+    <published>2022-01-04T02:42:07.301Z</published>
+    <updated>2022-01-04T02:42:07.301Z</updated>
+    
+    
+      
+      
+        
+        
+    <summary type="html">&lt;h1 id=&quot;数据结构与算法&quot;&gt;&lt;a href=&quot;#数据结构与算法&quot; class=&quot;headerlink&quot; title=&quot;数据结构与算法&quot;&gt;&lt;/a&gt;数据结构与算法&lt;/h1&gt;&lt;h2 id=&quot;1-线性结构&quot;&gt;&lt;a href=&quot;#1-线性结构&quot; class=&quot;headerlink&quot;</summary>
+        
+      
+    
+    
+    
+    <category term="软考-数据库" scheme="https://rainsoil.github.io/categories/%E8%BD%AF%E8%80%83-%E6%95%B0%E6%8D%AE%E5%BA%93/"/>
+    
+    <category term="软考-数据库" scheme="https://rainsoil.github.io/categories/%E8%BD%AF%E8%80%83-%E6%95%B0%E6%8D%AE%E5%BA%93/%E8%BD%AF%E8%80%83-%E6%95%B0%E6%8D%AE%E5%BA%93/"/>
+    
+    
+  </entry>
+  
+  <entry>
+    <title>设计模式之适配器模式(7)</title>
+    <link href="https://rainsoil.github.io/2022/01/04/she-ji-mo-shi/she-ji-mo-shi-zhi-gua-pei-qi-mo-shi-7/"/>
+    <id>https://rainsoil.github.io/2022/01/04/she-ji-mo-shi/she-ji-mo-shi-zhi-gua-pei-qi-mo-shi-7/</id>
+    <published>2022-01-04T02:42:07.297Z</published>
+    <updated>2022-01-04T02:42:07.297Z</updated>
+    
+    
+      
+      
+        
+        
+    <summary type="html">&lt;h1 id=&quot;7-设计模式之适配器模式-Adapter-Pattren&quot;&gt;&lt;a href=&quot;#7-设计模式之适配器模式-Adapter-Pattren&quot; class=&quot;headerlink&quot; title=&quot;7. 设计模式之适配器模式(Adapter</summary>
+        
+      
+    
+    
+    
+    <category term="设计模式" scheme="https://rainsoil.github.io/categories/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/"/>
+    
+    <category term="设计模式" scheme="https://rainsoil.github.io/categories/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/"/>
+    
+    
+  </entry>
+  
+  <entry>
+    <title>elasticsratch问题</title>
+    <link href="https://rainsoil.github.io/2022/01/04/yi-nan-za-zheng/elasticsratch-wen-ti/"/>
+    <id>https://rainsoil.github.io/2022/01/04/yi-nan-za-zheng/elasticsratch-wen-ti/</id>
+    <published>2022-01-04T02:42:07.297Z</published>
+    <updated>2022-01-04T02:42:07.297Z</updated>
+    
+    
+      
+      
+        
+        
+    <summary type="html">&lt;h2 id=&quot;max-virtual-memory-areas-vm-max-map-count-65530-is-too-low-increase-to-at-least&quot;&gt;&lt;a</summary>
+        
+      
+    
+    
+    
+    <category term="疑难杂症" scheme="https://rainsoil.github.io/categories/%E7%96%91%E9%9A%BE%E6%9D%82%E7%97%87/"/>
+    
+    <category term="疑难杂症" scheme="https://rainsoil.github.io/categories/%E7%96%91%E9%9A%BE%E6%9D%82%E7%97%87/%E7%96%91%E9%9A%BE%E6%9D%82%E7%97%87/"/>
+    
+    
+  </entry>
+  
+  <entry>
+    <title>启动 WSL 2时警告“参考的对象类型不支持尝试的操作”</title>
+    <link href="https://rainsoil.github.io/2022/01/04/yi-nan-za-zheng/qi-dong-wsl-2-shi-jing-gao-can-kao-de-dui-xiang-lei-xing-bu-zhi-chi-chang-shi-de-cao-zuo/"/>
+    <id>https://rainsoil.github.io/2022/01/04/yi-nan-za-zheng/qi-dong-wsl-2-shi-jing-gao-can-kao-de-dui-xiang-lei-xing-bu-zhi-chi-chang-shi-de-cao-zuo/</id>
+    <published>2022-01-04T02:42:07.297Z</published>
+    <updated>2022-01-04T02:42:07.297Z</updated>
+    
+    
+      
+      
+        
+        
+    <summary type="html">&lt;h1 id=&quot;启动-WSL-2时警告“参考的对象类型不支持尝试的操作”&quot;&gt;&lt;a href=&quot;#启动-WSL-2时警告“参考的对象类型不支持尝试的操作”&quot; class=&quot;headerlink&quot; title=&quot;启动 WSL</summary>
+        
+      
+    
+    
+    
+    <category term="疑难杂症" scheme="https://rainsoil.github.io/categories/%E7%96%91%E9%9A%BE%E6%9D%82%E7%97%87/"/>
+    
+    <category term="疑难杂症" scheme="https://rainsoil.github.io/categories/%E7%96%91%E9%9A%BE%E6%9D%82%E7%97%87/%E7%96%91%E9%9A%BE%E6%9D%82%E7%97%87/"/>
+    
+    
+  </entry>
+  
+  <entry>
+    <title>CENTOS 7 和 JDK 添加中文字体</title>
+    <link href="https://rainsoil.github.io/2022/01/04/yi-nan-za-zheng/centos-7-he-jdk-tian-jia-zhong-wen-zi-ti/"/>
+    <id>https://rainsoil.github.io/2022/01/04/yi-nan-za-zheng/centos-7-he-jdk-tian-jia-zhong-wen-zi-ti/</id>
+    <published>2022-01-04T02:42:07.297Z</published>
+    <updated>2022-01-04T02:42:07.297Z</updated>
+    
+    
+      
+      
+        
+        
+    <summary type="html">&lt;h1 id=&quot;CENTOS-7-和-JDK-添加中文字体&quot;&gt;&lt;a href=&quot;#CENTOS-7-和-JDK-添加中文字体&quot; class=&quot;headerlink&quot; title=&quot;CENTOS 7 和 JDK 添加中文字体&quot;&gt;&lt;/a&gt;CENTOS 7 和 JDK</summary>
+        
+      
+    
+    
+    
+    <category term="疑难杂症" scheme="https://rainsoil.github.io/categories/%E7%96%91%E9%9A%BE%E6%9D%82%E7%97%87/"/>
+    
+    <category term="疑难杂症" scheme="https://rainsoil.github.io/categories/%E7%96%91%E9%9A%BE%E6%9D%82%E7%97%87/%E7%96%91%E9%9A%BE%E6%9D%82%E7%97%87/"/>
+    
+    
+  </entry>
+  
+</feed>

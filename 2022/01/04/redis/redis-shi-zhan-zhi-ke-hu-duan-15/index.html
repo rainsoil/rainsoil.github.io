@@ -1,0 +1,1815 @@
+<!DOCTYPE HTML>
+<html lang="zh-CN">
+
+
+<head>
+    <meta charset="utf-8">
+    <meta name="keywords" content="redis实战之客户端(15), railsoil">
+    <meta name="description" content="redis客户端1. 客户端通信原理客户端和服务器端通过TCP 连接来进行数据交互, 服务器默认的端口号是6379, 客户端和服务端发送的命令和数据一律以\r\n (CRLF 回车+换行) 结尾. 
+如果使用wireshark 对jedis">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="renderer" content="webkit|ie-stand|ie-comp">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="format-detection" content="telephone=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="referrer" content="no-referrer-when-downgrade">
+    <!-- Global site tag (gtag.js) - Google Analytics -->
+
+
+    <title>redis实战之客户端(15) | railsoil</title>
+    <link rel="icon" type="image/png" href="/favicon.png">
+
+    <link rel="stylesheet" type="text/css" href="/libs/awesome/css/all.min.css">
+    <link rel="stylesheet" type="text/css" href="/libs/materialize/materialize.min.css">
+    <link rel="stylesheet" type="text/css" href="/libs/aos/aos.css">
+    <link rel="stylesheet" type="text/css" href="/libs/animate/animate.min.css">
+    <link rel="stylesheet" type="text/css" href="/libs/lightGallery/css/lightgallery.min.css">
+    <link rel="stylesheet" type="text/css" href="/css/matery.css">
+    <link rel="stylesheet" type="text/css" href="/css/my.css">
+
+    <script src="/libs/jquery/jquery.min.js"></script>
+
+<meta name="generator" content="Hexo 5.4.0"><link rel="alternate" href="/atom.xml" title="railsoil" type="application/atom+xml">
+<link rel="stylesheet" href="/css/prism-tomorrow.css" type="text/css"></head>
+
+
+
+
+<body>
+    <header class="navbar-fixed">
+    <nav id="headNav" class="bg-color nav-transparent">
+        <div id="navContainer" class="nav-wrapper container">
+            <div class="brand-logo">
+                <a href="/" class="waves-effect waves-light">
+                    
+                    <img src="/medias/logo.png" class="logo-img" alt="LOGO">
+                    
+                    <span class="logo-span">railsoil</span>
+                </a>
+            </div>
+            
+
+<a href="#" data-target="mobile-nav" class="sidenav-trigger button-collapse"><i class="fas fa-bars"></i></a>
+<ul class="right nav-menu">
+  
+  <li class="hide-on-med-and-down nav-item">
+    
+    <a href="/" class="waves-effect waves-light">
+      
+      <i class="fas fa-home" style="zoom: 0.6;"></i>
+      
+      <span>首页</span>
+    </a>
+    
+  </li>
+  
+  <li class="hide-on-med-and-down nav-item">
+    
+    <a href="/tags" class="waves-effect waves-light">
+      
+      <i class="fas fa-tags" style="zoom: 0.6;"></i>
+      
+      <span>标签</span>
+    </a>
+    
+  </li>
+  
+  <li class="hide-on-med-and-down nav-item">
+    
+    <a href="/categories" class="waves-effect waves-light">
+      
+      <i class="fas fa-bookmark" style="zoom: 0.6;"></i>
+      
+      <span>分类</span>
+    </a>
+    
+  </li>
+  
+  <li class="hide-on-med-and-down nav-item">
+    
+    <a href="/archives" class="waves-effect waves-light">
+      
+      <i class="fas fa-archive" style="zoom: 0.6;"></i>
+      
+      <span>归档</span>
+    </a>
+    
+  </li>
+  
+  <li class="hide-on-med-and-down nav-item">
+    
+    <a href="/about" class="waves-effect waves-light">
+      
+      <i class="fas fa-user-circle" style="zoom: 0.6;"></i>
+      
+      <span>关于</span>
+    </a>
+    
+  </li>
+  
+  <li>
+    <a href="#searchModal" class="modal-trigger waves-effect waves-light">
+      <i id="searchIcon" class="fas fa-search" title="搜索" style="zoom: 0.85;"></i>
+    </a>
+  </li>
+</ul>
+
+
+<div id="mobile-nav" class="side-nav sidenav">
+
+    <div class="mobile-head bg-color">
+        
+        <img src="/medias/logo.png" class="logo-img circle responsive-img">
+        
+        <div class="logo-name">railsoil</div>
+        <div class="logo-desc">
+            
+            Never really desperate, only the lost of the soul.
+            
+        </div>
+    </div>
+
+    <ul class="menu-list mobile-menu-list">
+        
+        <li class="m-nav-item">
+	  
+		<a href="/" class="waves-effect waves-light">
+			
+			    <i class="fa-fw fas fa-home"></i>
+			
+			首页
+		</a>
+          
+        </li>
+        
+        <li class="m-nav-item">
+	  
+		<a href="/tags" class="waves-effect waves-light">
+			
+			    <i class="fa-fw fas fa-tags"></i>
+			
+			标签
+		</a>
+          
+        </li>
+        
+        <li class="m-nav-item">
+	  
+		<a href="/categories" class="waves-effect waves-light">
+			
+			    <i class="fa-fw fas fa-bookmark"></i>
+			
+			分类
+		</a>
+          
+        </li>
+        
+        <li class="m-nav-item">
+	  
+		<a href="/archives" class="waves-effect waves-light">
+			
+			    <i class="fa-fw fas fa-archive"></i>
+			
+			归档
+		</a>
+          
+        </li>
+        
+        <li class="m-nav-item">
+	  
+		<a href="/about" class="waves-effect waves-light">
+			
+			    <i class="fa-fw fas fa-user-circle"></i>
+			
+			关于
+		</a>
+          
+        </li>
+        
+        
+    </ul>
+</div>
+
+
+        </div>
+
+        
+    </nav>
+
+</header>
+
+    
+
+
+
+<div class="bg-cover pd-header post-cover" style="background-image: url('/medias/featureimages/9.jpg')">
+    <div class="container" style="right: 0px;left: 0px;">
+        <div class="row">
+            <div class="col s12 m12 l12">
+                <div class="brand">
+                    <h1 class="description center-align post-title">redis实战之客户端(15)</h1>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+
+<main class="post-container content">
+
+    
+    <link rel="stylesheet" href="/libs/tocbot/tocbot.css">
+<style>
+    #articleContent h1::before,
+    #articleContent h2::before,
+    #articleContent h3::before,
+    #articleContent h4::before,
+    #articleContent h5::before,
+    #articleContent h6::before {
+        display: block;
+        content: " ";
+        height: 100px;
+        margin-top: -100px;
+        visibility: hidden;
+    }
+
+    #articleContent :focus {
+        outline: none;
+    }
+
+    .toc-fixed {
+        position: fixed;
+        top: 64px;
+    }
+
+    .toc-widget {
+        width: 345px;
+        padding-left: 20px;
+    }
+
+    .toc-widget .toc-title {
+        padding: 35px 0 15px 17px;
+        font-size: 1.5rem;
+        font-weight: bold;
+        line-height: 1.5rem;
+    }
+
+    .toc-widget ol {
+        padding: 0;
+        list-style: none;
+    }
+
+    #toc-content {
+        padding-bottom: 30px;
+        overflow: auto;
+    }
+
+    #toc-content ol {
+        padding-left: 10px;
+    }
+
+    #toc-content ol li {
+        padding-left: 10px;
+    }
+
+    #toc-content .toc-link:hover {
+        color: #42b983;
+        font-weight: 700;
+        text-decoration: underline;
+    }
+
+    #toc-content .toc-link::before {
+        background-color: transparent;
+        max-height: 25px;
+
+        position: absolute;
+        right: 23.5vw;
+        display: block;
+    }
+
+    #toc-content .is-active-link {
+        color: #42b983;
+    }
+
+    #floating-toc-btn {
+        position: fixed;
+        right: 15px;
+        bottom: 76px;
+        padding-top: 15px;
+        margin-bottom: 0;
+        z-index: 998;
+    }
+
+    #floating-toc-btn .btn-floating {
+        width: 48px;
+        height: 48px;
+    }
+
+    #floating-toc-btn .btn-floating i {
+        line-height: 48px;
+        font-size: 1.4rem;
+    }
+</style>
+<div class="row">
+    <div id="main-content" class="col s12 m12 l9">
+        <!-- 文章内容详情 -->
+<div id="artDetail">
+    <div class="card">
+        <div class="card-content article-info">
+            <div class="row tag-cate">
+                <div class="col s7">
+                    
+                          <div class="article-tag">
+                            <span class="chip bg-color">无标签</span>
+                          </div>
+                    
+                </div>
+                <div class="col s5 right-align">
+                    
+                    <div class="post-cate">
+                        <i class="fas fa-bookmark fa-fw icon-category"></i>
+                        
+                            <a href="/categories/redis/" class="post-category">
+                                redis
+                            </a>
+                        
+                            <a href="/categories/redis/redis/" class="post-category">
+                                redis
+                            </a>
+                        
+                    </div>
+                    
+                </div>
+            </div>
+
+            <div class="post-info">
+                
+                <div class="post-date info-break-policy">
+                    <i class="far fa-calendar-minus fa-fw"></i>发布日期:&nbsp;&nbsp;
+                    2022-01-04
+                </div>
+                
+
+                
+
+                
+                <div class="info-break-policy">
+                    <i class="far fa-file-word fa-fw"></i>文章字数:&nbsp;&nbsp;
+                    6.5k
+                </div>
+                
+
+                
+                <div class="info-break-policy">
+                    <i class="far fa-clock fa-fw"></i>阅读时长:&nbsp;&nbsp;
+                    29 分
+                </div>
+                
+
+                
+                    <div id="busuanzi_container_page_pv" class="info-break-policy">
+                        <i class="far fa-eye fa-fw"></i>阅读次数:&nbsp;&nbsp;
+                        <span id="busuanzi_value_page_pv"></span>
+                    </div>
+				
+            </div>
+        </div>
+        <hr class="clearfix">
+
+        
+
+        
+
+        <div class="card-content article-card-content">
+            <div id="articleContent">
+                <h1 id="redis客户端"><a href="#redis客户端" class="headerlink" title="redis客户端"></a>redis客户端</h1><h2 id="1-客户端通信原理"><a href="#1-客户端通信原理" class="headerlink" title="1. 客户端通信原理"></a>1. 客户端通信原理</h2><p>客户端和服务器端通过TCP 连接来进行数据交互, 服务器默认的端口号是6379, 客户端和服务端发送的命令和数据一律以<code>\r\n</code> (CRLF 回车+换行) 结尾. </p>
+<p>如果使用<code>wireshark</code> 对<code>jedis</code> 抓包</p>
+<p>环境: <code>jedis</code> 连接到运行在虚拟机202的redis, 执行命令, 对<code>VMnet8</code> 进行抓包</p>
+<p>过滤条件： <code>ip.dst==192.168.8.202 and tcp.port in &#123;6379&#125;</code></p>
+<p><code>set test 2673</code> 转包</p>
+<p>可以看到实际发出的数据包是: </p>
+<pre class=" language-bash"><code class="language-bash">*3\r\n<span class="token variable">$3</span>\r\nSET\r\n<span class="token variable">$4</span>\r\ntest\r\n<span class="token variable">$4</span>\r\n2673\r\n
+</code></pre>
+<p><code>get test</code> 抓包</p>
+<pre class=" language-bash"><code class="language-bash">*2\r\n<span class="token variable">$3</span>\r\nGET\r\n<span class="token variable">$4</span>\r\ntest\r\n
+</code></pre>
+<p>客户端跟redis 之间, 使用一种特殊的编码格式(在AOF文件里面我们能够看到). 叫做<code>Redis Serialization Protocol</code>(redis 序列化协议). 特点: 容易实现、解析快、可读性强. 客户端发送服务端的消息需要经过编码, 服务端收到之后会按约定进行解码,反之亦然. </p>
+<p>基于此, 我们可以自己实现自己的一个redis客户端</p>
+<ol>
+<li>建立socket连接</li>
+<li><code>OutputStream</code> 写入数据(发送到服务端)</li>
+<li><code>InputStream</code> 读取数据(从服务端接口)</li>
+</ol>
+<pre class=" language-java"><code class="language-java">
+<span class="token comment" spellcheck="true">/**
+ * @author luyanan
+ * @since 2020/4/2
+ * &lt;p>自己编写客户端&lt;/p>
+ **/</span>
+<span class="token keyword">public</span> <span class="token keyword">class</span> <span class="token class-name">MyRedisClient</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+
+
+    <span class="token keyword">private</span> Socket socket<span class="token punctuation">;</span>
+    <span class="token keyword">private</span> OutputStream write<span class="token punctuation">;</span>
+    <span class="token keyword">private</span> InputStream read<span class="token punctuation">;</span>
+
+
+    <span class="token keyword">public</span> <span class="token function">MyRedisClient</span><span class="token punctuation">(</span>String host<span class="token punctuation">,</span> <span class="token keyword">int</span> port<span class="token punctuation">)</span> <span class="token keyword">throws</span> IOException <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+        socket <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">Socket</span><span class="token punctuation">(</span>host<span class="token punctuation">,</span> port<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        write <span class="token operator">=</span> socket<span class="token punctuation">.</span><span class="token function">getOutputStream</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        read <span class="token operator">=</span> socket<span class="token punctuation">.</span><span class="token function">getInputStream</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+
+    <span class="token keyword">private</span> <span class="token keyword">static</span> <span class="token keyword">final</span> String LINE_SUFFIX <span class="token operator">=</span> <span class="token string">"\r\n"</span><span class="token punctuation">;</span>
+
+    <span class="token keyword">public</span> <span class="token keyword">void</span> <span class="token function">set</span><span class="token punctuation">(</span>String key<span class="token punctuation">,</span> String val<span class="token punctuation">)</span> <span class="token keyword">throws</span> IOException <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+        StringBuffer sb <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">StringBuffer</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+        <span class="token comment" spellcheck="true">// 代表3个参数</span>
+        sb<span class="token punctuation">.</span><span class="token function">append</span><span class="token punctuation">(</span><span class="token string">"*3"</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">append</span><span class="token punctuation">(</span>LINE_SUFFIX<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token comment" spellcheck="true">//  第一个参数(get) 的长度</span>
+        sb<span class="token punctuation">.</span><span class="token function">append</span><span class="token punctuation">(</span><span class="token string">"$3"</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">append</span><span class="token punctuation">(</span>LINE_SUFFIX<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token comment" spellcheck="true">// 第一个参数的内容</span>
+        sb<span class="token punctuation">.</span><span class="token function">append</span><span class="token punctuation">(</span><span class="token string">"SET"</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">append</span><span class="token punctuation">(</span>LINE_SUFFIX<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token comment" spellcheck="true">// 第二个参数key的长度</span>
+        sb<span class="token punctuation">.</span><span class="token function">append</span><span class="token punctuation">(</span><span class="token string">"$"</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">append</span><span class="token punctuation">(</span>key<span class="token punctuation">.</span><span class="token function">getBytes</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">.</span>length<span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">append</span><span class="token punctuation">(</span>LINE_SUFFIX<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token comment" spellcheck="true">// 第二个参数key 的内容</span>
+        sb<span class="token punctuation">.</span><span class="token function">append</span><span class="token punctuation">(</span>key<span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">append</span><span class="token punctuation">(</span>LINE_SUFFIX<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token comment" spellcheck="true">// 第三个参数value的长度</span>
+        sb<span class="token punctuation">.</span><span class="token function">append</span><span class="token punctuation">(</span><span class="token string">"$"</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">append</span><span class="token punctuation">(</span>val<span class="token punctuation">.</span><span class="token function">getBytes</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">.</span>length<span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">append</span><span class="token punctuation">(</span>LINE_SUFFIX<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token comment" spellcheck="true">// 第三个参数value 的内容</span>
+        sb<span class="token punctuation">.</span><span class="token function">append</span><span class="token punctuation">(</span>val<span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">append</span><span class="token punctuation">(</span>LINE_SUFFIX<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        write<span class="token punctuation">.</span><span class="token function">write</span><span class="token punctuation">(</span>sb<span class="token punctuation">.</span><span class="token function">toString</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">getBytes</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token keyword">byte</span><span class="token punctuation">[</span><span class="token punctuation">]</span> bytes <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">byte</span><span class="token punctuation">[</span><span class="token number">1024</span><span class="token punctuation">]</span><span class="token punctuation">;</span>
+        read<span class="token punctuation">.</span><span class="token function">read</span><span class="token punctuation">(</span>bytes<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        System<span class="token punctuation">.</span>out<span class="token punctuation">.</span><span class="token function">println</span><span class="token punctuation">(</span><span class="token string">"----set------的返回结果为:"</span> <span class="token operator">+</span> <span class="token keyword">new</span> <span class="token class-name">String</span><span class="token punctuation">(</span>bytes<span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+
+
+    <span class="token keyword">public</span> <span class="token keyword">void</span> <span class="token function">get</span><span class="token punctuation">(</span>String key<span class="token punctuation">)</span> <span class="token keyword">throws</span> IOException <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+        StringBuffer sb <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">StringBuffer</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token comment" spellcheck="true">// 代表2个参数</span>
+        sb<span class="token punctuation">.</span><span class="token function">append</span><span class="token punctuation">(</span><span class="token string">"*2"</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">append</span><span class="token punctuation">(</span>LINE_SUFFIX<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token comment" spellcheck="true">// 第一个参数(get)的长度</span>
+        sb<span class="token punctuation">.</span><span class="token function">append</span><span class="token punctuation">(</span><span class="token string">"$3"</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">append</span><span class="token punctuation">(</span>LINE_SUFFIX<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token comment" spellcheck="true">// 第一个参数的内容</span>
+        sb<span class="token punctuation">.</span><span class="token function">append</span><span class="token punctuation">(</span><span class="token string">"GET"</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">append</span><span class="token punctuation">(</span>LINE_SUFFIX<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token comment" spellcheck="true">//第二个参数的长度</span>
+        sb<span class="token punctuation">.</span><span class="token function">append</span><span class="token punctuation">(</span><span class="token string">"$"</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">append</span><span class="token punctuation">(</span>key<span class="token punctuation">.</span><span class="token function">getBytes</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">.</span>length<span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">append</span><span class="token punctuation">(</span>LINE_SUFFIX<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token comment" spellcheck="true">// 第二个参数的值</span>
+        sb<span class="token punctuation">.</span><span class="token function">append</span><span class="token punctuation">(</span>key<span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">append</span><span class="token punctuation">(</span>LINE_SUFFIX<span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+        write<span class="token punctuation">.</span><span class="token function">write</span><span class="token punctuation">(</span>sb<span class="token punctuation">.</span><span class="token function">toString</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">getBytes</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token keyword">byte</span><span class="token punctuation">[</span><span class="token punctuation">]</span> bytes <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">byte</span><span class="token punctuation">[</span><span class="token number">1024</span><span class="token punctuation">]</span><span class="token punctuation">;</span>
+        read<span class="token punctuation">.</span><span class="token function">read</span><span class="token punctuation">(</span>bytes<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        System<span class="token punctuation">.</span>out<span class="token punctuation">.</span><span class="token function">println</span><span class="token punctuation">(</span><span class="token string">"-------get------的返回结果为:"</span> <span class="token operator">+</span> <span class="token keyword">new</span> <span class="token class-name">String</span><span class="token punctuation">(</span>bytes<span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+
+    <span class="token keyword">public</span> <span class="token keyword">static</span> <span class="token keyword">void</span> <span class="token function">main</span><span class="token punctuation">(</span>String<span class="token punctuation">[</span><span class="token punctuation">]</span> args<span class="token punctuation">)</span> <span class="token keyword">throws</span> IOException <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+        MyRedisClient redisClient <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">MyRedisClient</span><span class="token punctuation">(</span><span class="token string">"192.168.8.220"</span><span class="token punctuation">,</span> <span class="token number">6379</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        redisClient<span class="token punctuation">.</span><span class="token function">set</span><span class="token punctuation">(</span><span class="token string">"test"</span><span class="token punctuation">,</span> <span class="token string">"111111"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        redisClient<span class="token punctuation">.</span><span class="token function">get</span><span class="token punctuation">(</span><span class="token string">"test"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+<span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+</code></pre>
+<p>基于这种协议, 我们可以用java实现所有的redis操作命令。当然, 我们不需要这么做, 因为已经有很多成熟的java客户端, 实现了完整的功能和高级特性, 并且提供了很好的性能. </p>
+<p><a target="_blank" rel="noopener" href="https://redis.io/clients">https://redis.io/clients</a></p>
+<p>官网推荐的java客户端主要有三个<code>jedis</code>、<code>redisson</code>和<code>luttuce</code>.</p>
+<table>
+<thead>
+<tr>
+<th>客户端</th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>jedis</code></td>
+<td>A blazingly small and sane redis java client</td>
+</tr>
+<tr>
+<td><code>redisson</code></td>
+<td>distributed and scalable Java data structures on top of Redis server</td>
+</tr>
+<tr>
+<td><code>luttuce</code></td>
+<td>Advanced Redis client for thread-safe sync, async, and reactive usage. Supports Cluster, Sentinel, Pipelining, and codecs.</td>
+</tr>
+</tbody></table>
+<blockquote>
+<p>Spring连接<code>redis</code>使用的是什么？ <code>RedisConnectionFactory</code> 接口支持多种实现, 例如: <code>JedisConnectionFactory</code>、<code>LettuceConnectionFactory</code> 等. </p>
+</blockquote>
+<h2 id="2-Jedis"><a href="#2-Jedis" class="headerlink" title="2 Jedis"></a>2 <a target="_blank" rel="noopener" href="https://github.com/xetorthio/jedis">Jedis</a></h2><h4 id="1-2-1-特点"><a href="#1-2-1-特点" class="headerlink" title="1.2.1 特点"></a>1.2.1 特点</h4><p>jedis 是我们最熟悉和最常用的客户端. 轻量、简单、便于集成和改造. </p>
+<pre class=" language-java"><code class="language-java">    <span class="token keyword">public</span> <span class="token keyword">static</span> <span class="token keyword">void</span> <span class="token function">main</span><span class="token punctuation">(</span>String<span class="token punctuation">[</span><span class="token punctuation">]</span> args<span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+        Jedis jedis <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">Jedis</span><span class="token punctuation">(</span><span class="token string">"localhost"</span><span class="token punctuation">,</span> <span class="token number">6379</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        jedis<span class="token punctuation">.</span><span class="token function">set</span><span class="token punctuation">(</span><span class="token string">"test"</span><span class="token punctuation">,</span> <span class="token string">"111"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        System<span class="token punctuation">.</span>out<span class="token punctuation">.</span><span class="token function">println</span><span class="token punctuation">(</span>jedis<span class="token punctuation">.</span><span class="token function">get</span><span class="token punctuation">(</span><span class="token string">"test"</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        jedis<span class="token punctuation">.</span><span class="token function">close</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        
+    <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+</code></pre>
+<p><code>jedis</code> 多个线程使用一个连接的时候线程不安全. 可以使用连接池, 为每个请求创建不同的连接, 基于<code>Apache common pool</code> 实现. 跟数据库是一样的, 可以设置最大连接数等参数. <code>jedis</code> 中有多种连接池的子类. </p>
+<p><img src="http://files.luyanan.com//img/20200402133358.png" alt="image-20200402133357314"></p>
+<p><code>jedis</code> 有3种工作模式: 单节点、分片、哨兵、集群</p>
+<p>3种请求模式:<code>client</code>、<code>pipeline</code>和事务. <code>client</code>模式就是客户端发送一个命令, 阻塞等待服务端执行,然后服务返回结果。 <code>pipeline</code> 模式就是一次性发送多条命令, 最后一次性取回所有的返回结果,这种模式通过减少网络的往返时间和io读写, 大幅度提高通信性能. 第三种事务模式, <code>Transaction</code> 模式即开启redis 的事务管理, 事务模式开启后,所有的命令(除了<code>exec</code>、<code>discard</code>、<code>multi</code>和<code>watch</code>) 到达服务端以后不会立即执行, 会进入一个等待队列. </p>
+<h4 id="1-2-2-sentinel-获取连接原理"><a href="#1-2-2-sentinel-获取连接原理" class="headerlink" title="1.2.2 sentinel 获取连接原理"></a>1.2.2 sentinel 获取连接原理</h4><p>问题： <code>jedis</code> 连接<code>sentinel</code> 的时候, 我们配置的是全部哨兵地址, <code>sentinel</code> 是如何返回可用的<code>master</code>地址的呢? </p>
+<p>在构造方法:</p>
+<pre class=" language-java"><code class="language-java"><span class="token keyword">public</span> <span class="token function">JedisSentinelPool</span><span class="token punctuation">(</span>String masterName<span class="token punctuation">,</span> Set<span class="token operator">&lt;</span>String<span class="token operator">></span> sentinels<span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+        <span class="token keyword">this</span><span class="token punctuation">(</span>masterName<span class="token punctuation">,</span> sentinels<span class="token punctuation">,</span> <span class="token keyword">new</span> <span class="token class-name">GenericObjectPoolConfig</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">,</span> <span class="token number">2000</span><span class="token punctuation">,</span> <span class="token punctuation">(</span>String<span class="token punctuation">)</span>null<span class="token punctuation">,</span> <span class="token number">0</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+</code></pre>
+<p>我们继续往下看, 直到 redis.clients.jedis.JedisSentinelPool#JedisSentinelPool(java.lang.String, java.util.Set&lt;java.lang.String&gt;, org.apache.commons.pool2.impl.GenericObjectPoolConfig, int, int, java.lang.String, int, java.lang.String)</p>
+<pre class=" language-java"><code class="language-java">  <span class="token keyword">public</span> <span class="token function">JedisSentinelPool</span><span class="token punctuation">(</span>String masterName<span class="token punctuation">,</span> Set<span class="token operator">&lt;</span>String<span class="token operator">></span> sentinels<span class="token punctuation">,</span> GenericObjectPoolConfig poolConfig<span class="token punctuation">,</span> <span class="token keyword">int</span> connectionTimeout<span class="token punctuation">,</span> <span class="token keyword">int</span> soTimeout<span class="token punctuation">,</span> String password<span class="token punctuation">,</span> <span class="token keyword">int</span> database<span class="token punctuation">,</span> String clientName<span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+        <span class="token keyword">this</span><span class="token punctuation">.</span>connectionTimeout <span class="token operator">=</span> <span class="token number">2000</span><span class="token punctuation">;</span>
+        <span class="token keyword">this</span><span class="token punctuation">.</span>soTimeout <span class="token operator">=</span> <span class="token number">2000</span><span class="token punctuation">;</span>
+        <span class="token keyword">this</span><span class="token punctuation">.</span>database <span class="token operator">=</span> <span class="token number">0</span><span class="token punctuation">;</span>
+        <span class="token keyword">this</span><span class="token punctuation">.</span>masterListeners <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">HashSet</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token keyword">this</span><span class="token punctuation">.</span>log <span class="token operator">=</span> Logger<span class="token punctuation">.</span><span class="token function">getLogger</span><span class="token punctuation">(</span><span class="token keyword">this</span><span class="token punctuation">.</span><span class="token function">getClass</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">getName</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token keyword">this</span><span class="token punctuation">.</span>poolConfig <span class="token operator">=</span> poolConfig<span class="token punctuation">;</span>
+        <span class="token keyword">this</span><span class="token punctuation">.</span>connectionTimeout <span class="token operator">=</span> connectionTimeout<span class="token punctuation">;</span>
+        <span class="token keyword">this</span><span class="token punctuation">.</span>soTimeout <span class="token operator">=</span> soTimeout<span class="token punctuation">;</span>
+        <span class="token keyword">this</span><span class="token punctuation">.</span>password <span class="token operator">=</span> password<span class="token punctuation">;</span>
+        <span class="token keyword">this</span><span class="token punctuation">.</span>database <span class="token operator">=</span> database<span class="token punctuation">;</span>
+        <span class="token keyword">this</span><span class="token punctuation">.</span>clientName <span class="token operator">=</span> clientName<span class="token punctuation">;</span>
+        HostAndPort master <span class="token operator">=</span> <span class="token keyword">this</span><span class="token punctuation">.</span><span class="token function">initSentinels</span><span class="token punctuation">(</span>sentinels<span class="token punctuation">,</span> masterName<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token keyword">this</span><span class="token punctuation">.</span><span class="token function">initPool</span><span class="token punctuation">(</span>master<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+</code></pre>
+<p>我们看到调用了<code>HostAndPort master = this.initSentinels(sentinels, masterName);</code></p>
+<pre class=" language-java"><code class="language-java"> <span class="token keyword">private</span> HostAndPort <span class="token function">initSentinels</span><span class="token punctuation">(</span>Set<span class="token operator">&lt;</span>String<span class="token operator">></span> sentinels<span class="token punctuation">,</span> <span class="token keyword">final</span> String masterName<span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+
+    HostAndPort master <span class="token operator">=</span> null<span class="token punctuation">;</span>
+    <span class="token keyword">boolean</span> sentinelAvailable <span class="token operator">=</span> <span class="token boolean">false</span><span class="token punctuation">;</span>
+
+    log<span class="token punctuation">.</span><span class="token function">info</span><span class="token punctuation">(</span><span class="token string">"Trying to find master from available Sentinels..."</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+   <span class="token comment" spellcheck="true">//有多个sentinel 地址转换为一个HostAndPort 对象</span>
+    <span class="token keyword">for</span> <span class="token punctuation">(</span>String sentinel <span class="token operator">:</span> sentinels<span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+        <span class="token comment" spellcheck="true">// host:port 表示的sentinel 地址转换为一个HostAndPort 对象</span>
+      <span class="token keyword">final</span> HostAndPort hap <span class="token operator">=</span> HostAndPort<span class="token punctuation">.</span><span class="token function">parseString</span><span class="token punctuation">(</span>sentinel<span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+      log<span class="token punctuation">.</span><span class="token function">fine</span><span class="token punctuation">(</span><span class="token string">"Connecting to Sentinel "</span> <span class="token operator">+</span> hap<span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+      Jedis jedis <span class="token operator">=</span> null<span class="token punctuation">;</span>
+      <span class="token keyword">try</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+          <span class="token comment" spellcheck="true">// 连接到sentinel</span>
+        jedis <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">Jedis</span><span class="token punctuation">(</span>hap<span class="token punctuation">.</span><span class="token function">getHost</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">,</span> hap<span class="token punctuation">.</span><span class="token function">getPort</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token comment" spellcheck="true">// 根据masterName 得到一个master地址, 返回一个list, host=list[0], port=list[1]</span>
+        List<span class="token operator">&lt;</span>String<span class="token operator">></span> masterAddr <span class="token operator">=</span> jedis<span class="token punctuation">.</span><span class="token function">sentinelGetMasterAddrByName</span><span class="token punctuation">(</span>masterName<span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+        <span class="token comment" spellcheck="true">// connected to sentinel...</span>
+        sentinelAvailable <span class="token operator">=</span> <span class="token boolean">true</span><span class="token punctuation">;</span>
+       
+        <span class="token keyword">if</span> <span class="token punctuation">(</span>masterAddr <span class="token operator">==</span> null <span class="token operator">||</span> masterAddr<span class="token punctuation">.</span><span class="token function">size</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">!=</span> <span class="token number">2</span><span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+          log<span class="token punctuation">.</span><span class="token function">warning</span><span class="token punctuation">(</span><span class="token string">"Can not get master addr, master name: "</span> <span class="token operator">+</span> masterName <span class="token operator">+</span> <span class="token string">". Sentinel: "</span> <span class="token operator">+</span> hap
+              <span class="token operator">+</span> <span class="token string">"."</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+          <span class="token keyword">continue</span><span class="token punctuation">;</span>
+        <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+         <span class="token comment" spellcheck="true">// 如果在任何一个sentinel 中找到了master, 不再遍历 sentinel</span>
+        master <span class="token operator">=</span> <span class="token function">toHostAndPort</span><span class="token punctuation">(</span>masterAddr<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        log<span class="token punctuation">.</span><span class="token function">fine</span><span class="token punctuation">(</span><span class="token string">"Found Redis master at "</span> <span class="token operator">+</span> master<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token keyword">break</span><span class="token punctuation">;</span>
+      <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span> <span class="token keyword">catch</span> <span class="token punctuation">(</span><span class="token class-name">JedisException</span> e<span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+        <span class="token comment" spellcheck="true">// resolves #1036, it should handle JedisException there's another chance</span>
+        <span class="token comment" spellcheck="true">// of raising JedisDataException</span>
+        log<span class="token punctuation">.</span><span class="token function">warning</span><span class="token punctuation">(</span><span class="token string">"Cannot get master address from sentinel running @ "</span> <span class="token operator">+</span> hap <span class="token operator">+</span> <span class="token string">". Reason: "</span> <span class="token operator">+</span> e
+            <span class="token operator">+</span> <span class="token string">". Trying next one."</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+      <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span> <span class="token keyword">finally</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+        <span class="token keyword">if</span> <span class="token punctuation">(</span>jedis <span class="token operator">!=</span> null<span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+          jedis<span class="token punctuation">.</span><span class="token function">close</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+      <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+    <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+  <span class="token comment" spellcheck="true">// 到这里, 如果master为null, 则说明有两种情况, 一种是所有的sentinel节点都down掉了, 另外一种是master没有被存活的sentinel 监控到</span>
+    <span class="token keyword">if</span> <span class="token punctuation">(</span>master <span class="token operator">==</span> null<span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+      <span class="token keyword">if</span> <span class="token punctuation">(</span>sentinelAvailable<span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+        <span class="token comment" spellcheck="true">// can connect to sentinel, but master name seems to not</span>
+        <span class="token comment" spellcheck="true">// monitored</span>
+        <span class="token keyword">throw</span> <span class="token keyword">new</span> <span class="token class-name">JedisException</span><span class="token punctuation">(</span><span class="token string">"Can connect to sentinel, but "</span> <span class="token operator">+</span> masterName
+            <span class="token operator">+</span> <span class="token string">" seems to be not monitored..."</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+      <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span> <span class="token keyword">else</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+        <span class="token keyword">throw</span> <span class="token keyword">new</span> <span class="token class-name">JedisConnectionException</span><span class="token punctuation">(</span><span class="token string">"All sentinels down, cannot determine where is "</span>
+            <span class="token operator">+</span> masterName <span class="token operator">+</span> <span class="token string">" master is running..."</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+      <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+    <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+
+     <span class="token comment" spellcheck="true">// 如果走到这里, 说明找到了master的地址</span>
+    log<span class="token punctuation">.</span><span class="token function">info</span><span class="token punctuation">(</span><span class="token string">"Redis master running at "</span> <span class="token operator">+</span> master <span class="token operator">+</span> <span class="token string">", starting Sentinel listeners..."</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+     <span class="token comment" spellcheck="true">// 启动对每个sentinel 的监控为每个sentinel 都启动一个监听者 `masterListener`. MasterListener 本身是一个线程, 它会去订阅sentinel 上关于master节点地址改变的消息. </span>
+    <span class="token keyword">for</span> <span class="token punctuation">(</span>String sentinel <span class="token operator">:</span> sentinels<span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+      <span class="token keyword">final</span> HostAndPort hap <span class="token operator">=</span> HostAndPort<span class="token punctuation">.</span><span class="token function">parseString</span><span class="token punctuation">(</span>sentinel<span class="token punctuation">)</span><span class="token punctuation">;</span>
+      MasterListener masterListener <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">MasterListener</span><span class="token punctuation">(</span>masterName<span class="token punctuation">,</span> hap<span class="token punctuation">.</span><span class="token function">getHost</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">,</span> hap<span class="token punctuation">.</span><span class="token function">getPort</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+      <span class="token comment" spellcheck="true">// whether MasterListener threads are alive or not, process can be stopped</span>
+      masterListener<span class="token punctuation">.</span><span class="token function">setDaemon</span><span class="token punctuation">(</span><span class="token boolean">true</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+      masterListeners<span class="token punctuation">.</span><span class="token function">add</span><span class="token punctuation">(</span>masterListener<span class="token punctuation">)</span><span class="token punctuation">;</span>
+      masterListener<span class="token punctuation">.</span><span class="token function">start</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+
+    <span class="token keyword">return</span> master<span class="token punctuation">;</span>
+  <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+</code></pre>
+<h4 id="1-2-3-Cluster-获取连接原理"><a href="#1-2-3-Cluster-获取连接原理" class="headerlink" title="1.2.3 Cluster 获取连接原理"></a>1.2.3 Cluster 获取连接原理</h4><pre class=" language-java"><code class="language-java">  <span class="token keyword">public</span> <span class="token keyword">static</span> <span class="token keyword">void</span> <span class="token function">main</span><span class="token punctuation">(</span>String<span class="token punctuation">[</span><span class="token punctuation">]</span> args<span class="token punctuation">)</span> <span class="token keyword">throws</span> IOException <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+        HostAndPort h1 <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">HostAndPort</span><span class="token punctuation">(</span><span class="token string">"192.168.8.207"</span><span class="token punctuation">,</span> <span class="token number">7291</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        HostAndPort h2 <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">HostAndPort</span><span class="token punctuation">(</span><span class="token string">"192.168.8.207"</span><span class="token punctuation">,</span> <span class="token number">7292</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        HostAndPort h3 <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">HostAndPort</span><span class="token punctuation">(</span><span class="token string">"192.168.8.207"</span><span class="token punctuation">,</span> <span class="token number">7293</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        HostAndPort h4 <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">HostAndPort</span><span class="token punctuation">(</span><span class="token string">"192.168.8.207"</span><span class="token punctuation">,</span> <span class="token number">7294</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        HostAndPort h5 <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">HostAndPort</span><span class="token punctuation">(</span><span class="token string">"192.168.8.207"</span><span class="token punctuation">,</span> <span class="token number">7295</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        HostAndPort h6 <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">HostAndPort</span><span class="token punctuation">(</span><span class="token string">"192.168.8.207"</span><span class="token punctuation">,</span> <span class="token number">7296</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        Set nodes <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">HashSet</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        nodes<span class="token punctuation">.</span><span class="token function">add</span><span class="token punctuation">(</span>h1<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        nodes<span class="token punctuation">.</span><span class="token function">add</span><span class="token punctuation">(</span>h2<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        nodes<span class="token punctuation">.</span><span class="token function">add</span><span class="token punctuation">(</span>h3<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        nodes<span class="token punctuation">.</span><span class="token function">add</span><span class="token punctuation">(</span>h4<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        JedisCluster cluster <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">JedisCluster</span><span class="token punctuation">(</span>nodes<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        cluster<span class="token punctuation">.</span><span class="token function">set</span><span class="token punctuation">(</span><span class="token string">"cluster:test"</span><span class="token punctuation">,</span> <span class="token string">"1111"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        System<span class="token punctuation">.</span>out<span class="token punctuation">.</span><span class="token function">println</span><span class="token punctuation">(</span>cluster<span class="token punctuation">.</span><span class="token function">get</span><span class="token punctuation">(</span><span class="token string">"cluster:test"</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        cluster<span class="token punctuation">.</span><span class="token function">close</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+</code></pre>
+<p>问题: 使用<code>jedis</code> 连接<code>cluster</code>的时候, 我们只需要连接到任意一个或者多个<code>redis group</code> 中的实例地址, 那我们是怎么获取到需要操作的<code>redis master</code> 实例的? </p>
+<p>关键问题: 在于如何存储<code>slot</code>和redis 连接池的关系</p>
+<ol>
+<li><p>程序启动初始化集群环境, 读取配置文件中的节点配置, 无论是主从, 无论多少个, 只拿第一个, 获取redis 连接实例(后面有个break)</p>
+<p> 从<code>JedisCluster cluster = new JedisCluster(nodes);</code> 进入</p>
+<p>到 <code>redis.clients.jedis.BinaryJedisCluster#BinaryJedisCluster(java.util.Set&lt;redis.clients.jedis.HostAndPort&gt;, int, int, org.apache.commons.pool2.impl.GenericObjectPoolConfig)</code></p>
+<pre class=" language-java"><code class="language-java">  <span class="token keyword">public</span> <span class="token function">BinaryJedisCluster</span><span class="token punctuation">(</span>Set<span class="token operator">&lt;</span>HostAndPort<span class="token operator">></span> jedisClusterNode<span class="token punctuation">,</span> <span class="token keyword">int</span> timeout<span class="token punctuation">,</span> <span class="token keyword">int</span> maxAttempts<span class="token punctuation">,</span>
+      <span class="token keyword">final</span> GenericObjectPoolConfig poolConfig<span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+    <span class="token keyword">this</span><span class="token punctuation">.</span>connectionHandler <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">JedisSlotBasedConnectionHandler</span><span class="token punctuation">(</span>jedisClusterNode<span class="token punctuation">,</span> poolConfig<span class="token punctuation">,</span>
+        timeout<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token keyword">this</span><span class="token punctuation">.</span>maxAttempts <span class="token operator">=</span> maxAttempts<span class="token punctuation">;</span>
+  <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+</code></pre>
+<p> 最后进入到<code>redis.clients.jedis.JedisClusterConnectionHandler#JedisClusterConnectionHandler</code></p>
+<pre class=" language-java"><code class="language-java">  <span class="token keyword">public</span> <span class="token function">JedisClusterConnectionHandler</span><span class="token punctuation">(</span>Set<span class="token operator">&lt;</span>HostAndPort<span class="token operator">></span> nodes<span class="token punctuation">,</span>
+                                       <span class="token keyword">final</span> GenericObjectPoolConfig poolConfig<span class="token punctuation">,</span> <span class="token keyword">int</span> connectionTimeout<span class="token punctuation">,</span> <span class="token keyword">int</span> soTimeout<span class="token punctuation">,</span> String password<span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+    <span class="token keyword">this</span><span class="token punctuation">.</span>cache <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">JedisClusterInfoCache</span><span class="token punctuation">(</span>poolConfig<span class="token punctuation">,</span> connectionTimeout<span class="token punctuation">,</span> soTimeout<span class="token punctuation">,</span> password<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token function">initializeSlotsCache</span><span class="token punctuation">(</span>nodes<span class="token punctuation">,</span> poolConfig<span class="token punctuation">,</span> password<span class="token punctuation">)</span><span class="token punctuation">;</span>
+  <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+</code></pre>
+<pre class=" language-java"><code class="language-java">
+ <span class="token keyword">private</span> <span class="token keyword">void</span> <span class="token function">initializeSlotsCache</span><span class="token punctuation">(</span>Set<span class="token operator">&lt;</span>HostAndPort<span class="token operator">></span> startNodes<span class="token punctuation">,</span> GenericObjectPoolConfig poolConfig<span class="token punctuation">,</span> String password<span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+   <span class="token keyword">for</span> <span class="token punctuation">(</span>HostAndPort hostAndPort <span class="token operator">:</span> startNodes<span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+       <span class="token comment" spellcheck="true">//  获取一个jedis实例</span>
+     Jedis jedis <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">Jedis</span><span class="token punctuation">(</span>hostAndPort<span class="token punctuation">.</span><span class="token function">getHost</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">,</span> hostAndPort<span class="token punctuation">.</span><span class="token function">getPort</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+     <span class="token keyword">if</span> <span class="token punctuation">(</span>password <span class="token operator">!=</span> null<span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+       jedis<span class="token punctuation">.</span><span class="token function">auth</span><span class="token punctuation">(</span>password<span class="token punctuation">)</span><span class="token punctuation">;</span>
+     <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+     <span class="token keyword">try</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+         <span class="token comment" spellcheck="true">// 获取redis节点和slot 虚拟槽</span>
+       cache<span class="token punctuation">.</span><span class="token function">discoverClusterNodesAndSlots</span><span class="token punctuation">(</span>jedis<span class="token punctuation">)</span><span class="token punctuation">;</span>
+         <span class="token comment" spellcheck="true">// 直接跳出循环</span>
+       <span class="token keyword">break</span><span class="token punctuation">;</span>
+     <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span> <span class="token keyword">catch</span> <span class="token punctuation">(</span><span class="token class-name">JedisConnectionException</span> e<span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+       <span class="token comment" spellcheck="true">// try next nodes</span>
+     <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span> <span class="token keyword">finally</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+       <span class="token keyword">if</span> <span class="token punctuation">(</span>jedis <span class="token operator">!=</span> null<span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+         jedis<span class="token punctuation">.</span><span class="token function">close</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+       <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+     <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+   <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+ <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+</code></pre>
+</li>
+<li><p>用获取的redis 连接实例执行<code>clusterSlots()</code> 方法, 实际执行redis 服务端<code>cluster solts</code> 命令, 获取虚拟槽信息. </p>
+<p> 该集合的基本信息为<code>[long,long,list,list]</code>, 第一,二个元素为该节点负责槽点的起始位置, 第三个元素为是主节点信息, 第四个元素为主节点对应的从节点的信息. 该list 的基本信息为<code>[string,int,string]</code>. 第一个是host信息, 第二个是port信息, 第三个为唯一id. </p>
+<p> <img src="http://files.luyanan.com//img/20200402142434.png" alt="image-20200402142431808"></p>
+</li>
+<li><p>获取有关节点的槽点信息后, 调用<code>getAssignedSlotArray(slotinfo)</code> 来获取所有的槽点值。</p>
+</li>
+<li><p>再获取主节点的地址信息, 调用<code>generateHostAndPort(hostInfo)</code>, 生成一个<code>hostAndPort</code> 对象. </p>
+</li>
+<li><p>再根据节点地址信息来设置节点对应的<code>jedisPool</code>,即设置<code>Map nodes</code>的值</p>
+<p> 接下来判断若此时节点信息为主节点信息, 则调用<code>assignSlotsToNodes</code> 方法, 设置每个槽点值对应的连接池信息, 即设置<code>Map slots </code>的值. </p>
+<p><code>redis.clients.jedis.JedisClusterInfoCache#discoverClusterNodesAndSlots</code></p>
+<pre class=" language-java"><code class="language-java">
+  <span class="token keyword">public</span> <span class="token keyword">void</span> <span class="token function">discoverClusterNodesAndSlots</span><span class="token punctuation">(</span>Jedis jedis<span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+    w<span class="token punctuation">.</span><span class="token function">lock</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+    <span class="token keyword">try</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+      <span class="token function">reset</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token comment" spellcheck="true">// 获取节点信息</span>
+      List<span class="token operator">&lt;</span>Object<span class="token operator">></span> slots <span class="token operator">=</span> jedis<span class="token punctuation">.</span><span class="token function">clusterSlots</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+     <span class="token comment" spellcheck="true">// 遍历3个master节点</span>
+      <span class="token keyword">for</span> <span class="token punctuation">(</span>Object slotInfoObj <span class="token operator">:</span> slots<span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+          <span class="token comment" spellcheck="true">// slotInfo 槽开始，槽结束，主，从</span>
+          <span class="token comment" spellcheck="true">// &amp;#123;[0,5460,7291,7294],[5461,10922,7292,7295],[10923,16383,7293,7296]&amp;#125;</span>
+        List<span class="token operator">&lt;</span>Object<span class="token operator">></span> slotInfo <span class="token operator">=</span> <span class="token punctuation">(</span>List<span class="token operator">&lt;</span>Object<span class="token operator">></span><span class="token punctuation">)</span> slotInfoObj<span class="token punctuation">;</span>
+        <span class="token comment" spellcheck="true">// 如果&lt;=2,表示没有分配slot</span>
+        <span class="token keyword">if</span> <span class="token punctuation">(</span>slotInfo<span class="token punctuation">.</span><span class="token function">size</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">&lt;=</span> MASTER_NODE_INDEX<span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+          <span class="token keyword">continue</span><span class="token punctuation">;</span>
+        <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+       <span class="token comment" spellcheck="true">// 获取分配到当前master节点的槽, 例如7291 节点的&amp;#123;0,1,2,3……5460&amp;#125;</span>
+        List<span class="token operator">&lt;</span>Integer<span class="token operator">></span> slotNums <span class="token operator">=</span> <span class="token function">getAssignedSlotArray</span><span class="token punctuation">(</span>slotInfo<span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+        <span class="token comment" spellcheck="true">// hostInfos</span>
+        <span class="token keyword">int</span> size <span class="token operator">=</span> slotInfo<span class="token punctuation">.</span><span class="token function">size</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>  <span class="token comment" spellcheck="true">// size是4，槽最小最大, 主, 从</span>
+          <span class="token comment" spellcheck="true">// 第3位和第4位是主从端口的信息</span>
+        <span class="token keyword">for</span> <span class="token punctuation">(</span><span class="token keyword">int</span> i <span class="token operator">=</span> MASTER_NODE_INDEX<span class="token punctuation">;</span> i <span class="token operator">&lt;</span> size<span class="token punctuation">;</span> i<span class="token operator">++</span><span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+          List<span class="token operator">&lt;</span>Object<span class="token operator">></span> hostInfos <span class="token operator">=</span> <span class="token punctuation">(</span>List<span class="token operator">&lt;</span>Object<span class="token operator">></span><span class="token punctuation">)</span> slotInfo<span class="token punctuation">.</span><span class="token function">get</span><span class="token punctuation">(</span>i<span class="token punctuation">)</span><span class="token punctuation">;</span>
+          <span class="token keyword">if</span> <span class="token punctuation">(</span>hostInfos<span class="token punctuation">.</span><span class="token function">size</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">&lt;=</span> <span class="token number">0</span><span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+            <span class="token keyword">continue</span><span class="token punctuation">;</span>
+          <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+         <span class="token comment" spellcheck="true">// 根据ip端口生成HostAndPort 对象</span>
+          HostAndPort targetNode <span class="token operator">=</span> <span class="token function">generateHostAndPort</span><span class="token punctuation">(</span>hostInfos<span class="token punctuation">)</span><span class="token punctuation">;</span>
+          <span class="token comment" spellcheck="true">// 根据HostAndPort解析出 ip:port 的 key 值，再根据 key 从缓存中查询对应的 jedisPool 实例。如果没有 jedisPool实例，就创建 JedisPool 实例，最后放入缓存中。nodeKey 和 nodePool 的关系</span>
+            <span class="token function">setupNodeIfNotExist</span><span class="token punctuation">(</span>targetNode<span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <span class="token comment" spellcheck="true">// 把 slot 和 jedisPool 缓存起来（16384 个），key 是 slot 下标，value 是连接池</span>
+          <span class="token keyword">if</span> <span class="token punctuation">(</span>i <span class="token operator">==</span> MASTER_NODE_INDEX<span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+            <span class="token function">assignSlotsToNode</span><span class="token punctuation">(</span>slotNums<span class="token punctuation">,</span> targetNode<span class="token punctuation">)</span><span class="token punctuation">;</span>
+          <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+        <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+      <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+    <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span> <span class="token keyword">finally</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+      w<span class="token punctuation">.</span><span class="token function">unlock</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+  <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+</code></pre>
+</li>
+</ol>
+<p>从集群环境中存取值: </p>
+<ol>
+<li>把key作为参数, 执行<code>CRC16</code> 算法, 获取key对应的<code>slot</code>值. </li>
+<li>通过该<code>slot</code> 值, 去<code>slots</code>的map 集合中获取<code>jedisPool</code>实例. </li>
+<li>通过<code>jedisPool</code> 实例获取<code>jedis</code> 实例, 最终完成redis数据存取工作. </li>
+</ol>
+<h4 id="1-2-4-pipeline"><a href="#1-2-4-pipeline" class="headerlink" title="1.2.4 pipeline"></a>1.2.4 pipeline</h4><p> 当我们使用set方法设置几万条数据的时候, 会发现非常慢, 完全没有把redis  的10万的QPS 利用起来, 但是单个命令的执行到底慢在哪里? </p>
+<h5 id="慢在哪里"><a href="#慢在哪里" class="headerlink" title="慢在哪里?"></a>慢在哪里?</h5><p>redis 使用的是客户端/服务端(C/S) 模式和请求/响应协议的TCP服务器 , 这意味着通常情况下下一个请求会遵循以下步骤:</p>
+<ul>
+<li>客户端向服务端发送一个查询请求, 并监听socket 返回,通常是以阻塞模式, 等待服务端响应. </li>
+<li>服务端处理命令, 并将结果返回给客户端. </li>
+</ul>
+<p>Redis客户端与redis服务端之间使用TCP 协议进行连接, 一个客户端可以通过一个socket 连接发起多个请求命令. 每个请求命令发出后client 通常会阻塞并等待redis服务器处理, Redis处理完成后请求命令会将结果通过响应报文返回给 Client, 因此当执行多条命令的时候都需要等待上一个命令执行完毕才执行 。 </p>
+<p>Redis 本身提供了一些批量操作的命令, 比如<code>mget</code>、<code>mset</code>,可以减少通信的时间, 但是大部分都是不支持<code>multi</code>操作的, 例如<code>hash</code>就没有. </p>
+<p> 由于通信会有网络延迟, 例如<code>client</code> 和<code>server</code> 之间的包传输时间需要10毫秒, 一次交互就需要20毫秒(<code>RTT：Round Trip Time</code>), 这样的话, <code>client</code> 1秒钟也只能发送50条命令, 这显然没有充分利用redis 的处理能力. 另外一个, redis 服务端执行I/O的次数过多. </p>
+<h5 id="pipeline-管道"><a href="#pipeline-管道" class="headerlink" title="pipeline 管道"></a><a target="_blank" rel="noopener" href="https://redis.io/topics/pipelining">pipeline 管道</a></h5><p>那我们能不能像数据库的<code>batch</code>操作一样, 把一组命令组装在一起发送给redis 服务端执行,然后一次性获取返回结果呢? 这个就是<code>pipeline</code>的作用. <code>pipeline</code> 通过一个队列将所有的命令缓存起来, 然后把多条命令在一次连接中发送给服务器. </p>
+<p><img src="http://files.luyanan.com//img/20200402145658.png" alt="image-20200402145657214"></p>
+<p>我们先来看一下效果： </p>
+<pre class=" language-java"><code class="language-java"><span class="token comment" spellcheck="true">/**
+ * @author luyanan
+ * @since 2020/4/2
+ * &lt;p>使用pipeline 测试set&lt;/p>
+ **/</span>
+<span class="token keyword">public</span> <span class="token keyword">class</span> <span class="token class-name">PipelineTest</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+
+    <span class="token keyword">private</span> <span class="token keyword">static</span> <span class="token keyword">final</span> String host <span class="token operator">=</span> <span class="token string">"localhost"</span><span class="token punctuation">;</span>
+    <span class="token keyword">private</span> <span class="token keyword">static</span> <span class="token keyword">final</span> <span class="token keyword">int</span> port <span class="token operator">=</span> <span class="token number">6379</span><span class="token punctuation">;</span>
+
+    <span class="token keyword">private</span> <span class="token keyword">static</span> <span class="token keyword">final</span> <span class="token keyword">int</span> count <span class="token operator">=</span> <span class="token number">100000</span><span class="token punctuation">;</span>
+
+    <span class="token keyword">public</span> <span class="token keyword">static</span> <span class="token keyword">void</span> <span class="token function">main</span><span class="token punctuation">(</span>String<span class="token punctuation">[</span><span class="token punctuation">]</span> args<span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+        <span class="token comment" spellcheck="true">// 普通插入</span>
+        <span class="token keyword">new</span> <span class="token class-name">Thread</span><span class="token punctuation">(</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">-</span><span class="token operator">></span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+            <span class="token keyword">long</span> t1 <span class="token operator">=</span> System<span class="token punctuation">.</span><span class="token function">currentTimeMillis</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+            Jedis jedis <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">Jedis</span><span class="token punctuation">(</span>host<span class="token punctuation">,</span> port<span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <span class="token keyword">for</span> <span class="token punctuation">(</span><span class="token keyword">int</span> i <span class="token operator">=</span> <span class="token number">0</span><span class="token punctuation">;</span> i <span class="token operator">&lt;</span> count<span class="token punctuation">;</span> i<span class="token operator">++</span><span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+                jedis<span class="token punctuation">.</span><span class="token function">set</span><span class="token punctuation">(</span><span class="token string">"aa"</span> <span class="token operator">+</span> i<span class="token punctuation">,</span> <span class="token string">""</span> <span class="token operator">+</span> i<span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+            <span class="token keyword">long</span> t2 <span class="token operator">=</span> System<span class="token punctuation">.</span><span class="token function">currentTimeMillis</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+            System<span class="token punctuation">.</span>out<span class="token punctuation">.</span><span class="token function">println</span><span class="token punctuation">(</span><span class="token string">"普通插入"</span> <span class="token operator">+</span> count <span class="token operator">+</span> <span class="token string">"条数据,耗时:"</span> <span class="token operator">+</span> <span class="token punctuation">(</span>t2 <span class="token operator">-</span> t1<span class="token punctuation">)</span> <span class="token operator">+</span> <span class="token string">"毫秒"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+            <span class="token keyword">for</span> <span class="token punctuation">(</span><span class="token keyword">int</span> i <span class="token operator">=</span> <span class="token number">0</span><span class="token punctuation">;</span> i <span class="token operator">&lt;</span> count<span class="token punctuation">;</span> i<span class="token operator">++</span><span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+                jedis<span class="token punctuation">.</span><span class="token function">get</span><span class="token punctuation">(</span><span class="token string">"aa"</span> <span class="token operator">+</span> i<span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+            <span class="token keyword">long</span> t3 <span class="token operator">=</span> System<span class="token punctuation">.</span><span class="token function">currentTimeMillis</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+            System<span class="token punctuation">.</span>out<span class="token punctuation">.</span><span class="token function">println</span><span class="token punctuation">(</span><span class="token string">"普通获取"</span> <span class="token operator">+</span> count <span class="token operator">+</span> <span class="token string">"条数据,耗时:"</span> <span class="token operator">+</span> <span class="token punctuation">(</span>t3 <span class="token operator">-</span> t2<span class="token punctuation">)</span><span class="token operator">+</span> <span class="token string">"毫秒"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">start</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+
+        <span class="token comment" spellcheck="true">// pipeline插入</span>
+        <span class="token keyword">new</span> <span class="token class-name">Thread</span><span class="token punctuation">(</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">-</span><span class="token operator">></span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+            <span class="token keyword">long</span> t1 <span class="token operator">=</span> System<span class="token punctuation">.</span><span class="token function">currentTimeMillis</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+            Jedis jedis <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">Jedis</span><span class="token punctuation">(</span>host<span class="token punctuation">,</span> port<span class="token punctuation">)</span><span class="token punctuation">;</span>
+            Pipeline pipelined <span class="token operator">=</span> jedis<span class="token punctuation">.</span><span class="token function">pipelined</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <span class="token keyword">for</span> <span class="token punctuation">(</span><span class="token keyword">int</span> i <span class="token operator">=</span> <span class="token number">0</span><span class="token punctuation">;</span> i <span class="token operator">&lt;</span> count<span class="token punctuation">;</span> i<span class="token operator">++</span><span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+                pipelined<span class="token punctuation">.</span><span class="token function">set</span><span class="token punctuation">(</span><span class="token string">"pp"</span> <span class="token operator">+</span> i<span class="token punctuation">,</span> <span class="token string">""</span> <span class="token operator">+</span> i<span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+            pipelined<span class="token punctuation">.</span><span class="token function">syncAndReturnAll</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <span class="token keyword">long</span> t2 <span class="token operator">=</span> System<span class="token punctuation">.</span><span class="token function">currentTimeMillis</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+            System<span class="token punctuation">.</span>out<span class="token punctuation">.</span><span class="token function">println</span><span class="token punctuation">(</span><span class="token string">"pipeline插入"</span> <span class="token operator">+</span> count <span class="token operator">+</span> <span class="token string">"条数据,耗时:"</span> <span class="token operator">+</span> <span class="token punctuation">(</span>t2 <span class="token operator">-</span> t1<span class="token punctuation">)</span><span class="token operator">+</span> <span class="token string">"毫秒"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+            <span class="token keyword">for</span> <span class="token punctuation">(</span><span class="token keyword">int</span> i <span class="token operator">=</span> <span class="token number">0</span><span class="token punctuation">;</span> i <span class="token operator">&lt;</span> count<span class="token punctuation">;</span> i<span class="token operator">++</span><span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+                pipelined<span class="token punctuation">.</span><span class="token function">get</span><span class="token punctuation">(</span><span class="token string">"pp"</span> <span class="token operator">+</span> i<span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+            pipelined<span class="token punctuation">.</span><span class="token function">syncAndReturnAll</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <span class="token keyword">long</span> t3 <span class="token operator">=</span> System<span class="token punctuation">.</span><span class="token function">currentTimeMillis</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+            System<span class="token punctuation">.</span>out<span class="token punctuation">.</span><span class="token function">println</span><span class="token punctuation">(</span><span class="token string">"pipeline获取"</span> <span class="token operator">+</span> count <span class="token operator">+</span> <span class="token string">"条数据,耗时:"</span> <span class="token operator">+</span> <span class="token punctuation">(</span>t3 <span class="token operator">-</span> t2<span class="token punctuation">)</span><span class="token operator">+</span> <span class="token string">"毫秒"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">start</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+
+<span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+</code></pre>
+<p>查看结果</p>
+<pre class=" language-text"><code class="language-text">pipeline插入100000条数据,耗时:1275毫秒
+pipeline获取100000条数据,耗时:472毫秒
+普通插入100000条数据,耗时:166122毫秒
+普通获取100000条数据,耗时:170747毫秒
+</code></pre>
+<p>要实现<code>pipeline</code> , 既要服务端的支持, 也要客户端的支持. 对于服务端来说，需要能够处理客户端通过一个TCP连接发送起来的多个命令, 并且逐个执行命令一起返回. </p>
+<p>对于客户端来说, 要把多个命令缓存起来, 达到一定的条件就发送出去, 最后才处理redis的应答(这里也要注意对客户端内存的消耗)</p>
+<p><code>jedis-pipeline</code>的<code>client-buffer</code>限制是: 8192bytes, 客户端堆积的命令超过<code>8192bytes</code> 时, 会发送给服务端. </p>
+<p>源码: <code>redis.clients.util.RedisOutputStream#RedisOutputStream(java.io.OutputStream)</code></p>
+<pre class=" language-java"><code class="language-java">  <span class="token keyword">public</span> <span class="token function">RedisOutputStream</span><span class="token punctuation">(</span><span class="token keyword">final</span> OutputStream out<span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+    <span class="token keyword">this</span><span class="token punctuation">(</span>out<span class="token punctuation">,</span> <span class="token number">8192</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+  <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+</code></pre>
+<p><code>pipeline</code> 对于命令条数没有限制, 但是命令可能受限于TCP包的大小. </p>
+<p>如果<code>jedis </code> 发送了一组命令, 而发送请求还没有结束, redis响应的结果会放在接收缓存区内, 如果接收缓冲区满了, <code>jedis</code> 会通知<code>redis win=0</code>, 此时redis 不会在发送结果给<code>jedis</code>端, 转而把响应结果保存在redis 服务端的输出缓冲区中,. </p>
+<p>输出缓冲区的配置<code>redis.conf</code></p>
+<pre class=" language-properties"><code class="language-properties"><span class="token attr-name">client-output-buffer-limit</span> <span class="token attr-value">&lt;class> &lt;hard limit> &lt;soft limit> &lt;soft seconds></span>
+</code></pre>
+<pre class=" language-properties"><code class="language-properties"><span class="token attr-name">client-output-buffer-limit</span> <span class="token attr-value">normal 0 0 0</span>
+<span class="token attr-name">client-output-buffer-limit</span> <span class="token attr-value">replica 256mb 64mb 60</span>
+<span class="token attr-name">client-output-buffer-limit</span> <span class="token attr-value">pubsub 32mb 8mb 60</span>
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>配置</th>
+<th>作用</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>class</td>
+<td>客户端类型，分为三种。a）normal：普通客户端；b）slave：slave 客户端，用于复制；c） pubsub：发布订阅客户端</td>
+</tr>
+<tr>
+<td><code>hard limit</code></td>
+<td>如果客户端使用的输出缓冲区大于，客户端会被立即关闭，0 代表不限制</td>
+</tr>
+<tr>
+<td><code>soft limit soft seconds</code></td>
+<td>如果客户端使用的输出缓冲区超过了并且持续了秒，客户端会被立即 关闭</td>
+</tr>
+</tbody></table>
+<p>每个客户端使用的输出缓存区的大小可以用<code>client list</code>命令查看</p>
+<pre class=" language-bash"><code class="language-bash">redis<span class="token operator">></span> client list
+</code></pre>
+<blockquote>
+<p>id=5 addr=192.168.8.1:10859 fd=8 name= age=5 idle=0 flags=N db=0 sub=0 psub=0 multi=-1 qbuf=5 qbuf-free=32763 obl=16380 oll=227 omem=4654408 events=rw cmd=set</p>
+</blockquote>
+<ul>
+<li><code>obl</code>: 输出缓冲区的长度(字节为单位, 0表示没有分配输出缓冲区)</li>
+<li><code>oll</code>: 输出列表包含的对象数量(当输出缓冲区没有剩余空间时,命令回复会以字符串对象的形式被入队到这个队列里)</li>
+<li><code>omen</code>: 输出缓冲区和输出列表占用的内存总量. </li>
+</ul>
+<h5 id="使用场景"><a href="#使用场景" class="headerlink" title="使用场景"></a>使用场景</h5><p><code>pipeline</code> 适用于什么场景呢？ </p>
+<p>如果某些操作需要马上得到redis操作是否成功的结果, 这种场景就不适合. </p>
+<p>有些场景, 例如批量写入数据,对于结果的实时性和成功性要求不高的情况, 就可以用<code>pipeline</code>. </p>
+<h4 id="1-2-5-jedis-实现分布式锁"><a href="#1-2-5-jedis-实现分布式锁" class="headerlink" title="1.2.5  jedis 实现分布式锁"></a>1.2.5  <code>jedis</code> 实现分布式锁</h4><p><a target="_blank" rel="noopener" href="https://redis.io/topics/distlock">原文地址</a>,  <a target="_blank" rel="noopener" href="http://redis.cn/topics/distlock.html">中文地址</a></p>
+<p>分布式锁的基本特性或者要求: </p>
+<ol>
+<li>互斥性：只有一个客户端能够持有锁. </li>
+<li>不会产生死锁, 即使持有锁的客户端崩溃, 也能保证后续其他客户端可以获取锁. </li>
+<li>只有持有这把锁的客户端才能解锁</li>
+</ol>
+<pre class=" language-java"><code class="language-java"> <span class="token comment" spellcheck="true">/**
+     * 尝试获取分布式锁
+     * @param jedis Redis客户端
+     * @param lockKey 锁
+     * @param requestId 请求标识
+     * @param expireTime 超期时间
+     * @return 是否获取成功
+     */</span>
+    <span class="token keyword">public</span> <span class="token keyword">static</span> <span class="token keyword">boolean</span> <span class="token function">tryGetDistributedLock</span><span class="token punctuation">(</span>Jedis jedis<span class="token punctuation">,</span> String lockKey<span class="token punctuation">,</span> String requestId<span class="token punctuation">,</span> <span class="token keyword">int</span> expireTime<span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+        <span class="token comment" spellcheck="true">// set支持多个参数 NX（not exist） XX（exist） EX（seconds） PX（million seconds）</span>
+        String result <span class="token operator">=</span> jedis<span class="token punctuation">.</span><span class="token function">set</span><span class="token punctuation">(</span>lockKey<span class="token punctuation">,</span> requestId<span class="token punctuation">,</span> SET_IF_NOT_EXIST<span class="token punctuation">,</span> SET_WITH_EXPIRE_TIME<span class="token punctuation">,</span> expireTime<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token keyword">if</span> <span class="token punctuation">(</span>LOCK_SUCCESS<span class="token punctuation">.</span><span class="token function">equals</span><span class="token punctuation">(</span>result<span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+            <span class="token keyword">return</span> <span class="token boolean">true</span><span class="token punctuation">;</span>
+        <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+        <span class="token keyword">return</span> <span class="token boolean">false</span><span class="token punctuation">;</span>
+    <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+</code></pre>
+<p> 参数解读: </p>
+<ol>
+<li><code>lockKey</code>: 是redis key 的名称, 也就是谁添加成功了这个key就代表谁获取锁成功. </li>
+<li><code>reqyesuId</code>: 是客户端的id,设置成<code>value</code>, 如果我们要保证只有加锁的客户端才能释放锁, 就必须获取客户端的ID(保证第三点)</li>
+<li><code>SET_IF_NOT_EXIST</code> 是我们的命令里面加上<code>NX</code>（保证第一点）</li>
+<li><code>SET_WITH_EXPIRE_TIME</code>: <code>PX</code> 代表以毫秒为单位设置key 的过期时间(保证第2点), <code>expireTime</code> 是自动释放锁的时间, 比如5000代表5秒</li>
+</ol>
+<p>释放锁, 直接删除key 来释放锁, 可以吗? 就像这样</p>
+<pre class=" language-java"><code class="language-java"><span class="token keyword">public</span> <span class="token keyword">static</span> <span class="token keyword">void</span> <span class="token function">wrongReleaseLock1</span><span class="token punctuation">(</span>Jedis jedis<span class="token punctuation">,</span> String lockKey<span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+   jedis<span class="token punctuation">.</span><span class="token function">del</span><span class="token punctuation">(</span>lockKey<span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+</code></pre>
+<p>没有对<code>requestId</code> 进行判断, 可能会释放其他客户端持有的锁. </p>
+<p>先判断后删除呢? </p>
+<pre class=" language-java"><code class="language-java"><span class="token keyword">public</span> <span class="token keyword">static</span> <span class="token keyword">void</span> <span class="token function">wrongReleaseLock2</span><span class="token punctuation">(</span>Jedis jedis<span class="token punctuation">,</span> String lockKey<span class="token punctuation">,</span> String requestId<span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+    <span class="token comment" spellcheck="true">// 判断加锁与解锁是不是同一个客户端</span>
+    <span class="token keyword">if</span> <span class="token punctuation">(</span>requestId<span class="token punctuation">.</span><span class="token function">equals</span><span class="token punctuation">(</span>jedis<span class="token punctuation">.</span><span class="token function">get</span><span class="token punctuation">(</span>lockKey<span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+   <span class="token comment" spellcheck="true">// 若在此时，这把锁突然不是这个客户端的，则会误解锁</span>
+    jedis<span class="token punctuation">.</span><span class="token function">del</span><span class="token punctuation">(</span>lockKey<span class="token punctuation">)</span><span class="token punctuation">;</span>
+  <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+<span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+</code></pre>
+<p>如果在释放锁的时候, 这把锁已经不属于这个客户端了(例如已经过期, 并且已经被别的客户端获取锁成功了)， 那就回出现释放了其他客户端的锁的情况. </p>
+<p>所以我们把判断客户端是否相等和删除key的操作放在<code>lua</code>脚本里面执行, </p>
+<pre class=" language-java"><code class="language-java"> <span class="token comment" spellcheck="true">/**
+     * 释放分布式锁
+     * @param jedis Redis客户端
+     * @param lockKey 锁
+     * @param requestId 请求标识
+     * @return 是否释放成功
+     */</span>
+    <span class="token keyword">public</span> <span class="token keyword">static</span> <span class="token keyword">boolean</span> <span class="token function">releaseDistributedLock</span><span class="token punctuation">(</span>Jedis jedis<span class="token punctuation">,</span> String lockKey<span class="token punctuation">,</span> String requestId<span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+        String script <span class="token operator">=</span> <span class="token string">"if redis.call('get', KEYS[1]) == ARGV[1] then return redis.call('del', KEYS[1]) else return 0 end"</span><span class="token punctuation">;</span>
+        Object result <span class="token operator">=</span> jedis<span class="token punctuation">.</span><span class="token function">eval</span><span class="token punctuation">(</span>script<span class="token punctuation">,</span> Collections<span class="token punctuation">.</span><span class="token function">singletonList</span><span class="token punctuation">(</span>lockKey<span class="token punctuation">)</span><span class="token punctuation">,</span> Collections<span class="token punctuation">.</span><span class="token function">singletonList</span><span class="token punctuation">(</span>requestId<span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+        <span class="token keyword">if</span> <span class="token punctuation">(</span>RELEASE_SUCCESS<span class="token punctuation">.</span><span class="token function">equals</span><span class="token punctuation">(</span>result<span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+            <span class="token keyword">return</span> <span class="token boolean">true</span><span class="token punctuation">;</span>
+        <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+        <span class="token keyword">return</span> <span class="token boolean">false</span><span class="token punctuation">;</span>
+    <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+</code></pre>
+<p>这个是jedis 里面分布式锁的实现. </p>
+<h2 id="3-Luttuce"><a href="#3-Luttuce" class="headerlink" title="3 Luttuce"></a>3 <a target="_blank" rel="noopener" href="https://lettuce.io/"><code>Luttuce</code></a></h2><h4 id="1-3-1-特点"><a href="#1-3-1-特点" class="headerlink" title="1.3.1 特点"></a>1.3.1 特点</h4><p>与<code>jedis</code>相比, <code>Luttuce</code>则完全克服了其线程不安全的缺点：<code>Luttuce</code> 是一个可伸缩的线程安全的redis客户端, 支持同步、异步和响应式模式(<code>Reactive</code>).多线程可以共享一个连接实例,而不必担心多线程并发的问题. </p>
+<p>同步调用：</p>
+<pre class=" language-java"><code class="language-java"> <span class="token keyword">public</span> <span class="token keyword">static</span> <span class="token keyword">void</span> <span class="token function">main</span><span class="token punctuation">(</span>String<span class="token punctuation">[</span><span class="token punctuation">]</span> args<span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+
+        RedisClient redisClient <span class="token operator">=</span> RedisClient<span class="token punctuation">.</span><span class="token function">create</span><span class="token punctuation">(</span><span class="token string">"redis://127.0.0.1:6379"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token comment" spellcheck="true">// 线程安全的长连接, 连接丢失的时候会自动创建</span>
+        StatefulRedisConnection<span class="token operator">&lt;</span>String<span class="token punctuation">,</span> String<span class="token operator">></span> connect <span class="token operator">=</span> redisClient<span class="token punctuation">.</span><span class="token function">connect</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token comment" spellcheck="true">// 获取同步执行命令， 默认超时时间, 默认超时时间为60s</span>
+        RedisCommands<span class="token operator">&lt;</span>String<span class="token punctuation">,</span> String<span class="token operator">></span> commands <span class="token operator">=</span>
+                connect<span class="token punctuation">.</span><span class="token function">sync</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token comment" spellcheck="true">// 发送get请求,</span>
+        commands<span class="token punctuation">.</span><span class="token function">set</span><span class="token punctuation">(</span><span class="token string">"sync_test"</span><span class="token punctuation">,</span> <span class="token string">"1111"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        String value <span class="token operator">=</span> commands<span class="token punctuation">.</span><span class="token function">get</span><span class="token punctuation">(</span><span class="token string">"sync_test"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token comment" spellcheck="true">//关闭连接</span>
+        connect<span class="token punctuation">.</span><span class="token function">close</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token comment" spellcheck="true">//关闭客户端</span>
+        redisClient<span class="token punctuation">.</span><span class="token function">shutdown</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+    <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+</code></pre>
+<p>异步调用</p>
+<pre class=" language-java"><code class="language-java"><span class="token keyword">public</span> <span class="token keyword">static</span> <span class="token keyword">void</span> <span class="token function">main</span><span class="token punctuation">(</span>String<span class="token punctuation">[</span><span class="token punctuation">]</span> args<span class="token punctuation">)</span> <span class="token keyword">throws</span> InterruptedException<span class="token punctuation">,</span> ExecutionException<span class="token punctuation">,</span> TimeoutException <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+
+        RedisClient redisClient <span class="token operator">=</span> RedisClient<span class="token punctuation">.</span><span class="token function">create</span><span class="token punctuation">(</span><span class="token string">"redis://127.0.0.1:6379"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token comment" spellcheck="true">// 线程安全的长连接, 连接丢失的时候会自动创建</span>
+        StatefulRedisConnection<span class="token operator">&lt;</span>String<span class="token punctuation">,</span> String<span class="token operator">></span> connect <span class="token operator">=</span> redisClient<span class="token punctuation">.</span><span class="token function">connect</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+        <span class="token comment" spellcheck="true">// 获取异步执行命名</span>
+        RedisAsyncCommands<span class="token operator">&lt;</span>String<span class="token punctuation">,</span> String<span class="token operator">></span> commands <span class="token operator">=</span> connect<span class="token punctuation">.</span><span class="token function">async</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token comment" spellcheck="true">// 发送get请求,</span>
+        commands<span class="token punctuation">.</span><span class="token function">set</span><span class="token punctuation">(</span><span class="token string">"async_test"</span><span class="token punctuation">,</span> <span class="token string">"1111"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        RedisFuture<span class="token operator">&lt;</span>String<span class="token operator">></span> future <span class="token operator">=</span> commands<span class="token punctuation">.</span><span class="token function">get</span><span class="token punctuation">(</span><span class="token string">"sync_test"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        String value <span class="token operator">=</span> future<span class="token punctuation">.</span><span class="token function">get</span><span class="token punctuation">(</span><span class="token number">60</span><span class="token punctuation">,</span> TimeUnit<span class="token punctuation">.</span>SECONDS<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token comment" spellcheck="true">//关闭连接</span>
+        connect<span class="token punctuation">.</span><span class="token function">close</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token comment" spellcheck="true">//关闭客户端</span>
+        redisClient<span class="token punctuation">.</span><span class="token function">shutdown</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+    <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+</code></pre>
+<p>它是基于<code>Netty</code>框架构建的, 支持redis 的高级功能, 比如<code>pipeline</code>、发布订阅、事务、<code>sentinel</code>、集群, 支持连接池. </p>
+<p><code>Luttuce</code> 是<code>Spring Boot</code> 2.X 默认的客户端, 替换了<code>jedis</code>. 集成之后不需要单独使用它, 直接调用<code>Spring</code>的<code>RedisTemplate</code> 操作, 连接和创建和关闭也是不需要我们自己操心. </p>
+<h2 id="4-Redisson"><a href="#4-Redisson" class="headerlink" title="4   Redisson"></a>4   <a target="_blank" rel="noopener" href="https://redisson.org/"><code>Redisson</code></a></h2><p>文档地址 : <a target="_blank" rel="noopener" href="https://github.com/redisson/redisson/wiki/%E7%9B%AE%E5%BD%95">https://github.com/redisson/redisson/wiki/%E7%9B%AE%E5%BD%95</a>    </p>
+<h4 id="1-4-1-本质"><a href="#1-4-1-本质" class="headerlink" title="1.4.1 本质"></a>1.4.1 本质</h4><p><code>Redisson</code> 是一个在redis的基础上实现的java驻内存数据网格(<code>In-Memory Data Grid</code>), 提供了分布式和可扩展的java数据结构. </p>
+<h4 id="1-4-2-特点"><a href="#1-4-2-特点" class="headerlink" title="1.4.2 特点"></a>1.4.2 特点</h4><p>基于Netty实现,采用非阻塞io, 性能高. </p>
+<p>支持异步请求. </p>
+<p>支持连接池、<code>pipeline</code>、<code>LUA Scripting</code>、<code>Redis Sentinel</code>、<code>Redis Cluster</code>. </p>
+<p>不支持事务, 官方建议使用<code>LUA Scripting</code> 代替事务.</p>
+<p>主从、哨兵、集群都支持, Spring 也可以配置和注入<code>RedissonClient</code></p>
+<h4 id="1-4-3-实现分布锁"><a href="#1-4-3-实现分布锁" class="headerlink" title="1.4.3 实现分布锁"></a>1.4.3 实现分布锁</h4><p>在<code>Redisson</code> 里面提供了简单的分布式锁的实现. </p>
+<p><img src="http://files.luyanan.com//img/20200402204026.png" alt="image-20200402204005932"></p>
+<pre class=" language-java"><code class="language-java"><span class="token keyword">public</span> <span class="token keyword">class</span> <span class="token class-name">LockTest</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+
+    <span class="token keyword">private</span> <span class="token keyword">static</span> RedissonClient redissonClient<span class="token punctuation">;</span>
+
+    <span class="token keyword">static</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+        Config config <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">Config</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        config<span class="token punctuation">.</span><span class="token function">useSingleServer</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">setAddress</span><span class="token punctuation">(</span><span class="token string">"redis://127.0.0.1:6379"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        redissonClient <span class="token operator">=</span> Redisson<span class="token punctuation">.</span><span class="token function">create</span><span class="token punctuation">(</span>config<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+
+    <span class="token keyword">public</span> <span class="token keyword">static</span> <span class="token keyword">void</span> <span class="token function">main</span><span class="token punctuation">(</span>String<span class="token punctuation">[</span><span class="token punctuation">]</span> args<span class="token punctuation">)</span> <span class="token keyword">throws</span> InterruptedException <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+
+
+        RLock lock <span class="token operator">=</span> redissonClient<span class="token punctuation">.</span><span class="token function">getLock</span><span class="token punctuation">(</span><span class="token string">"updateAccount"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+        <span class="token keyword">if</span> <span class="token punctuation">(</span>lock<span class="token punctuation">.</span><span class="token function">tryLock</span><span class="token punctuation">(</span><span class="token number">100</span><span class="token punctuation">,</span> <span class="token number">10</span><span class="token punctuation">,</span> TimeUnit<span class="token punctuation">.</span>SECONDS<span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+            System<span class="token punctuation">.</span>out<span class="token punctuation">.</span><span class="token function">println</span><span class="token punctuation">(</span><span class="token string">"获取锁"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+        lock<span class="token punctuation">.</span><span class="token function">unlock</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        redissonClient<span class="token punctuation">.</span><span class="token function">shutdown</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+
+<span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+</code></pre>
+<p>在获得<code>RLock</code>  之后, 有个<code>tryLock</code> 方法, 里面有3个参数: </p>
+<ol>
+<li><code>waitTime</code>: 获取锁的最大等待时间, 超过这个时间就不再尝试获取锁了. </li>
+<li><code>leaseTime</code>: 如果没有调用<code>unlock</code> 方法 ,超过了这个时间就自动释放锁. </li>
+<li><code>timeunit</code>: 释放时间的单位. </li>
+</ol>
+<p><code>Redisson</code> 的分布式锁是怎么实现的呢? </p>
+<p>在加锁的时候,在redis 写入了一个Hash , key是锁的名字， <code>field</code> 是线程名称,     <code>value</code> 是1(表示锁的冲入次数)</p>
+<p><img src="http://files.luyanan.com//img/20200402210252.png" alt="image-20200402210251089"></p>
+<p>源码： </p>
+<p><code>tryLock()——tryAcquire()——tryAcquireAsync()——tryLockInnerAsync()</code></p>
+<pre class=" language-java"><code class="language-java">
+    <span class="token operator">&lt;</span>T<span class="token operator">></span> RFuture<span class="token operator">&lt;</span>T<span class="token operator">></span> <span class="token function">tryLockInnerAsync</span><span class="token punctuation">(</span><span class="token keyword">long</span> leaseTime<span class="token punctuation">,</span> TimeUnit unit<span class="token punctuation">,</span> <span class="token keyword">long</span> threadId<span class="token punctuation">,</span> RedisStrictCommand<span class="token operator">&lt;</span>T<span class="token operator">></span> command<span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+        internalLockLeaseTime <span class="token operator">=</span> unit<span class="token punctuation">.</span><span class="token function">toMillis</span><span class="token punctuation">(</span>leaseTime<span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+        <span class="token keyword">return</span> commandExecutor<span class="token punctuation">.</span><span class="token function">evalWriteAsync</span><span class="token punctuation">(</span><span class="token function">getName</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">,</span> LongCodec<span class="token punctuation">.</span>INSTANCE<span class="token punctuation">,</span> command<span class="token punctuation">,</span>
+                  <span class="token string">"if (redis.call('exists', KEYS[1]) == 0) then "</span> <span class="token operator">+</span>
+                      <span class="token string">"redis.call('hset', KEYS[1], ARGV[2], 1); "</span> <span class="token operator">+</span>
+                      <span class="token string">"redis.call('pexpire', KEYS[1], ARGV[1]); "</span> <span class="token operator">+</span>
+                      <span class="token string">"return nil; "</span> <span class="token operator">+</span>
+                  <span class="token string">"end; "</span> <span class="token operator">+</span>
+                  <span class="token string">"if (redis.call('hexists', KEYS[1], ARGV[2]) == 1) then "</span> <span class="token operator">+</span>
+                      <span class="token string">"redis.call('hincrby', KEYS[1], ARGV[2], 1); "</span> <span class="token operator">+</span>
+                      <span class="token string">"redis.call('pexpire', KEYS[1], ARGV[1]); "</span> <span class="token operator">+</span>
+                      <span class="token string">"return nil; "</span> <span class="token operator">+</span>
+                  <span class="token string">"end; "</span> <span class="token operator">+</span>
+                  <span class="token string">"return redis.call('pttl', KEYS[1]);"</span><span class="token punctuation">,</span>
+                    Collections<span class="token punctuation">.</span>&lt;Object<span class="token operator">></span><span class="token function">singletonList</span><span class="token punctuation">(</span><span class="token function">getName</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">,</span> internalLockLeaseTime<span class="token punctuation">,</span> <span class="token function">getLockName</span><span class="token punctuation">(</span>threadId<span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+</code></pre>
+<p>最终调用的是一段<code>lua</code> 脚本,里面有一个参数,两个参数的值. </p>
+<table>
+<thead>
+<tr>
+<th>占位</th>
+<th>填充</th>
+<th>含义</th>
+<th>实际值</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>KEYS[1]</code></td>
+<td><code>getName()</code></td>
+<td>锁的名称(key)</td>
+<td><code>updateAccount</code></td>
+</tr>
+<tr>
+<td><code>ARGV[1]</code></td>
+<td><code>internalLockLeaseTime</code></td>
+<td>锁释放时间(毫秒)</td>
+<td>10000</td>
+</tr>
+<tr>
+<td><code>ARGV[2]</code></td>
+<td><code>getLockName(threadId)</code></td>
+<td>线程名称</td>
+<td><code>b60a9c8c-92f8-4bfe-b0e7-308967346336:1</code></td>
+</tr>
+</tbody></table>
+<pre class=" language-lua"><code class="language-lua"><span class="token operator">//</span> KEYS<span class="token punctuation">[</span><span class="token number">1</span><span class="token punctuation">]</span> 锁名称 updateAccount
+<span class="token operator">//</span> ARGV<span class="token punctuation">[</span><span class="token number">1</span><span class="token punctuation">]</span> key 过期时间 10000ms
+<span class="token operator">//</span> ARGV<span class="token punctuation">[</span><span class="token number">2</span><span class="token punctuation">]</span> 线程名称
+<span class="token operator">//</span> 锁名称不存在
+<span class="token keyword">if</span> <span class="token punctuation">(</span>redis<span class="token punctuation">.</span><span class="token function">call</span><span class="token punctuation">(</span><span class="token string">'exists'</span><span class="token punctuation">,</span> KEYS<span class="token punctuation">[</span><span class="token number">1</span><span class="token punctuation">]</span><span class="token punctuation">)</span> <span class="token operator">==</span> <span class="token number">0</span><span class="token punctuation">)</span> <span class="token keyword">then</span>
+  <span class="token operator">//</span> 创建一个 hash，key<span class="token operator">=</span>锁名称，field<span class="token operator">=</span>线程名，value<span class="token operator">=</span><span class="token number">1</span>
+  redis<span class="token punctuation">.</span><span class="token function">call</span><span class="token punctuation">(</span><span class="token string">'hset'</span><span class="token punctuation">,</span> KEYS<span class="token punctuation">[</span><span class="token number">1</span><span class="token punctuation">]</span><span class="token punctuation">,</span> ARGV<span class="token punctuation">[</span><span class="token number">2</span><span class="token punctuation">]</span><span class="token punctuation">,</span> <span class="token number">1</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+  <span class="token operator">//</span> 设置 hash 的过期时间
+   redis<span class="token punctuation">.</span><span class="token function">call</span><span class="token punctuation">(</span><span class="token string">'pexpire'</span><span class="token punctuation">,</span> KEYS<span class="token punctuation">[</span><span class="token number">1</span><span class="token punctuation">]</span><span class="token punctuation">,</span> ARGV<span class="token punctuation">[</span><span class="token number">1</span><span class="token punctuation">]</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token keyword">return</span> <span class="token keyword">nil</span><span class="token punctuation">;</span>
+<span class="token keyword">end</span><span class="token punctuation">;</span>
+<span class="token operator">//</span> 锁名称存在，判断是否当前线程持有的锁
+<span class="token keyword">if</span> <span class="token punctuation">(</span>redis<span class="token punctuation">.</span><span class="token function">call</span><span class="token punctuation">(</span><span class="token string">'hexists'</span><span class="token punctuation">,</span> KEYS<span class="token punctuation">[</span><span class="token number">1</span><span class="token punctuation">]</span><span class="token punctuation">,</span> ARGV<span class="token punctuation">[</span><span class="token number">2</span><span class="token punctuation">]</span><span class="token punctuation">)</span> <span class="token operator">==</span> <span class="token number">1</span><span class="token punctuation">)</span> <span class="token keyword">then</span>
+  <span class="token operator">//</span> 如果是，value<span class="token operator">+</span><span class="token number">1</span>，代表重入次数<span class="token operator">+</span><span class="token number">1</span>
+  redis<span class="token punctuation">.</span><span class="token function">call</span><span class="token punctuation">(</span><span class="token string">'hincrby'</span><span class="token punctuation">,</span> KEYS<span class="token punctuation">[</span><span class="token number">1</span><span class="token punctuation">]</span><span class="token punctuation">,</span> ARGV<span class="token punctuation">[</span><span class="token number">2</span><span class="token punctuation">]</span><span class="token punctuation">,</span> <span class="token number">1</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+  <span class="token operator">//</span> 重新获得锁，需要重新设置 Key 的过期时间
+  redis<span class="token punctuation">.</span><span class="token function">call</span><span class="token punctuation">(</span><span class="token string">'pexpire'</span><span class="token punctuation">,</span> KEYS<span class="token punctuation">[</span><span class="token number">1</span><span class="token punctuation">]</span><span class="token punctuation">,</span> ARGV<span class="token punctuation">[</span><span class="token number">1</span><span class="token punctuation">]</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token keyword">return</span> <span class="token keyword">nil</span><span class="token punctuation">;</span>
+<span class="token keyword">end</span><span class="token punctuation">;</span>
+ <span class="token operator">//</span> 锁存在，但是不是当前线程持有，返回过期时间（毫秒）
+ <span class="token keyword">return</span> redis<span class="token punctuation">.</span><span class="token function">call</span><span class="token punctuation">(</span><span class="token string">'pttl'</span><span class="token punctuation">,</span> KEYS<span class="token punctuation">[</span><span class="token number">1</span><span class="token punctuation">]</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+</code></pre>
+<p>释放锁, 源码:</p>
+<p><code>unlock——unlockInnerAsync</code></p>
+<pre class=" language-java"><code class="language-java"> <span class="token keyword">protected</span> RFuture<span class="token operator">&lt;</span>Boolean<span class="token operator">></span> <span class="token function">unlockInnerAsync</span><span class="token punctuation">(</span><span class="token keyword">long</span> threadId<span class="token punctuation">)</span> <span class="token operator">&amp;</span>#<span class="token number">123</span><span class="token punctuation">;</span>
+        <span class="token keyword">return</span> commandExecutor<span class="token punctuation">.</span><span class="token function">evalWriteAsync</span><span class="token punctuation">(</span><span class="token function">getName</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">,</span> LongCodec<span class="token punctuation">.</span>INSTANCE<span class="token punctuation">,</span> RedisCommands<span class="token punctuation">.</span>EVAL_BOOLEAN<span class="token punctuation">,</span>
+                <span class="token string">"if (redis.call('exists', KEYS[1]) == 0) then "</span> <span class="token operator">+</span>
+                    <span class="token string">"redis.call('publish', KEYS[2], ARGV[1]); "</span> <span class="token operator">+</span>
+                    <span class="token string">"return 1; "</span> <span class="token operator">+</span>
+                <span class="token string">"end;"</span> <span class="token operator">+</span>
+                <span class="token string">"if (redis.call('hexists', KEYS[1], ARGV[3]) == 0) then "</span> <span class="token operator">+</span>
+                    <span class="token string">"return nil;"</span> <span class="token operator">+</span>
+                <span class="token string">"end; "</span> <span class="token operator">+</span>
+                <span class="token string">"local counter = redis.call('hincrby', KEYS[1], ARGV[3], -1); "</span> <span class="token operator">+</span>
+                <span class="token string">"if (counter > 0) then "</span> <span class="token operator">+</span>
+                    <span class="token string">"redis.call('pexpire', KEYS[1], ARGV[2]); "</span> <span class="token operator">+</span>
+                    <span class="token string">"return 0; "</span> <span class="token operator">+</span>
+                <span class="token string">"else "</span> <span class="token operator">+</span>
+                    <span class="token string">"redis.call('del', KEYS[1]); "</span> <span class="token operator">+</span>
+                    <span class="token string">"redis.call('publish', KEYS[2], ARGV[1]); "</span> <span class="token operator">+</span>
+                    <span class="token string">"return 1; "</span><span class="token operator">+</span>
+                <span class="token string">"end; "</span> <span class="token operator">+</span>
+                <span class="token string">"return nil;"</span><span class="token punctuation">,</span>
+                Arrays<span class="token punctuation">.</span>&lt;Object<span class="token operator">></span><span class="token function">asList</span><span class="token punctuation">(</span><span class="token function">getName</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">,</span> <span class="token function">getChannelName</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">,</span> LockPubSub<span class="token punctuation">.</span>unlockMessage<span class="token punctuation">,</span> internalLockLeaseTime<span class="token punctuation">,</span> <span class="token function">getLockName</span><span class="token punctuation">(</span>threadId<span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+    <span class="token operator">&amp;</span>#<span class="token number">125</span><span class="token punctuation">;</span>
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>占位</th>
+<th>填充</th>
+<th>含义</th>
+<th>实际值</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>KEYS[1]</code></td>
+<td><code>getName()</code></td>
+<td>锁名称</td>
+<td><code>updateAccount</code></td>
+</tr>
+<tr>
+<td><code>KEYS[2]</code></td>
+<td><code>getChannelName()</code></td>
+<td>频道名称</td>
+<td><code>redisson_lock__channel:&#123;updateAccount&#125;</code></td>
+</tr>
+<tr>
+<td><code>ARGV[1]</code></td>
+<td><code>LockPubSub.unlockMessage</code></td>
+<td>解锁的时候的消息</td>
+<td>0</td>
+</tr>
+<tr>
+<td><code>ARGV[2]</code></td>
+<td><code>internalLockLeaseTime</code></td>
+<td>释放锁的时间</td>
+<td>10000</td>
+</tr>
+<tr>
+<td><code>ARGV[3]</code></td>
+<td><code>getLockName(threadId)</code></td>
+<td>线程名称</td>
+<td><code>b60a9c8c-92f8-4bfe-b0e7-308967346336:1</code></td>
+</tr>
+</tbody></table>
+<p>​    </p>
+<pre class=" language-java"><code class="language-java"><span class="token comment" spellcheck="true">// KEYS[1] 锁的名称 updateAccount</span>
+<span class="token comment" spellcheck="true">// KEYS[2] 频道名称 redisson_lock__channel:&amp;#123;updateAccount&amp;#125;</span>
+<span class="token comment" spellcheck="true">// ARGV[1] 释放锁的消息 0</span>
+<span class="token comment" spellcheck="true">// ARGV[2] 锁释放时间 10000</span>
+<span class="token comment" spellcheck="true">// ARGV[3] 线程名称</span>
+<span class="token comment" spellcheck="true">// 锁不存在（过期或者已经释放了）</span>
+<span class="token keyword">if</span> <span class="token punctuation">(</span>redis<span class="token punctuation">.</span><span class="token function">call</span><span class="token punctuation">(</span><span class="token string">'exists'</span><span class="token punctuation">,</span> KEYS<span class="token punctuation">[</span><span class="token number">1</span><span class="token punctuation">]</span><span class="token punctuation">)</span> <span class="token operator">==</span> <span class="token number">0</span><span class="token punctuation">)</span> then
+  <span class="token comment" spellcheck="true">// 发布锁已经释放的消息</span>
+  redis<span class="token punctuation">.</span><span class="token function">call</span><span class="token punctuation">(</span><span class="token string">'publish'</span><span class="token punctuation">,</span> KEYS<span class="token punctuation">[</span><span class="token number">2</span><span class="token punctuation">]</span><span class="token punctuation">,</span> ARGV<span class="token punctuation">[</span><span class="token number">1</span><span class="token punctuation">]</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+  <span class="token keyword">return</span> <span class="token number">1</span><span class="token punctuation">;</span>
+end<span class="token punctuation">;</span>
+<span class="token comment" spellcheck="true">// 锁存在，但是不是当前线程加的锁</span>
+<span class="token keyword">if</span> <span class="token punctuation">(</span>redis<span class="token punctuation">.</span><span class="token function">call</span><span class="token punctuation">(</span><span class="token string">'hexists'</span><span class="token punctuation">,</span> KEYS<span class="token punctuation">[</span><span class="token number">1</span><span class="token punctuation">]</span><span class="token punctuation">,</span> ARGV<span class="token punctuation">[</span><span class="token number">3</span><span class="token punctuation">]</span><span class="token punctuation">)</span> <span class="token operator">==</span> <span class="token number">0</span><span class="token punctuation">)</span> then
+  <span class="token keyword">return</span> nil<span class="token punctuation">;</span>
+end<span class="token punctuation">;</span>
+<span class="token comment" spellcheck="true">// 锁存在，是当前线程加的锁</span>
+<span class="token comment" spellcheck="true">// 重入次数-1</span>
+local counter <span class="token operator">=</span> redis<span class="token punctuation">.</span><span class="token function">call</span><span class="token punctuation">(</span><span class="token string">'hincrby'</span><span class="token punctuation">,</span> KEYS<span class="token punctuation">[</span><span class="token number">1</span><span class="token punctuation">]</span><span class="token punctuation">,</span> ARGV<span class="token punctuation">[</span><span class="token number">3</span><span class="token punctuation">]</span><span class="token punctuation">,</span> <span class="token operator">-</span><span class="token number">1</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token comment" spellcheck="true">// -1 后大于 0，说明这个线程持有这把锁还有其他的任务需要执行</span>
+<span class="token keyword">if</span> <span class="token punctuation">(</span>counter <span class="token operator">></span> <span class="token number">0</span><span class="token punctuation">)</span> then
+  <span class="token comment" spellcheck="true">// 重新设置锁的过期时间</span>
+  redis<span class="token punctuation">.</span><span class="token function">call</span><span class="token punctuation">(</span><span class="token string">'pexpire'</span><span class="token punctuation">,</span> KEYS<span class="token punctuation">[</span><span class="token number">1</span><span class="token punctuation">]</span><span class="token punctuation">,</span> ARGV<span class="token punctuation">[</span><span class="token number">2</span><span class="token punctuation">]</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+  <span class="token keyword">return</span> <span class="token number">0</span><span class="token punctuation">;</span>
+<span class="token keyword">else</span>
+  <span class="token comment" spellcheck="true">// -1 之后等于 0，现在可以删除锁了</span>
+  redis<span class="token punctuation">.</span><span class="token function">call</span><span class="token punctuation">(</span><span class="token string">'del'</span><span class="token punctuation">,</span> KEYS<span class="token punctuation">[</span><span class="token number">1</span><span class="token punctuation">]</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+  <span class="token comment" spellcheck="true">// 删除之后发布释放锁的消息</span>
+  redis<span class="token punctuation">.</span><span class="token function">call</span><span class="token punctuation">(</span><span class="token string">'publish'</span><span class="token punctuation">,</span> KEYS<span class="token punctuation">[</span><span class="token number">2</span><span class="token punctuation">]</span><span class="token punctuation">,</span> ARGV<span class="token punctuation">[</span><span class="token number">1</span><span class="token punctuation">]</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+  <span class="token keyword">return</span> <span class="token number">1</span><span class="token punctuation">;</span>
+end<span class="token punctuation">;</span>
+<span class="token comment" spellcheck="true">// 其他情况返回 nil</span>
+<span class="token keyword">return</span> nil<span class="token punctuation">;</span>
+</code></pre>
+<p>这个是<code>Redisson</code> 里面分布式锁的实现, 我们在调用的时候非常简单. </p>
+<p><code>Redisson</code>跟<code>Jedis</code> 定位不同, 它不是一个单纯的<code>Redis</code> 客户端, 而是基于redis 实现的分布式服务, 如果有需要用到一些分布式的数据结构, 我们我们可以基于<code>Redisson</code>的分布式队列实现分布式事务,就可以引入<code>Redisson</code> 的依赖实现. </p>
+
+                
+            </div>
+            <hr/>
+
+            
+
+    <div class="reprint" id="reprint-statement">
+        
+            <div class="reprint__author">
+                <span class="reprint-meta" style="font-weight: bold;">
+                    <i class="fas fa-user">
+                        文章作者:
+                    </i>
+                </span>
+                <span class="reprint-info">
+                    <a href="/about" rel="external nofollow noreferrer">luyanan</a>
+                </span>
+            </div>
+            <div class="reprint__type">
+                <span class="reprint-meta" style="font-weight: bold;">
+                    <i class="fas fa-link">
+                        文章链接:
+                    </i>
+                </span>
+                <span class="reprint-info">
+                    <a href="https://rainsoil.github.io/2022/01/04/redis/redis-shi-zhan-zhi-ke-hu-duan-15/">https://rainsoil.github.io/2022/01/04/redis/redis-shi-zhan-zhi-ke-hu-duan-15/</a>
+                </span>
+            </div>
+            <div class="reprint__notice">
+                <span class="reprint-meta" style="font-weight: bold;">
+                    <i class="fas fa-copyright">
+                        版权声明:
+                    </i>
+                </span>
+                <span class="reprint-info">
+                    本博客所有文章除特別声明外，均采用
+                    <a href="https://creativecommons.org/licenses/by/4.0/deed.zh" rel="external nofollow noreferrer" target="_blank">CC BY 4.0</a>
+                    许可协议。转载请注明来源
+                    <a href="/about" target="_blank">luyanan</a>
+                    !
+                </span>
+            </div>
+        
+    </div>
+
+    <script async defer>
+      document.addEventListener("copy", function (e) {
+        let toastHTML = '<span>复制成功，请遵循本文的转载规则</span><button class="btn-flat toast-action" onclick="navToReprintStatement()" style="font-size: smaller">查看</a>';
+        M.toast({html: toastHTML})
+      });
+
+      function navToReprintStatement() {
+        $("html, body").animate({scrollTop: $("#reprint-statement").offset().top - 80}, 800);
+      }
+    </script>
+
+
+
+            <div class="tag_share" style="display: block;">
+                <div class="post-meta__tag-list" style="display: inline-block;">
+                    
+                        <div class="article-tag">
+                            <span class="chip bg-color">无标签</span>
+                        </div>
+                    
+                </div>
+                <div class="post_share" style="zoom: 80%; width: fit-content; display: inline-block; float: right; margin: -0.15rem 0;">
+                    <link rel="stylesheet" type="text/css" href="/libs/share/css/share.min.css">
+<div id="article-share">
+
+    
+    <div class="social-share" data-sites="twitter,facebook,google,qq,qzone,wechat,weibo,douban,linkedin" data-wechat-qrcode-helper="<p>微信扫一扫即可分享！</p>"></div>
+    <script src="/libs/share/js/social-share.min.js"></script>
+    
+
+    
+
+</div>
+
+                </div>
+            </div>
+            
+        </div>
+    </div>
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+<article id="prenext-posts" class="prev-next articles">
+    <div class="row article-row">
+        
+        <div class="article col s12 m6" data-aos="fade-up">
+            <div class="article-badge left-badge text-color">
+                <i class="fas fa-chevron-left"></i>&nbsp;上一篇</div>
+            <div class="card">
+                <a href="/2022/01/04/spring/spring-aop-yuan-ma-jie-xi-7/">
+                    <div class="card-image">
+                        
+                        
+                        <img src="/medias/featureimages/3.jpg" class="responsive-img" alt="Spring AOP 源码解析(7)">
+                        
+                        <span class="card-title">Spring AOP 源码解析(7)</span>
+                    </div>
+                </a>
+                <div class="card-content article-content">
+                    <div class="summary block-with-text">
+                        
+                            
+                        
+                    </div>
+                    <div class="publish-info">
+                        <span class="publish-date">
+                            <i class="far fa-clock fa-fw icon-date"></i>2022-01-04
+                        </span>
+                        <span class="publish-author">
+                            
+                            <i class="fas fa-bookmark fa-fw icon-category"></i>
+                            
+                            <a href="/categories/spring/" class="post-category">
+                                    spring
+                                </a>
+                            
+                            <a href="/categories/spring/spring/" class="post-category">
+                                    spring
+                                </a>
+                            
+                            
+                        </span>
+                    </div>
+                </div>
+                
+            </div>
+        </div>
+        
+        
+        <div class="article col s12 m6" data-aos="fade-up">
+            <div class="article-badge right-badge text-color">
+                下一篇&nbsp;<i class="fas fa-chevron-right"></i>
+            </div>
+            <div class="card">
+                <a href="/2022/01/04/mysql/mysql-bai-ke-quan-shu/">
+                    <div class="card-image">
+                        
+                        
+                        <img src="/medias/featureimages/17.jpg" class="responsive-img" alt="mysql   百科全书">
+                        
+                        <span class="card-title">mysql   百科全书</span>
+                    </div>
+                </a>
+                <div class="card-content article-content">
+                    <div class="summary block-with-text">
+                        
+                            
+                        
+                    </div>
+                    <div class="publish-info">
+                            <span class="publish-date">
+                                <i class="far fa-clock fa-fw icon-date"></i>2022-01-04
+                            </span>
+                        <span class="publish-author">
+                            
+                            <i class="fas fa-bookmark fa-fw icon-category"></i>
+                            
+                            <a href="/categories/mysql/" class="post-category">
+                                    mysql
+                                </a>
+                            
+                            <a href="/categories/mysql/mysql/" class="post-category">
+                                    mysql
+                                </a>
+                            
+                            
+                        </span>
+                    </div>
+                </div>
+                
+            </div>
+        </div>
+        
+    </div>
+</article>
+
+</div>
+
+
+
+<!-- 代码块功能依赖 -->
+<script type="text/javascript" src="/libs/codeBlock/codeBlockFuction.js"></script>
+
+<!-- 代码语言 -->
+
+<script type="text/javascript" src="/libs/codeBlock/codeLang.js"></script>
+
+
+<!-- 代码块复制 -->
+
+<script type="text/javascript" src="/libs/codeBlock/codeCopy.js"></script>
+
+
+<!-- 代码块收缩 -->
+
+<script type="text/javascript" src="/libs/codeBlock/codeShrink.js"></script>
+
+
+    </div>
+    <div id="toc-aside" class="expanded col l3 hide-on-med-and-down">
+        <div class="toc-widget card" style="background-color: white;">
+            <div class="toc-title"><i class="far fa-list-alt"></i>&nbsp;&nbsp;目录</div>
+            <div id="toc-content"></div>
+        </div>
+    </div>
+</div>
+
+<!-- TOC 悬浮按钮. -->
+
+<div id="floating-toc-btn" class="hide-on-med-and-down">
+    <a class="btn-floating btn-large bg-color">
+        <i class="fas fa-list-ul"></i>
+    </a>
+</div>
+
+
+<script src="/libs/tocbot/tocbot.min.js"></script>
+<script>
+    $(function () {
+        tocbot.init({
+            tocSelector: '#toc-content',
+            contentSelector: '#articleContent',
+            headingsOffset: -($(window).height() * 0.4 - 45),
+            collapseDepth: Number('0'),
+            headingSelector: 'h2, h3, h4'
+        });
+
+        // modify the toc link href to support Chinese.
+        let i = 0;
+        let tocHeading = 'toc-heading-';
+        $('#toc-content a').each(function () {
+            $(this).attr('href', '#' + tocHeading + (++i));
+        });
+
+        // modify the heading title id to support Chinese.
+        i = 0;
+        $('#articleContent').children('h2, h3, h4').each(function () {
+            $(this).attr('id', tocHeading + (++i));
+        });
+
+        // Set scroll toc fixed.
+        let tocHeight = parseInt($(window).height() * 0.4 - 64);
+        let $tocWidget = $('.toc-widget');
+        $(window).scroll(function () {
+            let scroll = $(window).scrollTop();
+            /* add post toc fixed. */
+            if (scroll > tocHeight) {
+                $tocWidget.addClass('toc-fixed');
+            } else {
+                $tocWidget.removeClass('toc-fixed');
+            }
+        });
+
+        
+        /* 修复文章卡片 div 的宽度. */
+        let fixPostCardWidth = function (srcId, targetId) {
+            let srcDiv = $('#' + srcId);
+            if (srcDiv.length === 0) {
+                return;
+            }
+
+            let w = srcDiv.width();
+            if (w >= 450) {
+                w = w + 21;
+            } else if (w >= 350 && w < 450) {
+                w = w + 18;
+            } else if (w >= 300 && w < 350) {
+                w = w + 16;
+            } else {
+                w = w + 14;
+            }
+            $('#' + targetId).width(w);
+        };
+
+        // 切换TOC目录展开收缩的相关操作.
+        const expandedClass = 'expanded';
+        let $tocAside = $('#toc-aside');
+        let $mainContent = $('#main-content');
+        $('#floating-toc-btn .btn-floating').click(function () {
+            if ($tocAside.hasClass(expandedClass)) {
+                $tocAside.removeClass(expandedClass).hide();
+                $mainContent.removeClass('l9');
+            } else {
+                $tocAside.addClass(expandedClass).show();
+                $mainContent.addClass('l9');
+            }
+            fixPostCardWidth('artDetail', 'prenext-posts');
+        });
+        
+    });
+</script>
+
+    
+
+</main>
+
+
+
+
+    <footer class="page-footer bg-color">
+    
+        <link rel="stylesheet" href="/libs/aplayer/APlayer.min.css">
+<style>
+    .aplayer .aplayer-lrc p {
+        
+        display: none;
+        
+        font-size: 12px;
+        font-weight: 700;
+        line-height: 16px !important;
+    }
+
+    .aplayer .aplayer-lrc p.aplayer-lrc-current {
+        
+        display: none;
+        
+        font-size: 15px;
+        color: #42b983;
+    }
+
+    
+    .aplayer.aplayer-fixed.aplayer-narrow .aplayer-body {
+        left: -66px !important;
+    }
+
+    .aplayer.aplayer-fixed.aplayer-narrow .aplayer-body:hover {
+        left: 0px !important;
+    }
+
+    
+</style>
+<div class="">
+    
+    <div class="row">
+        <meting-js class="col l8 offset-l2 m10 offset-m1 s12"
+                   server="netease"
+                   type="playlist"
+                   id="503838841"
+                   fixed='true'
+                   autoplay='false'
+                   theme='#42b983'
+                   loop='all'
+                   order='random'
+                   preload='auto'
+                   volume='0.7'
+                   list-folded='true'
+        >
+        </meting-js>
+    </div>
+</div>
+
+<script src="/libs/aplayer/APlayer.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/meting@2/dist/Meting.min.js"></script>
+
+    
+
+    <div class="container row center-align"
+         style="margin-bottom: 0px !important;">
+        <div class="col s12 m8 l8 copy-right">
+            Copyright&nbsp;&copy;
+            
+                <span id="year">2019-2022</span>
+            
+            <a href="/about" target="_blank">luyanan</a>
+            |&nbsp;Powered by&nbsp;<a href="https://hexo.io/" target="_blank">Hexo</a>
+            |&nbsp;Theme&nbsp;<a href="https://github.com/blinkfox/hexo-theme-matery" target="_blank">Matery</a>
+            <br>
+            
+                &nbsp;<i class="fas fa-chart-area"></i>&nbsp;站点总字数:&nbsp;<span
+                        class="white-color">803.3k</span>
+            
+            
+            
+                
+            
+            
+                <span id="busuanzi_container_site_pv">
+                &nbsp;|&nbsp;<i class="far fa-eye"></i>&nbsp;总访问量:&nbsp;
+                    <span id="busuanzi_value_site_pv" class="white-color"></span>
+            </span>
+            
+            
+                <span id="busuanzi_container_site_uv">
+                &nbsp;|&nbsp;<i class="fas fa-users"></i>&nbsp;总访问人数:&nbsp;
+                    <span id="busuanzi_value_site_uv" class="white-color"></span>
+            </span>
+            
+            <br>
+
+            <!-- 运行天数提醒. -->
+            
+            <br>
+            
+        </div>
+        <div class="col s12 m4 l4 social-link social-statis">
+    <a href="https://github.com/rainsoil" class="tooltipped" target="_blank" data-tooltip="访问我的GitHub" data-position="top" data-delay="50">
+        <i class="fab fa-github"></i>
+    </a>
+
+
+
+    <a href="mailto:luyanan0718@163.com" class="tooltipped" target="_blank" data-tooltip="邮件联系我" data-position="top" data-delay="50">
+        <i class="fas fa-envelope-open"></i>
+    </a>
+
+
+
+
+
+
+
+    <a href="tencent://AddContact/?fromId=50&fromSubId=1&subcmd=all&uin=914596513" class="tooltipped" target="_blank" data-tooltip="QQ联系我: 914596513" data-position="top" data-delay="50">
+        <i class="fab fa-qq"></i>
+    </a>
+
+
+
+
+
+
+
+    <a href="/atom.xml" class="tooltipped" target="_blank" data-tooltip="RSS 订阅" data-position="top" data-delay="50">
+        <i class="fas fa-rss"></i>
+    </a>
+
+</div>
+    </div>
+</footer>
+
+<div class="progress-bar"></div>
+
+
+    <!-- 搜索遮罩框 -->
+<div id="searchModal" class="modal">
+    <div class="modal-content">
+        <div class="search-header">
+            <span class="title"><i class="fas fa-search"></i>&nbsp;&nbsp;搜索</span>
+            <input type="search" id="searchInput" name="s" placeholder="请输入搜索的关键字"
+                   class="search-input">
+        </div>
+        <div id="searchResult"></div>
+    </div>
+</div>
+
+<script type="text/javascript">
+$(function () {
+    var searchFunc = function (path, search_id, content_id) {
+        'use strict';
+        $.ajax({
+            url: path,
+            dataType: "xml",
+            success: function (xmlResponse) {
+                // get the contents from search data
+                var datas = $("entry", xmlResponse).map(function () {
+                    return {
+                        title: $("title", this).text(),
+                        content: $("content", this).text(),
+                        url: $("url", this).text()
+                    };
+                }).get();
+                var $input = document.getElementById(search_id);
+                var $resultContent = document.getElementById(content_id);
+                $input.addEventListener('input', function () {
+                    var str = '<ul class=\"search-result-list\">';
+                    var keywords = this.value.trim().toLowerCase().split(/[\s\-]+/);
+                    $resultContent.innerHTML = "";
+                    if (this.value.trim().length <= 0) {
+                        return;
+                    }
+                    // perform local searching
+                    datas.forEach(function (data) {
+                        var isMatch = true;
+                        var data_title = data.title.trim().toLowerCase();
+                        var data_content = data.content.trim().replace(/<[^>]+>/g, "").toLowerCase();
+                        var data_url = data.url;
+                        data_url = data_url.indexOf('/') === 0 ? data.url : '/' + data_url;
+                        var index_title = -1;
+                        var index_content = -1;
+                        var first_occur = -1;
+                        // only match artiles with not empty titles and contents
+                        if (data_title !== '' && data_content !== '') {
+                            keywords.forEach(function (keyword, i) {
+                                index_title = data_title.indexOf(keyword);
+                                index_content = data_content.indexOf(keyword);
+                                if (index_title < 0 && index_content < 0) {
+                                    isMatch = false;
+                                } else {
+                                    if (index_content < 0) {
+                                        index_content = 0;
+                                    }
+                                    if (i === 0) {
+                                        first_occur = index_content;
+                                    }
+                                }
+                            });
+                        }
+                        // show search results
+                        if (isMatch) {
+                            str += "<li><a href='" + data_url + "' class='search-result-title'>" + data_title + "</a>";
+                            var content = data.content.trim().replace(/<[^>]+>/g, "");
+                            if (first_occur >= 0) {
+                                // cut out 100 characters
+                                var start = first_occur - 20;
+                                var end = first_occur + 80;
+                                if (start < 0) {
+                                    start = 0;
+                                }
+                                if (start === 0) {
+                                    end = 100;
+                                }
+                                if (end > content.length) {
+                                    end = content.length;
+                                }
+                                var match_content = content.substr(start, end);
+                                // highlight all keywords
+                                keywords.forEach(function (keyword) {
+                                    var regS = new RegExp(keyword, "gi");
+                                    match_content = match_content.replace(regS, "<em class=\"search-keyword\">" + keyword + "</em>");
+                                });
+
+                                str += "<p class=\"search-result\">" + match_content + "...</p>"
+                            }
+                            str += "</li>";
+                        }
+                    });
+                    str += "</ul>";
+                    $resultContent.innerHTML = str;
+                });
+            }
+        });
+    };
+
+    searchFunc('/search.xml', 'searchInput', 'searchResult');
+});
+</script>
+
+    <!-- 回到顶部按钮 -->
+<div id="backTop" class="top-scroll">
+    <a class="btn-floating btn-large waves-effect waves-light" href="#!">
+        <i class="fas fa-arrow-up"></i>
+    </a>
+</div>
+
+
+    <script src="/libs/materialize/materialize.min.js"></script>
+    <script src="/libs/masonry/masonry.pkgd.min.js"></script>
+    <script src="/libs/aos/aos.js"></script>
+    <script src="/libs/scrollprogress/scrollProgress.min.js"></script>
+    <script src="/libs/lightGallery/js/lightgallery-all.min.js"></script>
+    <script src="/js/matery.js"></script>
+
+    
+
+    
+
+    <!-- 雪花特效 -->
+    
+
+    <!-- 鼠标星星特效 -->
+    
+
+    <!-- Baidu Analytics -->
+
+    <!-- Baidu Push -->
+
+<script>
+    (function () {
+        var bp = document.createElement('script');
+        var curProtocol = window.location.protocol.split(':')[0];
+        if (curProtocol === 'https') {
+            bp.src = 'https://zz.bdstatic.com/linksubmit/push.js';
+        } else {
+            bp.src = 'http://push.zhanzhang.baidu.com/push.js';
+        }
+        var s = document.getElementsByTagName("script")[0];
+        s.parentNode.insertBefore(bp, s);
+    })();
+</script>
+
+    
+    <script src="/libs/others/clicklove.js" async="async"></script>
+    
+    
+    <script async src="/libs/others/busuanzi.pure.mini.js"></script>
+    
+
+    
+
+    
+
+    <!--腾讯兔小巢-->
+    
+    
+    <script type="text/javascript" color="0,0,255"
+        pointColor="0,0,255" opacity='0.7'
+        zIndex="-1" count="99"
+        src="/libs/background/canvas-nest.js"></script>
+    
+
+    
+
+    
+
+    
+    <script src="/libs/instantpage/instantpage.js" type="module"></script>
+    
+
+</body>
+
+</html>
